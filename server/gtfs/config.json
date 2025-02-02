@@ -1,0 +1,27 @@
+{
+  "agencies": [
+    {
+      "url": "https://go.bkk.hu/api/static/v1/public-gtfs/budapest_gtfs.zip",
+      "realtimeAlerts": {
+        "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/Alerts.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
+      },
+      "realtimeTripUpdates": {
+        "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/TripUpdates.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
+      },
+      "realtimeVehiclePositions": {
+        "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/VehiclePositions.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
+      }
+    },
+    {
+      "url": "https://gtfs.kti.hu/public-gtfs/volanbusz_gtfs.zip"
+    }
+  ],
+  "csvOptions": {
+    "skip_lines_with_error": true
+  },
+  "downloadTimeout": 5000,
+  "ignoreDuplicates": false,
+  "ignoreErrors": false,
+  "sqlitePath": "./timetable.sqlite",
+  "exportPath": "./tmp/gtfs"
+}
