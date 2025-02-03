@@ -1,3 +1,5 @@
 import Database from "bun:sqlite";
 
-export const db = new Database("timetable");
+export const db = new Database("timetable.sqlite", {
+  readonly: true,
+});
