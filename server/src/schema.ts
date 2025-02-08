@@ -1,0 +1,185 @@
+export const typeDefs = `#graphql
+  scalar JSON
+  scalar Date
+  scalar Time
+  scalar DateTime
+
+  enum RouteType {
+    TRAM
+    SUBWAY
+    RAIL
+    BUS
+    FERRY
+    CABLE_TRAM
+    AERIAL_LIFT
+    FUNICULAR
+    TROLLEYBUS
+    MONORAIL
+  }
+
+  enum LocationType {
+    STOP
+    STATION
+    ENTRANCE_EXIT
+    GENERIC_NODE
+    BOARDING_AREA
+  }
+
+  type Agency {
+    agencyId: ID!
+    name: String
+    url: String
+    timezone: String
+    lang: String
+    phone: String
+    fareUrl: String
+
+    # Custom fields
+    routes: [Route]
+    stops: [Stop]
+  }
+
+
+  type Route {
+    routeId: ID!
+    agency: Agency
+    shortName: String
+    longName: String
+    desc: String
+    type: RouteType
+    url: String
+    color: String
+    textColor: String
+
+    # Custom fields
+    trips: [Trip]
+    stops: [Stop]!
+    closestStop(lat: Float!, lon: Float!): Stop
+  }
+
+  type RoutePaginated {
+    data: [Route!]!
+    total: Int
+    page: Int
+    limit: Int
+    pages: Int
+  }
+
+  type Stop {
+    stopId: ID!
+    code: String
+    name: String
+    desc: String
+    lat: Float
+    lon: Float
+    zoneId: ID
+    url: String
+    locationType: LocationType
+    parentStation: ID
+    timezone: String
+    wheelchairBoarding: Int
+
+    # Custom fields
+    routes: [Route]
+    trips: [Trip]
+  }
+
+  type StopPaginated {
+    data: [Stop!]!
+    total: Int
+    page: Int
+    limit: Int
+    pages: Int
+  }
+
+  type Trip {
+    route: Route
+    serviceId: ID!
+    tripId: ID!
+    headsign: String
+    directionId: Int
+    blockId: ID
+    shapeId: ID
+
+    # Custom fields
+    agency: Agency
+    stops: [Stop]
+    stopTimes: [StopTime]
+  }
+
+  type StopTime {
+    trip: Trip
+    arrivalTime: String
+    departureTime: String
+    stop: Stop
+    stopSequence: Int
+    pickupType: Int
+    dropOffType: Int
+    shapeDistTraveled: Float
+  }
+
+  type VehiclePosition {
+    id: ID!
+    bearing:  Float
+    latitude: Float
+    longitude: Float
+    speed: Float
+    currentStopSequence: Int
+    trip: Trip
+    tripStartDate: String
+    tripStartTime: String
+    congestationLevel: String
+    occupancyStatus: String
+    occupationPercentage: Float
+    vehicleId: ID
+    vehicleLabel: String
+    vehicleLicensePlate: String
+    vehicleWheelchairAccessible: Boolean
+    timestamp: DateTime
+    createdTimestamp: DateTime
+    expirationTimestamp: DateTime
+  }
+ 
+
+  type Calendar {
+    serviceId: ID!
+    monday: Int
+    tuesday: Int
+    wednesday: Int
+    thursday: Int
+    friday: Int
+    saturday: Int
+    sunday: Int
+    startDate: String
+    endDate: String
+  }
+
+  input BboxInput {
+    minLat: Float!
+    minLon: Float!
+    maxLat: Float!
+    maxLon: Float!
+  }
+
+  type AgencyPaginated {
+    data: [Agency!]!
+    total: Int
+    page: Int
+    limit: Int
+    pages: Int
+  }
+
+  type Query {
+    agencies(limit: Int, page: Int): AgencyPaginated!
+    agency(id: ID!): Agency
+    routes(limit: Int, page: Int): RoutePaginated!
+    route(id: ID!): Route
+
+    stops(limit: Int, page: Int): StopPaginated!
+    stopsByBbox(bbox: BboxInput!): [Stop]!
+    stopsByRadius(lat: Float!, lon: Float!, radius: Float!): [Stop]!
+    stop(id: ID!): Stop
+
+    vehiclePositions: [VehiclePosition]!
+  }
+`;
