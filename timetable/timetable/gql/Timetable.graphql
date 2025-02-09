@@ -1,0 +1,10 @@
+query Timetable($stopId: ID!, $routeId: ID!, $range: RangeInput) {
+  timetable(stopId: $stopId, routeId: $routeId, range: $range) {
+    arrival
+    departure
+    serviceId
+    tripId
+    wheelchairAccessible
+    bikesAllowed
+  }
+}

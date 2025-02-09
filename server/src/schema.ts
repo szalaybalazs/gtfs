@@ -48,6 +48,18 @@ export const typeDefs = `#graphql
     BOARDING_AREA
   }
 
+  enum WheelchairBoarding {
+    UNKNOWN
+    AVAILABLE
+    UNAVAILABLE
+  }
+
+  enum BikesAllowed {
+    UNKNOWN
+    ALLOWED
+    NOT_ALLOWED
+  }
+
   type Agency {
     agencyId: ID!
     name: String
@@ -60,6 +72,15 @@ export const typeDefs = `#graphql
     # Custom fields
     routes: [Route]
     stops: [Stop]
+  }
+
+  type TimetableEntry {
+    arrival: DateTime!
+    departure: DateTime!
+    serviceId: ID!
+    tripId: ID!
+    wheelchairAccessible: WheelchairBoarding!
+    bikesAllowed: BikesAllowed!
   }
 
 
@@ -77,7 +98,14 @@ export const typeDefs = `#graphql
     # Custom fields
     trips: [Trip]
     stops: [Stop]!
-    closestStop(lat: Float!, lon: Float!): Stop
+    closestStop(lat: Float, lon: Float): Stop
+    directions: [Direction!]
+  }
+
+  type Direction {
+    directionId: Int!
+    headsign: String!
+    stops: [Stop!]!
   }
 
   type RoutePaginated {
@@ -193,6 +221,11 @@ export const typeDefs = `#graphql
     pages: Int
   }
 
+  input RangeInput {
+    start: Date!
+    end: Date!
+  }
+
   type Query {
     agencies(limit: Int, page: Int): AgencyPaginated!
     agency(id: ID!): Agency
@@ -207,5 +240,7 @@ export const typeDefs = `#graphql
     vehiclePositions: [VehiclePosition]!
 
     shapes: FeatureCollection!
+
+    timetable(stopId: ID!, routeId: ID!, range: RangeInput): [TimetableEntry!]!
   }
 `;

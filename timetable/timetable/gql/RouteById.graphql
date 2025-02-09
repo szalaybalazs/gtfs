@@ -1,0 +1,18 @@
+query RouteById($routeId: ID!, $lat: Float, $lon: Float) {
+  route(id: $routeId) {
+    routeId
+    closestStop(lat: $lat, lon: $lon) {
+      code
+      name
+      stopId
+    }
+    directions {
+      headsign
+      directionId
+      stops {
+        stopId
+        name
+      }
+    }
+  }
+}

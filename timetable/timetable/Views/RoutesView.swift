@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import TimetableAPI
+import Apollo
 
 struct RouteListItem: View {
     let route: RoutesQuery.Data.Routes.Datum
     
     var body: some View {
-        NavigationLink(destination: RouteDetails(id: route.routeId, shortName: route.shortName)){
+        NavigationLink(destination: RouteDetailsView(id: route.routeId, shortName: route.shortName)){
             HStack(alignment: .center) {
                 HStack(alignment: .center) {
                     Text(route.shortName ?? "")

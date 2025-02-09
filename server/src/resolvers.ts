@@ -1,11 +1,18 @@
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from "graphql-scalars";
-import { LOCATION_TYPES, ROUTE_TYPES } from "./constants";
+import {
+  BIKES_ALLOWED,
+  LOCATION_TYPES,
+  ROUTE_TYPES,
+  WHEELCHAIR_BOARDING,
+} from "./constants";
 import { db } from "./db";
 import {
   Feature,
   FeatureCollection,
   LineString,
 } from "graphql-geojson-scalar-types";
+import dayjs from "dayjs";
+import { snakeToCamel } from "./common/camel";
 
 const formatRoute = (r: any) => {
   return {
@@ -127,17 +134,20 @@ export const resolvers = {
       return db
         .query(
           `
-            WITH selected_trip AS (
-              SELECT trip_id
-              FROM trips
-              WHERE route_id = ?
-              LIMIT 1
-            )
-            SELECT s.*
-            FROM stop_times st
-            JOIN stops s ON s.stop_id = st.stop_id
-            WHERE st.trip_id = (SELECT trip_id FROM selected_trip)
-            ORDER BY st.stop_sequence;`
+            SELECT DISTINCT
+                s.*
+            FROM routes r
+            JOIN trips t ON r.route_id = t.route_id
+            JOIN stop_times st ON t.trip_id = st.trip_id
+            JOIN stops s ON st.stop_id = s.stop_id
+            WHERE 
+                r.route_id = ?
+            GROUP BY 
+                s.stop_id, 
+                s.stop_name
+            ORDER BY 
+                st.stop_sequence;
+          `
         )
         .all(parent.route_id)
         .map(formatStop);
@@ -149,22 +159,26 @@ export const resolvers = {
         .map(formatTrip);
     },
     closestStop: async (parent: any, args: any) => {
+      if (!args.lon || !args.lat) return null;
       const stops =
         parent.stops ||
         db
           .query(
             `
-          WITH selected_trip AS (
-            SELECT trip_id
-            FROM trips
-            WHERE route_id = ?
-            LIMIT 1
-          )
-          SELECT s.*
-          FROM stop_times st
-          JOIN stops s ON s.stop_id = st.stop_id
-          WHERE st.trip_id = (SELECT trip_id FROM selected_trip)
-          ORDER BY st.stop_sequence;`
+              SELECT DISTINCT
+                  s.*
+              FROM routes r
+              JOIN trips t ON r.route_id = t.route_id
+              JOIN stop_times st ON t.trip_id = st.trip_id
+              JOIN stops s ON st.stop_id = s.stop_id
+              WHERE 
+                  r.route_id = ?
+              GROUP BY 
+                  s.stop_id, 
+                  s.stop_name
+              ORDER BY 
+                  st.stop_sequence;
+            `
           )
           .all(parent.route_id)
           .map(formatStop);
@@ -180,6 +194,66 @@ export const resolvers = {
         return acc;
       }, null);
       return closestStop;
+    },
+    directions: async (parent: any) => {
+      const res = db
+        .query(
+          `
+          SELECT 
+            route_id,
+            direction_id,
+            trip_headsign,
+            COUNT(DISTINCT trip_id) AS num_trips,
+            COUNT(DISTINCT stop_id) AS unique_stops
+        FROM (
+            SELECT 
+                r.route_id,
+                t.direction_id,
+                t.trip_headsign,
+                t.trip_id,
+                st.stop_id
+            FROM routes r
+            JOIN trips t ON r.route_id = t.route_id
+            JOIN stop_times st ON t.trip_id = st.trip_id
+            WHERE r.route_id = ?
+        )
+        GROUP BY 
+            route_id, 
+            direction_id, 
+            trip_headsign
+        ORDER BY 
+            num_trips DESC
+            LIMIT 2;
+        `
+        )
+        .all(parent.route_id);
+
+      return res.map((r: any) => {
+        return {
+          directionId: r.direction_id,
+          headsign: r.trip_headsign,
+          stops: db
+            .query(
+              `
+              SELECT
+                  s.*
+              FROM routes r
+              JOIN trips t ON r.route_id = t.route_id
+              JOIN stop_times st ON t.trip_id = st.trip_id
+              JOIN stops s ON st.stop_id = s.stop_id
+              WHERE
+                  r.route_id = ? AND t.direction_id = ?
+              GROUP BY
+                  s.stop_id,
+                  s.stop_name
+              ORDER BY
+                  st.stop_sequence;
+              `
+            )
+            .all(parent.route_id, r.direction_id)
+            .map(formatStop),
+        };
+      });
     },
   },
   Stop: {
@@ -418,6 +492,85 @@ export const resolvers = {
         type: "FeatureCollection",
         features: shapes,
       };
+    },
+
+    timetable: async (
+      _: any,
+      {
+        stopId,
+        routeId,
+        range,
+      }: { stopId: string; routeId: string; range?: { start: Date; end: Date } }
+    ) => {
+      const start = dayjs(range?.start).startOf("day").format("YYYY-MM-DD");
+      const end = (range?.end ? dayjs(range.end) : dayjs().add(1, "day"))
+        .endOf("day")
+        .format("YYYY-MM-DD");
+      const stops = db
+        .query(
+          `
+            WITH RECURSIVE dates(date) AS (
+              SELECT DATE(?)
+              UNION ALL
+              SELECT DATE(date, '+1 day')
+              FROM dates
+              WHERE date < DATE(?)
+            ),
+            valid_trips AS (
+              SELECT d.date, t.*
+              FROM dates d
+              JOIN trips t ON t.route_id = ?
+              WHERE EXISTS (
+                SELECT 1
+                FROM stop_times st
+                WHERE st.trip_id = t.trip_id
+                AND st.stop_id = ?
+              )
+              AND (
+                -- Handle services defined ONLY in trips table
+                NOT EXISTS (
+                  SELECT 1 
+                  FROM calendar 
+                  WHERE service_id = t.service_id
+                )
+                OR EXISTS (
+                  SELECT 1
+                  FROM calendar_dates
+                  WHERE service_id = t.service_id
+                  AND date = d.date
+                  AND exception_type = 1
+                )
+              )
+            )
+            SELECT
+              vt.date,
+              st.arrival_time,
+              st.departure_time,
+              vt.service_id, 
+              vt.trip_id,
+              wheelchair_accessible,
+              bikes_allowed
+            FROM valid_trips vt
+            JOIN stop_times st ON vt.trip_id = st.trip_id
+            WHERE st.stop_id = ?
+            ORDER BY vt.date, departure_time
+          `
+        )
+        .all(start, end, routeId, stopId, stopId);
+
+      console.log(start, end, routeId, stopId, stopId);
+
+      console.log(stops);
+
+      return stops.map((s: any) => {
+        return {
+          ...snakeToCamel(s),
+          arrival: dayjs(`${s.date}T${s.arrival_time}`).toDate(),
+          departure: dayjs(`${s.date}T${s.departure_time}`).toDate(),
+          wheelchairAccessible: WHEELCHAIR_BOARDING[s.wheelchair_accessible],
+          bikesAllowed: BIKES_ALLOWED[s.bikes_allowed],
+        };
+      });
     },
   },
 

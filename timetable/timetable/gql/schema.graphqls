@@ -70,6 +70,18 @@ enum LocationType {
   BOARDING_AREA
 }
 
+enum WheelchairBoarding {
+  UNKNOWN
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum BikesAllowed {
+  UNKNOWN
+  ALLOWED
+  NOT_ALLOWED
+}
+
 type Agency {
   agencyId: ID!
   name: String
@@ -80,6 +92,15 @@ type Agency {
   fareUrl: String
   routes: [Route]
   stops: [Stop]
+}
+
+type TimetableEntry {
+  arrival: DateTime!
+  departure: DateTime!
+  serviceId: ID!
+  tripId: ID!
+  wheelchairAccessible: WheelchairBoarding!
+  bikesAllowed: BikesAllowed!
 }
 
 type Route {
@@ -94,7 +115,14 @@ type Route {
   textColor: String
   trips: [Trip]
   stops: [Stop]!
-  closestStop(lat: Float!, lon: Float!): Stop
+  closestStop(lat: Float, lon: Float): Stop
+  directions: [Direction!]
+}
+
+type Direction {
+  directionId: Int!
+  headsign: String!
+  stops: [Stop!]!
 }
 
 type RoutePaginated {
@@ -205,6 +233,11 @@ type AgencyPaginated {
   pages: Int
 }
 
+input RangeInput {
+  start: Date!
+  end: Date!
+}
+
 type Query {
   agencies(limit: Int, page: Int): AgencyPaginated!
   agency(id: ID!): Agency
@@ -216,4 +249,5 @@ type Query {
   stop(id: ID!): Stop
   vehiclePositions: [VehiclePosition]!
   shapes: FeatureCollection!
+  timetable(stopId: ID!, routeId: ID!, range: RangeInput): [TimetableEntry!]!
 }

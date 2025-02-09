@@ -39,3 +39,19 @@ export const LOCATION_TYPES: Record<number, string> = {
 };
 
 export type eLocationType = keyof typeof LOCATION_TYPES;
+
+export const WHEELCHAIR_BOARDING: Record<number, string> = {
+  0: "UNKNOWN",
+  1: "AVAILABLE",
+  2: "UNAVAILABLE",
+};
+
+export type eWheelchairBoarding = keyof typeof WHEELCHAIR_BOARDING;
+
+export const BIKES_ALLOWED: Record<number, string> = {
+  0: "UNKNOWN",
+  1: "ALLOWED",
+  2: "NOT_ALLOWED",
+};
+
+export type eBikesAllowed = keyof typeof BIKES_ALLOWED;
