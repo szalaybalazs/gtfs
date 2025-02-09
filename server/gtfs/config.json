@@ -1,6 +1,7 @@
 {
   "agencies": [
     {
+      "agency_key": "bkk",
       "url": "https://go.bkk.hu/api/static/v1/public-gtfs/budapest_gtfs.zip",
       "realtimeAlerts": {
         "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/Alerts.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
@@ -13,7 +14,15 @@
       }
     },
     {
+      "agency_key": "volan",
       "url": "https://gtfs.kti.hu/public-gtfs/volanbusz_gtfs.zip"
+    },
+    {
+      "agency_key": "mav",
+      "url": "https://www.mavcsoport.hu/gtfs/gtfsMavMenetrend.zip",
+      "headers": {
+        "Authorization": "Basic YmFsYXpzQHN6YWxheS5tZTpNaWJUd3NWUURlYzhSeEhD"
+      }
     }
   ],
   "csvOptions": {
@@ -23,5 +32,13 @@
   "ignoreDuplicates": false,
   "ignoreErrors": false,
   "sqlitePath": "./timetable.sqlite",
-  "exportPath": "./tmp/gtfs"
+  "exportPath": "./tmp/gtfs",
+  "bufferSizeMeters": 100,
+  "coordinatePrecision": 8,
+  "outputType": "agency",
+  "outputFormat": "lines-and-stops",
+  "verbose": true,
+  "zipOutput": false,
+  "startDate": "20240301",
+  "endDate": "20240331"
 }

@@ -3,6 +3,29 @@ export const typeDefs = `#graphql
   scalar Date
   scalar Time
   scalar DateTime
+  scalar Coordinates
+  type PointGeometry {
+    type: String!
+    coordinates: Coordinates!
+  }
+  type PointProps {
+    id: Int!
+    lat: Float
+    lon: Float
+  }
+  type PointObject {
+    type: String!
+    geometry: PointGeometry
+    properties: PointProps
+  }
+  type LineStringGeometry {
+    type: String!
+    coordinates: [Coordinates]
+  }
+  type FeatureCollection {
+    type: String!
+    features: [PointObject]
+  }
 
   enum RouteType {
     TRAM
@@ -105,6 +128,7 @@ export const typeDefs = `#graphql
     agency: Agency
     stops: [Stop]
     stopTimes: [StopTime]
+    path: LineStringGeometry
   }
 
   type StopTime {
@@ -181,5 +205,7 @@ export const typeDefs = `#graphql
     stop(id: ID!): Stop
 
     vehiclePositions: [VehiclePosition]!
+
+    shapes: FeatureCollection!
   }
 `;

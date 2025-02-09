@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "gtfs:import": "gtfs-import --configPath ./gtfs/config.json",
+    "gtfs:geojson": "gtfs-to-geojson --configPath ./gtfs/config.json",
     "gtfs:update": "gtfsrealtime-update --configPath ./gtfs/config.json"
   },
   "keywords": [],
@@ -18,6 +19,7 @@
     "@types/node": "^22.13.0",
     "@types/unzipper": "^0.10.10",
     "gtfs": "^4.15.12",
+    "gtfs-to-geojson": "^3.7.9",
     "tsx": "^4.19.2"
   },
   "dependencies": {

@@ -1,0 +1,8 @@
+Feed Version: 00891.20250208
+GTFS-to-geoJSON Version: 3.7.9
+Date Generated: Sat Feb 08 2025 18:02:38 GMT+0100 (Central European Standard Time)
+Route Count: 0
+Shape Count: 0
+GeoJSON File Count: 1
+Output Type: agency
+Source: https://gtfs.kti.hu/public-gtfs/volanbusz_gtfs.zip

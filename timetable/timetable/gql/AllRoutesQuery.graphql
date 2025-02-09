@@ -1,0 +1,20 @@
+query Routes($limit: Int, $page: Int) {
+  routes(limit: $limit, page: $page) {
+    limit
+    pages
+    page
+    data {
+      longName
+      desc
+      color
+      textColor
+      shortName
+      routeId
+
+      stops {
+        stopId
+        name
+      }
+    }
+  }
+}

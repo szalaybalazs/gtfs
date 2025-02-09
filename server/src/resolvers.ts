@@ -1,6 +1,11 @@
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from "graphql-scalars";
 import { LOCATION_TYPES, ROUTE_TYPES } from "./constants";
 import { db } from "./db";
+import {
+  Feature,
+  FeatureCollection,
+  LineString,
+} from "graphql-geojson-scalar-types";
 
 const formatRoute = (r: any) => {
   return {
@@ -137,6 +142,12 @@ export const resolvers = {
         .all(parent.route_id)
         .map(formatStop);
     },
+    trips: async (parent: any) => {
+      return db
+        .query("SELECT * FROM trips WHERE route_id = ?")
+        .all(parent.route_id)
+        .map(formatTrip);
+    },
     closestStop: async (parent: any, args: any) => {
       const stops =
         parent.stops ||
@@ -222,6 +233,33 @@ export const resolvers = {
     expirationTimestamp: (parent: any) =>
       new Date(Number(`${parent.expiration_timestamp}000`)),
   },
+  Trip: {
+    path: (parent: any) => {
+      const id = parent.tripId;
+
+      const res = db
+        .query(
+          `
+            SELECT *
+            FROM shapes
+            WHERE shape_id = (
+              SELECT shape_id
+              FROM trips
+              WHERE trip_id = ?
+            )
+            ORDER BY shape_dist_traveled;
+          `
+        )
+        .all(id);
+
+      const coordinates = res.map((r: any) => [r.shape_pt_lon, r.shape_pt_lat]);
+
+      return {
+        type: "LineString",
+        coordinates,
+      };
+    },
+  },
   Query: {
     agencies: async (
       _: any,
@@ -252,7 +290,7 @@ export const resolvers = {
     ) => {
       const routes = db
         .query(
-          "SELECT *, COUNT(*) OVER() AS total_count FROM routes LIMIT ? OFFSET ?"
+          "SELECT *, COUNT(*) OVER() AS total_count FROM routes WHERE agency_id = 'BKK' ORDER BY route_sort_order LIMIT ? OFFSET ?"
         )
         .all(limit, page * limit)
         .map(formatRoute);
@@ -351,6 +389,35 @@ export const resolvers = {
         .query("SELECT * FROM vehicle_positions")
         .all()
         .map(formatVehiclePosition);
+    },
+    shapes: async () => {
+      const res = db
+        .query("SELECT * FROM shapes ORDER BY shape_dist_traveled")
+        .all();
+      const shapeIds = Array.from(new Set(res.map((r: any) => r.shape_id)));
+
+      const shapes = shapeIds.map((shapeId: string) => {
+        const points = res.filter((r: any) => r.shape_id === shapeId);
+
+        return {
+          type: "Feature",
+          properties: {
+            shapeId,
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: points.map((p: any) => [
+              p.shape_pt_lon,
+              p.shape_pt_lat,
+            ]),
+          },
+        };
+      });
+
+      return {
+        type: "FeatureCollection",
+        features: shapes,
+      };
     },
   },
 
