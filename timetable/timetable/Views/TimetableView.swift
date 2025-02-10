@@ -81,9 +81,10 @@ struct TimetableView: View {
                         Text("No events")
                             .foregroundStyle(.secondary)
                             .font(.caption)
+                            .padding(.horizontal, 8)
                     } else {
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack {
+                            HStack(spacing: 4) {
                                 ForEach(events, id: \.self) { event in
                                     TimestampView(event: event)
                                 }
@@ -131,11 +132,22 @@ struct TimestampView: View {
     
     var body: some View {
         NavigationLink(destination: Text("TRIP")) {
-            Text(minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date()))
+            HStack(alignment: .center, spacing: 0) {
+                Text("\(minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date()))")
+                    .underline(event.wheelchairAccessible == .available, color: Color.secondary)
+                if let scheduled = event.scheduleRelationship {
+                    Text("'")
+                }
+            }
                 .fontWeight(.medium)
-                .foregroundStyle(.black)
-                .underline(event.wheelchairAccessible == .available)
+                .foregroundStyle(event.isPast ? Color.secondary : Color.black)
                 .allowsTightening(true)
+                .padding(.vertical, 3)
+                .padding(.leading, 6)
+                .padding(.trailing, 2)
+                .monospaced()
+                .background(event.isNext ? Color.gray.opacity(0.15) : nil)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         
     }
@@ -147,3 +159,11 @@ struct TimestampView: View {
     }
 
 }
+
+//Text(route.shortName ?? "")
+//    .padding(.vertical, 3)
+//    .padding(.horizontal, 6)
+//    .background(Color(hex: route.color ?? "#000000"))
+//    .font(.system(size: 13, weight: .semibold))
+//    .foregroundStyle(Color(hex: route.textColor ?? "#ffffff"))
+//    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

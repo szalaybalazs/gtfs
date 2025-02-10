@@ -49,6 +49,11 @@ type FeatureCollection {
   features: [PointObject]
 }
 
+enum ScheduleRelationship {
+  SCHEDULED
+  NO_DATA
+}
+
 enum RouteType {
   TRAM
   SUBWAY
@@ -101,6 +106,11 @@ type TimetableEntry {
   tripId: ID!
   wheelchairAccessible: WheelchairBoarding!
   bikesAllowed: BikesAllowed!
+  arrivalDelay: Int
+  departureDelay: Int
+  scheduleRelationship: ScheduleRelationship
+  isNext: Boolean!
+  isPast: Boolean!
 }
 
 type Route {

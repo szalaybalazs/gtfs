@@ -506,7 +506,7 @@ export const resolvers = {
       const end = (range?.end ? dayjs(range.end) : dayjs().add(1, "day"))
         .endOf("day")
         .format("YYYY-MM-DD");
-      const stops = db
+      const res = db
         .query(
           `
             WITH RECURSIVE dates(date) AS (
@@ -528,24 +528,36 @@ export const resolvers = {
               WHERE route_id = ? AND exception_type = 1
             )
 
-            SELECT *
+            SELECT _trips.*, stop_times.*, stop_time_updates.arrival_delay, stop_time_updates.departure_delay, schedule_relationship
             FROM _trips
             LEFT JOIN stop_times USING (trip_id)
-            WHERE stop_id = ? -- AND stop_headsign IS NOT NULL
+            LEFT JOIN stop_time_updates USING (trip_id, stop_id)
+            WHERE stop_id = ?
             ORDER BY date, arrival_time;
           `
         )
         .all(start, end, routeId, stopId);
 
-      console.log(start, end, routeId, stopId, stopId);
+      const stops = res.map((s: any) => {
+        return {
+          ...s,
+          arrival: dayjs(`${s.date}T${s.arrival_time}`)
+            .add(s.arrival_delay ?? 0, "second")
+            .toDate(),
+          departure: dayjs(`${s.date}T${s.departure_time}`)
+            .add(s.departure_delay ?? 0, "second")
+            .toDate(),
+        };
+      });
 
-      console.log(stops);
-
-      return stops.map((s: any) => {
+      const nextIndex = stops.findIndex((s) => {
+        return s.arrival.getTime() > Date.now();
+      });
+      return stops.map((s: any, index) => {
         return {
           ...snakeToCamel(s),
-          arrival: dayjs(`${s.date}T${s.arrival_time}`).toDate(),
-          departure: dayjs(`${s.date}T${s.departure_time}`).toDate(),
+          isNext: index === nextIndex,
+          isPast: index < nextIndex,
           wheelchairAccessible:
             WHEELCHAIR_BOARDING[s.wheelchair_accessible] ??
             WHEELCHAIR_BOARDING[0],

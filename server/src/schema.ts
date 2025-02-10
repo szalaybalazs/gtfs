@@ -27,6 +27,11 @@ export const typeDefs = `#graphql
     features: [PointObject]
   }
 
+  enum ScheduleRelationship {
+    SCHEDULED
+    NO_DATA
+  }
+
   enum RouteType {
     TRAM
     SUBWAY
@@ -81,6 +86,14 @@ export const typeDefs = `#graphql
     tripId: ID!
     wheelchairAccessible: WheelchairBoarding!
     bikesAllowed: BikesAllowed!
+
+    arrivalDelay: Int
+    departureDelay: Int
+    scheduleRelationship: ScheduleRelationship
+
+    # Custom fields
+    isNext: Boolean!
+    isPast: Boolean!
   }
 
 

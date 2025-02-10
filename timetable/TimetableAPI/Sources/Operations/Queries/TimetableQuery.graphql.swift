@@ -7,7 +7,7 @@ public class TimetableQuery: GraphQLQuery {
   public static let operationName: String = "Timetable"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query Timetable($stopId: ID!, $routeId: ID!, $range: RangeInput) { timetable(stopId: $stopId, routeId: $routeId, range: $range) { __typename arrival departure serviceId tripId wheelchairAccessible bikesAllowed } }"#
+      #"query Timetable($stopId: ID!, $routeId: ID!, $range: RangeInput) { timetable(stopId: $stopId, routeId: $routeId, range: $range) { __typename arrival departure serviceId tripId wheelchairAccessible bikesAllowed arrivalDelay departureDelay scheduleRelationship isNext isPast } }"#
     ))
 
   public var stopId: ID
@@ -61,6 +61,11 @@ public class TimetableQuery: GraphQLQuery {
         .field("tripId", TimetableAPI.ID.self),
         .field("wheelchairAccessible", GraphQLEnum<TimetableAPI.WheelchairBoarding>.self),
         .field("bikesAllowed", GraphQLEnum<TimetableAPI.BikesAllowed>.self),
+        .field("arrivalDelay", Int?.self),
+        .field("departureDelay", Int?.self),
+        .field("scheduleRelationship", GraphQLEnum<TimetableAPI.ScheduleRelationship>?.self),
+        .field("isNext", Bool.self),
+        .field("isPast", Bool.self),
       ] }
 
       public var arrival: TimetableAPI.DateTime { __data["arrival"] }
@@ -69,6 +74,11 @@ public class TimetableQuery: GraphQLQuery {
       public var tripId: TimetableAPI.ID { __data["tripId"] }
       public var wheelchairAccessible: GraphQLEnum<TimetableAPI.WheelchairBoarding> { __data["wheelchairAccessible"] }
       public var bikesAllowed: GraphQLEnum<TimetableAPI.BikesAllowed> { __data["bikesAllowed"] }
+      public var arrivalDelay: Int? { __data["arrivalDelay"] }
+      public var departureDelay: Int? { __data["departureDelay"] }
+      public var scheduleRelationship: GraphQLEnum<TimetableAPI.ScheduleRelationship>? { __data["scheduleRelationship"] }
+      public var isNext: Bool { __data["isNext"] }
+      public var isPast: Bool { __data["isPast"] }
     }
   }
 }

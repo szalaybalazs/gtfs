@@ -6,5 +6,10 @@ query Timetable($stopId: ID!, $routeId: ID!, $range: RangeInput) {
     tripId
     wheelchairAccessible
     bikesAllowed
+    arrivalDelay
+    departureDelay
+    scheduleRelationship
+    isNext
+    isPast
   }
 }
