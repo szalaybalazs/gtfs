@@ -26,7 +26,19 @@ struct RouteDetailsView: View {
     public let id: String
     public let shortName: String?
     @StateObject private var routeModel: RouteDetailsViewModel
-        
+    @State private var selectedEvent: TimetableQuery.Data.Timetable?
+    
+    var isEventSelected: Binding<Bool> {
+        Binding(
+            get: { selectedEvent != nil },
+            set: { newValue in
+                if !newValue {
+                    selectedEvent = nil
+                }
+            }
+        )
+    }
+    
     init(id: String, shortName: String? = nil) {
         self.id = id
         self.shortName = shortName
@@ -39,6 +51,13 @@ struct RouteDetailsView: View {
     
     var body: some View {
         VStack {
+            NavigationLink(isActive: isEventSelected) {
+                if let selectedEvent {
+                    TripView(tripId: selectedEvent.tripId)
+                }
+            } label: {
+                EmptyView()
+            }
             List {
                 Section {
                     Picker("Stop", selection: $routeModel.stopId) {
@@ -54,7 +73,7 @@ struct RouteDetailsView: View {
                     }
                     
                 }
-                TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId)
+                TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId, selectedEvent: $selectedEvent)
             }
             .listStyle(.grouped)
         }

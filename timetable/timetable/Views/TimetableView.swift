@@ -20,23 +20,13 @@ struct TimetableView: View {
     public let stopId: String
     
     @StateObject var timetableModel: TimetableViewModel
-    @State private var selectedEvent: TimetableQuery.Data.Timetable?
+    @Binding var selectedEvent: TimetableQuery.Data.Timetable?
     
-    var isEventSelected: Binding<Bool> {
-        Binding(
-            get: { selectedEvent != nil },
-            set: { newValue in
-                if !newValue {
-                    selectedEvent = nil
-                }
-            }
-        )
-    }
-
-    
-    init(routeId: String, stopId: String) {
+    init(routeId: String, stopId: String, selectedEvent: Binding<TimetableQuery.Data.Timetable?>) {
         self.routeId = routeId
         self.stopId = stopId
+        _selectedEvent = selectedEvent // Use _selectedEvent to initialize the binding
+
         
         print("route id: \(routeId), stopid: \(stopId)")
         _timetableModel = StateObject(wrappedValue: TimetableViewModel(routeId: routeId, stopId: stopId))
@@ -108,16 +98,6 @@ struct TimetableView: View {
             }
         }
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
-        .toolbar {
-            NavigationLink(isActive: isEventSelected) {
-                if let selectedEvent {
-                    TripView(tripId: selectedEvent.tripId)
-                }
-                
-            } label: {
-                EmptyView()
-            }
-        }
         .onAppear {
             timetableModel.fetchTimetable()
         }
@@ -184,6 +164,6 @@ struct TimestampView: View {
 
 #Preview {
     List{
-        TimetableView(routeId: "3560", stopId: "007975")
+        TimetableView(routeId: "3560", stopId: "007975", selectedEvent: .constant(nil))
     }
 }
