@@ -49,6 +49,7 @@ public struct WrappingCollectionView<Data: RandomAccessCollection, Content: View
         return ZStack(alignment: .topLeading) {
             ForEach(data) { item in
                 content(item)
+                    .buttonStyle(.plain)
                     .alignmentGuide(
                         .leading,
                         computeValue: { dimension in

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B90CF8BC2D5A38A200DD8FA1 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = B90CF8BB2D5A38A200DD8FA1 /* Flow */; };
 		B92D01552D57CEAD00296AF9 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = B92D01542D57CEAD00296AF9 /* Apollo */; };
 		B92D01572D57CEAD00296AF9 /* ApolloWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = B92D01562D57CEAD00296AF9 /* ApolloWebSocket */; };
 		B92D015F2D57CF9A00296AF9 /* TimetableAPI in Frameworks */ = {isa = PBXBuildFile; productRef = B92D015E2D57CF9A00296AF9 /* TimetableAPI */; };
@@ -42,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B90CF8BC2D5A38A200DD8FA1 /* Flow in Frameworks */,
 				B92D01552D57CEAD00296AF9 /* Apollo in Frameworks */,
 				B92D015F2D57CF9A00296AF9 /* TimetableAPI in Frameworks */,
 				B92D01572D57CEAD00296AF9 /* ApolloWebSocket in Frameworks */,
@@ -98,6 +100,7 @@
 				B92D01542D57CEAD00296AF9 /* Apollo */,
 				B92D01562D57CEAD00296AF9 /* ApolloWebSocket */,
 				B92D015E2D57CF9A00296AF9 /* TimetableAPI */,
+				B90CF8BB2D5A38A200DD8FA1 /* Flow */,
 			);
 			productName = timetable;
 			productReference = B92D01402D57CE5D00296AF9 /* timetable.app */;
@@ -130,6 +133,7 @@
 			packageReferences = (
 				B92D01532D57CEAD00296AF9 /* XCRemoteSwiftPackageReference "apollo-ios" */,
 				B92D015D2D57CF9A00296AF9 /* XCLocalSwiftPackageReference "TimetableAPI" */,
+				B90CF8BA2D5A38A200DD8FA1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B92D01412D57CE5D00296AF9 /* Products */;
@@ -374,6 +378,14 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		B90CF8BA2D5A38A200DD8FA1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.1;
+			};
+		};
 		B92D01532D57CEAD00296AF9 /* XCRemoteSwiftPackageReference "apollo-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apollographql/apollo-ios.git";
@@ -385,6 +397,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B90CF8BB2D5A38A200DD8FA1 /* Flow */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B90CF8BA2D5A38A200DD8FA1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
+			productName = Flow;
+		};
 		B92D01542D57CEAD00296AF9 /* Apollo */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B92D01532D57CEAD00296AF9 /* XCRemoteSwiftPackageReference "apollo-ios" */;

@@ -8,6 +8,12 @@
 import SwiftUI
 import TimetableAPI
 import Foundation
+import Flow
+
+struct IdentifiableEvent: Identifiable {
+    let id = UUID()
+    let event: TimetableQuery.Data.Timetable
+}
 
 struct TimetableView: View {
     public let routeId: String
@@ -36,17 +42,9 @@ struct TimetableView: View {
         return formatter
     }()
     
-  
-    
     var groupedEntries: [Foundation.Date: [TimetableQuery.Data.Timetable]] {
-//        print("Total entries: \(timetableModel.entries.count)")
-        
         let grouped = Dictionary(grouping: timetableModel.entries) { entry in
-            // Verbose logging
-//            print("Raw arrival string: \(entry.arrival)")
-            
             guard let date = isoFormatter.date(from: entry.arrival) else {
-//                print("Failed to parse date: \(entry.arrival)")
                 return Foundation.Date()
             }
             
@@ -54,11 +52,9 @@ struct TimetableView: View {
                 Calendar.current.dateComponents([.year, .month, .day, .hour], from: date)
             ) ?? date
             
-//            print("Parsed date: \(date), Rounded key: \(key)")
             return key
         }
         
-//        print("Grouped entries count: \(grouped.count)")
         return grouped
     }
 
@@ -67,7 +63,7 @@ struct TimetableView: View {
             ForEach(0..<24, id: \.self) { offset in
                 let hourTime = Calendar.current.date(byAdding: .hour, value: offset, to: Date())!
                 let key = Calendar.current.date(from:
-                    Calendar.current.dateComponents([.year, .month, .day, .hour], from: hourTime)
+                                                    Calendar.current.dateComponents([.year, .month, .day, .hour], from: hourTime)
                 ) ?? hourTime
                 
                 let events = self.groupedEntries[key] ?? []
@@ -83,22 +79,22 @@ struct TimetableView: View {
                             .font(.caption)
                             .padding(.horizontal, 8)
                     } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 4) {
-                                ForEach(events, id: \.self) { event in
-                                    TimestampView(event: event)
-                                }
-                            }.padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
+                        HFlow(itemSpacing: 4, rowSpacing: 4) {
+                            ForEach(events, id: \.self) { event in
+                                TimestampView(event: event)
+                            }
                         }
+                        .padding(.vertical, 8)
+                        .padding(.trailing, 16)
                         
-
+                        
                     }
                 }
-                    .font(.callout)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }.listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
+                .font(.callout)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
-        .listStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
         .onAppear {
             timetableModel.fetchTimetable()
         }
@@ -115,6 +111,8 @@ struct TimetableView: View {
 
 struct TimestampView: View {
     public let event: TimetableQuery.Data.Timetable
+    @State private var isPressed = false  // Add this state
+    @Environment(\.navigationPath) private var path
     
     private let isoFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -131,11 +129,15 @@ struct TimestampView: View {
     }()
     
     var body: some View {
-        NavigationLink(destination: Text("TRIP")) {
+        let minute = minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date())
+        Button(action: {
+            print("TIMESTAMP \(minute)")
+            path.wrappedValue.append(event)
+            
+        }) {
             HStack(alignment: .center, spacing: 0) {
-                Text("\(minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date()))")
-                    .underline(event.wheelchairAccessible == .available, color: Color.secondary)
-                if let scheduled = event.scheduleRelationship {
+                Text(minute).underline(event.wheelchairAccessible == .available, color: Color.secondary)
+                if event.scheduleRelationship != nil {
                     Text("'")
                 }
             }
@@ -144,12 +146,21 @@ struct TimestampView: View {
                 .allowsTightening(true)
                 .padding(.vertical, 3)
                 .padding(.leading, 6)
-                .padding(.trailing, 2)
+                .padding(.trailing, event.scheduleRelationship != nil ? 2 : 6)
                 .monospaced()
                 .background(event.isNext ? Color.gray.opacity(0.15) : nil)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .fixedSize(horizontal: true, vertical: true)
+                .buttonStyle(PlainButtonStyle())
         }
-        
+        .buttonStyle(PlainButtonStyle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in
+                    isPressed = false
+                }
+        )
     }
 }
 
@@ -157,13 +168,4 @@ struct TimestampView: View {
     List{
         TimetableView(routeId: "3560", stopId: "007975")
     }
-
 }
-
-//Text(route.shortName ?? "")
-//    .padding(.vertical, 3)
-//    .padding(.horizontal, 6)
-//    .background(Color(hex: route.color ?? "#000000"))
-//    .font(.system(size: 13, weight: .semibold))
-//    .foregroundStyle(Color(hex: route.textColor ?? "#ffffff"))
-//    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
