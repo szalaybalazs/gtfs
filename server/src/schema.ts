@@ -146,6 +146,7 @@ export const typeDefs = `#graphql
     # Custom fields
     routes: [Route]
     trips: [Trip]
+    stopTimes(range: RangeInput): [StopTime!]
   }
 
   type StopPaginated {
@@ -157,7 +158,7 @@ export const typeDefs = `#graphql
   }
 
   type Trip {
-    route: Route
+    route: Route!
     serviceId: ID!
     tripId: ID!
     headsign: String
@@ -176,10 +177,11 @@ export const typeDefs = `#graphql
   }
 
   type StopTime {
-    trip: Trip
+    trip: Trip!
+    stop: Stop!
+    
     arrivalTime: String
     departureTime: String
-    stop: Stop
     stopSequence: Int
     pickupType: Int
     dropOffType: Int

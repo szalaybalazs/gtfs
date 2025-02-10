@@ -14,9 +14,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack(path: $path) {
             RoutesView()
-                .navigationDestination(for: TimetableQuery.Data.Timetable.self) { event in
-                    TripView(tripId: event.tripId)
-                }
         }
     }
 }

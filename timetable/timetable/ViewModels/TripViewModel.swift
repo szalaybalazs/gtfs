@@ -34,7 +34,6 @@ class TripViewModel: ObservableObject {
             switch result {
             case .success(let graphQLResult):
                 if let trip = graphQLResult.data?.trip {
-                    print("Loaded trip: \(trip)")
                     if let trip = graphQLResult.data?.trip {
                         self?.trip = trip
                     }

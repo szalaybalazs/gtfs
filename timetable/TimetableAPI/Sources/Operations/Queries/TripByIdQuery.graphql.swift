@@ -43,7 +43,7 @@ public class TripByIdQuery: GraphQLQuery {
         .field("headsign", String?.self),
         .field("wheelchairAccessible", GraphQLEnum<TimetableAPI.WheelchairBoarding>?.self),
         .field("bikesAllowed", GraphQLEnum<TimetableAPI.BikesAllowed>?.self),
-        .field("route", Route?.self),
+        .field("route", Route.self),
         .field("stopTimes", [StopTime]?.self),
       ] }
 
@@ -51,7 +51,7 @@ public class TripByIdQuery: GraphQLQuery {
       public var headsign: String? { __data["headsign"] }
       public var wheelchairAccessible: GraphQLEnum<TimetableAPI.WheelchairBoarding>? { __data["wheelchairAccessible"] }
       public var bikesAllowed: GraphQLEnum<TimetableAPI.BikesAllowed>? { __data["bikesAllowed"] }
-      public var route: Route? { __data["route"] }
+      public var route: Route { __data["route"] }
       public var stopTimes: [StopTime]? { __data["stopTimes"] }
 
       /// Trip.Route
@@ -93,7 +93,7 @@ public class TripByIdQuery: GraphQLQuery {
           .field("shapeDistTraveled", Double?.self),
           .field("arrival", TimetableAPI.DateTime.self),
           .field("departure", TimetableAPI.DateTime.self),
-          .field("stop", Stop?.self),
+          .field("stop", Stop.self),
         ] }
 
         public var arrivalTime: String? { __data["arrivalTime"] }
@@ -107,7 +107,7 @@ public class TripByIdQuery: GraphQLQuery {
         public var shapeDistTraveled: Double? { __data["shapeDistTraveled"] }
         public var arrival: TimetableAPI.DateTime { __data["arrival"] }
         public var departure: TimetableAPI.DateTime { __data["departure"] }
-        public var stop: Stop? { __data["stop"] }
+        public var stop: Stop { __data["stop"] }
 
         /// Trip.StopTime.Stop
         ///

@@ -158,6 +158,7 @@ type Stop {
   wheelchairBoarding: Int
   routes: [Route]
   trips: [Trip]
+  stopTimes(range: RangeInput): [StopTime!]
 }
 
 type StopPaginated {
@@ -169,7 +170,7 @@ type StopPaginated {
 }
 
 type Trip {
-  route: Route
+  route: Route!
   serviceId: ID!
   tripId: ID!
   headsign: String
@@ -185,10 +186,10 @@ type Trip {
 }
 
 type StopTime {
-  trip: Trip
+  trip: Trip!
+  stop: Stop!
   arrivalTime: String
   departureTime: String
-  stop: Stop
   stopSequence: Int
   pickupType: Int
   dropOffType: Int

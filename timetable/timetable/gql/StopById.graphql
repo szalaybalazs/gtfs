@@ -1,0 +1,28 @@
+query StopById($stopId: ID!) {
+  stop(id: $stopId) {
+    stopId
+    name
+
+    stopTimes {
+      arrival
+      departure
+      scheduleRelationship
+      departureDelay
+      arrivalDelay
+      trip {
+        tripId
+        headsign
+        wheelchairAccessible
+        bikesAllowed
+        route {
+          routeId
+          shortName
+          color
+          textColor
+          desc
+          longName
+        }
+      }
+    }
+  }
+}

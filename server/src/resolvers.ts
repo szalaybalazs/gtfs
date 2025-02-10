@@ -299,6 +299,81 @@ export const resolvers = {
         )
         .all(parent.stop_id);
     },
+    stopTimes: async (parent: any, args: any) => {
+      const start = dayjs(args.range?.start)
+        .startOf("day")
+        .format("YYYY-MM-DD");
+      const end = (
+        args.range?.end ? dayjs(args.range.end) : dayjs().add(1, "day")
+      )
+        .endOf("day")
+        .format("YYYY-MM-DD");
+
+      const res = db
+        .query(
+          `
+          WITH RECURSIVE 
+          -- Generate date range between start and end dates
+          dates(date) AS (
+              SELECT DATE(?)
+              UNION ALL
+              SELECT DATE(date, '+1 day')
+              FROM dates
+              WHERE date < DATE(?)
+          ), 
+          -- Format dates and create a clean date reference table
+          date_range AS (
+              SELECT 
+                  date AS service_date,
+                  strftime('%Y%m%d', date) AS date
+              FROM dates
+          ),
+          -- Get active trips for the date range considering service exceptions
+          active_trips AS (
+              SELECT 
+                  dr.service_date,
+                  t.*
+              FROM date_range dr
+              LEFT JOIN calendar_dates cd USING (date)
+              LEFT JOIN trips t USING (service_id)
+              WHERE cd.exception_type = 1  -- Only include active service exceptions
+          )
+
+          -- Main query joining with stop times and real-time updates
+          SELECT at.*, st.*, r.*, stu.arrival_delay, stu.departure_delay, schedule_relationship
+          FROM active_trips at
+          INNER JOIN stop_times st ON at.trip_id = st.trip_id
+          LEFT JOIN stop_time_updates stu ON (
+              st.trip_id = stu.trip_id 
+              AND st.stop_id = stu.stop_id
+          )
+          LEFT JOIN routes r USING (route_id)
+          WHERE st.stop_id = ?
+          ORDER BY 
+              at.service_date,
+              st.arrival_time;
+        `
+        )
+        .all(start, end, parent.stop_id);
+
+      console.log(start, end, parent.stop_id);
+
+      const stopTimes = res.map((r: any) => {
+        return {
+          ...snakeToCamel(r),
+          arrival: getDateFromTime(r.arrival_time, r.service_date),
+          departure: getDateFromTime(r.departure_time, r.service_date),
+          trip: {
+            ...formatTrip(r),
+            wheelchairAccessible: WHEELCHAIR_BOARDING[r.wheelchair_accessible],
+            bikesAllowed: BIKES_ALLOWED[r.bikes_allowed],
+            route: formatRoute(r),
+          },
+        };
+      });
+
+      return stopTimes;
+    },
   },
   VehiclePosition: {
     timestamp: (parent: any) => new Date(Number(`${parent.timestamp}000`)),
@@ -309,6 +384,7 @@ export const resolvers = {
   },
   Trip: {
     route: async (parent: any) => {
+      if (parent.route) return parent.route;
       return formatRoute(
         db.query("SELECT * FROM routes WHERE route_id = ?").get(parent.routeId)
       );

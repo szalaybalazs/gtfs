@@ -53,7 +53,7 @@ struct RouteDetailsView: View {
         VStack {
             NavigationLink(isActive: isEventSelected) {
                 if let selectedEvent {
-                    TripView(tripId: selectedEvent.tripId)
+                    TripView(tripId: selectedEvent.tripId, headsign: "")
                 }
             } label: {
                 EmptyView()
