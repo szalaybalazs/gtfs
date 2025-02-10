@@ -10,12 +10,18 @@ import Combine
 import Apollo
 import TimetableAPI
 
+struct Token: Identifiable {
+    var id: String { name }
+    var name: String
+}
+
 class RoutesViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var isLoading: Bool = false
     @Published var routes = [RoutesQuery.Data.Routes.Datum]()
     @Published var activeRequest: Apollo.Cancellable?
     @Published var lastConnection: RoutesQuery.Data.Routes?
+    @Published var tokens: [Token] = []
 
 
     private var cancellables = Set<AnyCancellable>()

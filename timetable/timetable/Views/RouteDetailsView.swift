@@ -38,24 +38,28 @@ struct RouteDetailsView: View {
     }
     
     var body: some View {
-        VStack {
-            List {
-                Section {
-                    Picker("Stop", selection: $routeModel.stopId) {
-                        ForEach(0..<stops.count, id: \.self) { index in
-                            StopOption(stop: stops[index])
+        ScrollView {
+            VStack(spacing: 0) {
+                VStack {
+                    Section {
+                        Picker("Stop", selection: $routeModel.stopId) {
+                            ForEach(0..<stops.count, id: \.self) { index in
+                                StopOption(stop: stops[index])
+                            }
+                            Text("TEST").tag("__TEST__")
                         }
-                        Text("TEST").tag("__TEST__")
-                    }
-                    Picker("Direction", selection: $routeModel.directionId) {
-                        ForEach(0..<routeModel.directions.count, id: \.self) { index in
-                            DirectionOption(direction: routeModel.directions[index])
+                        Picker("Direction", selection: $routeModel.directionId) {
+                            ForEach(0..<routeModel.directions.count, id: \.self) { index in
+                                DirectionOption(direction: routeModel.directions[index])
+                            }
                         }
                     }
-                    
+                    .padding()
                 }
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                
                 TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId)
-            }   
+            }
         }
         .navigationTitle(shortName ?? id)
         .onAppear{
@@ -67,6 +71,7 @@ struct RouteDetailsView: View {
                 routeModel.stopId = closestStop.stopId
             }
         }
+
         
     }
 }
@@ -74,3 +79,4 @@ struct RouteDetailsView: View {
 #Preview {
     RouteDetailsView(id: "3560", shortName: "56")
 }
+

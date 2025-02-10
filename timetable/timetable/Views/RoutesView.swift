@@ -9,6 +9,10 @@ import SwiftUI
 import TimetableAPI
 import Apollo
 
+
+
+
+
 struct RouteListItem: View {
     let route: RoutesQuery.Data.Routes.Datum
     
@@ -40,7 +44,13 @@ struct RouteListItem: View {
 struct RoutesView: View {
     @StateObject private var viewModel = RoutesViewModel()
     @StateObject var locationManager = LocationManager()
-    @State private var searchText: String = ""
+    
+    let allTokens = [Token(name: "Favourites"), Token(name: "Subway"), Token(name: "Bus"), Token(name: "Tram"), Token(name: "Train")]
+
+    // The list of tokens we want to show to the user right now. Activates token selection only when searchText starts with #.
+    var suggestedTokens: [Token] {
+        return allTokens
+    }
     
     var body: some View {
         VStack {
@@ -146,7 +156,12 @@ struct RoutesView: View {
                 }
             }
         }
-        .searchable(text: $searchText)
+        .searchable(text: $viewModel.searchText,
+                    tokens: $viewModel.tokens,
+                    suggestedTokens: .constant(suggestedTokens),
+                    prompt: Text("Type to filter, or use # for tags")) { token in
+                            Text(token.name)
+        }
         .onAppear {
             viewModel.fetchRoutes()
         }
