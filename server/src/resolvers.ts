@@ -308,6 +308,12 @@ export const resolvers = {
       new Date(Number(`${parent.expiration_timestamp}000`)),
   },
   Trip: {
+    route: async (parent: any) => {
+      console.log(parent);
+      return formatRoute(
+        db.query("SELECT * FROM routes WHERE route_id = ?").get(parent.routeId)
+      );
+    },
     path: (parent: any) => {
       const id = parent.tripId;
 
@@ -565,9 +571,54 @@ export const resolvers = {
         };
       });
     },
+
+    trip: async (_: any, { id }: { id: string }) => {
+      const trip = formatTrip(
+        db.query("SELECT * FROM trips WHERE trip_id = ?").get(id)
+      );
+      const stopTimes = db
+        .query(
+          `
+            SELECT stop_times.*, stops.*, stop_time_updates.arrival_delay, stop_time_updates.departure_delay, schedule_relationship
+            FROM stop_times 
+            LEFT JOIN stops USING (stop_id)
+            LEFT JOIN stop_time_updates USING (trip_id, stop_id)
+            WHERE trip_id = ?
+            ORDER BY stop_sequence;
+          `
+        )
+        .all(id);
+
+      return {
+        ...snakeToCamel(trip),
+        wheelchairAccessible: WHEELCHAIR_BOARDING[trip.wheelchair_accessible],
+        bikesAllowed: BIKES_ALLOWED[trip.bikes_allowed],
+        stopTimes: stopTimes.map((st: any) => {
+          return {
+            ...formatStopTime(st),
+            stop: formatStop(st),
+            arrival: getDateFromTime(st.arrival_time),
+            departure: getDateFromTime(st.departure_time),
+          };
+        }),
+      };
+    },
   },
 
   Date: GraphQLDate,
   Time: GraphQLTime,
   DateTime: GraphQLDateTime,
+};
+
+const getDateFromTime = (
+  time: string,
+  date: string = dayjs().format("YYYY-MM-DD")
+) => {
+  const [hour, minute, second] = time.split(":").map(Number);
+  const d = dayjs(date)
+    .set("hour", hour)
+    .set("minute", minute)
+    .set("second", second);
+
+  return d.toDate();
 };

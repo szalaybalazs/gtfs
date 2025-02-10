@@ -1,0 +1,29 @@
+query TripById($tripId: ID!) {
+  trip(id: $tripId) {
+    tripId
+    headsign
+    wheelchairAccessible
+    bikesAllowed
+    route {
+      color
+      textColor
+    }
+    stopTimes {
+      arrivalTime
+      departureTime
+      arrivalDelay
+      departureDelay
+      scheduleRelationship
+      stopSequence
+      pickupType
+      dropOffType
+      shapeDistTraveled
+      arrival
+      departure
+      stop {
+        stopId
+        name
+      }
+    }
+  }
+}

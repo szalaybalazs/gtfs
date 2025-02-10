@@ -167,9 +167,12 @@ export const typeDefs = `#graphql
 
     # Custom fields
     agency: Agency
-    stops: [Stop]
-    stopTimes: [StopTime]
+    stops: [Stop!]
+    stopTimes: [StopTime!]
     path: LineStringGeometry
+
+    wheelchairAccessible: WheelchairBoarding
+    bikesAllowed: BikesAllowed
   }
 
   type StopTime {
@@ -181,6 +184,13 @@ export const typeDefs = `#graphql
     pickupType: Int
     dropOffType: Int
     shapeDistTraveled: Float
+
+    # Custom fields
+    arrival: DateTime!
+    departure: DateTime!
+    arrivalDelay: Int
+    departureDelay: Int
+    scheduleRelationship: ScheduleRelationship
   }
 
   type VehiclePosition {
@@ -249,6 +259,8 @@ export const typeDefs = `#graphql
     stopsByBbox(bbox: BboxInput!): [Stop]!
     stopsByRadius(lat: Float!, lon: Float!, radius: Float!): [Stop]!
     stop(id: ID!): Stop
+
+    trip(id: ID!): Trip
 
     vehiclePositions: [VehiclePosition]!
 

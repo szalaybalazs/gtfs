@@ -132,6 +132,7 @@ struct TimestampView: View {
         let minute = minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date())
         Button(action: {
             print("TIMESTAMP \(minute)")
+            print("Tip id: \(event.tripId)")
             path.wrappedValue.append(event)
             
         }) {
@@ -142,7 +143,7 @@ struct TimestampView: View {
                 }
             }
                 .fontWeight(.medium)
-                .foregroundStyle(event.isPast ? Color.secondary : Color.black)
+                .foregroundStyle(event.isPast ? Color.secondary : Color.primary)
                 .allowsTightening(true)
                 .padding(.vertical, 3)
                 .padding(.leading, 6)

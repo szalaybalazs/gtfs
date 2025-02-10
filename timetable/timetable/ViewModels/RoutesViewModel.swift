@@ -31,6 +31,9 @@ class RoutesViewModel: ObservableObject {
                 case .success(let graphQLResult):
                     if let routesConnection = graphQLResult.data?.routes {
                         self?.lastConnection = routesConnection
+                        if page == 0 {
+                            self?.routes.removeAll()
+                        }
                         self?.routes.append(contentsOf: routesConnection.data)
                     }
 

@@ -177,9 +177,11 @@ type Trip {
   blockId: ID
   shapeId: ID
   agency: Agency
-  stops: [Stop]
-  stopTimes: [StopTime]
+  stops: [Stop!]
+  stopTimes: [StopTime!]
   path: LineStringGeometry
+  wheelchairAccessible: WheelchairBoarding
+  bikesAllowed: BikesAllowed
 }
 
 type StopTime {
@@ -191,6 +193,11 @@ type StopTime {
   pickupType: Int
   dropOffType: Int
   shapeDistTraveled: Float
+  arrival: DateTime!
+  departure: DateTime!
+  arrivalDelay: Int
+  departureDelay: Int
+  scheduleRelationship: ScheduleRelationship
 }
 
 type VehiclePosition {
@@ -257,6 +264,7 @@ type Query {
   stopsByBbox(bbox: BboxInput!): [Stop]!
   stopsByRadius(lat: Float!, lon: Float!, radius: Float!): [Stop]!
   stop(id: ID!): Stop
+  trip(id: ID!): Trip
   vehiclePositions: [VehiclePosition]!
   shapes: FeatureCollection!
   timetable(stopId: ID!, routeId: ID!, range: RangeInput): [TimetableEntry!]!

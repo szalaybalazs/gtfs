@@ -136,7 +136,11 @@ struct RoutesView: View {
                              // Code
                          }) {
                              Label("News", systemImage: "newspaper")
-
+                             
+                         }
+                         Divider()
+                         NavigationLink(destination: TripView(tripId: "C922453125")) {
+                             Label("Trip", systemImage: "map")
                          }
                          
                         
