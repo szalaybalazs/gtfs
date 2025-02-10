@@ -515,48 +515,27 @@ export const resolvers = {
               SELECT DATE(date, '+1 day')
               FROM dates
               WHERE date < DATE(?)
+            ), 
+            _dates AS (
+              SELECT date AS original_date, strftime('%Y%m%d', date) AS date
+              FROM dates
             ),
-            valid_trips AS (
-              SELECT d.date, t.*
-              FROM dates d
-              JOIN trips t ON t.route_id = ?
-              WHERE EXISTS (
-                SELECT 1
-                FROM stop_times st
-                WHERE st.trip_id = t.trip_id
-                AND st.stop_id = ?
-              )
-              AND (
-                -- Handle services defined ONLY in trips table
-                NOT EXISTS (
-                  SELECT 1 
-                  FROM calendar 
-                  WHERE service_id = t.service_id
-                )
-                OR EXISTS (
-                  SELECT 1
-                  FROM calendar_dates
-                  WHERE service_id = t.service_id
-                  AND date = d.date
-                  AND exception_type = 1
-                )
-              )
+            _trips AS (
+              SELECT original_date AS date, trips.*
+              FROM _dates
+              LEFT JOIN calendar_dates USING (date)
+              LEFT JOIN trips USING (service_id)
+              WHERE route_id = ? AND exception_type = 1
             )
-            SELECT
-              vt.date,
-              st.arrival_time,
-              st.departure_time,
-              vt.service_id, 
-              vt.trip_id,
-              wheelchair_accessible,
-              bikes_allowed
-            FROM valid_trips vt
-            JOIN stop_times st ON vt.trip_id = st.trip_id
-            WHERE st.stop_id = ?
-            ORDER BY vt.date, departure_time
+
+            SELECT *
+            FROM _trips
+            LEFT JOIN stop_times USING (trip_id)
+            WHERE stop_id = ? -- AND stop_headsign IS NOT NULL
+            ORDER BY date, arrival_time;
           `
         )
-        .all(start, end, routeId, stopId, stopId);
+        .all(start, end, routeId, stopId);
 
       console.log(start, end, routeId, stopId, stopId);
 
@@ -567,8 +546,10 @@ export const resolvers = {
           ...snakeToCamel(s),
           arrival: dayjs(`${s.date}T${s.arrival_time}`).toDate(),
           departure: dayjs(`${s.date}T${s.departure_time}`).toDate(),
-          wheelchairAccessible: WHEELCHAIR_BOARDING[s.wheelchair_accessible],
-          bikesAllowed: BIKES_ALLOWED[s.bikes_allowed],
+          wheelchairAccessible:
+            WHEELCHAIR_BOARDING[s.wheelchair_accessible] ??
+            WHEELCHAIR_BOARDING[0],
+          bikesAllowed: BIKES_ALLOWED[s.bikes_allowed] ?? BIKES_ALLOWED[0],
         };
       });
     },

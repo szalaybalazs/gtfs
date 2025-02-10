@@ -11,8 +11,8 @@ import Apollo
 import TimetableAPI
 
 class TimetableViewModel: ObservableObject {
-    let routeId: TimetableAPI.ID
-    let stopId: TimetableAPI.ID
+    var routeId: TimetableAPI.ID
+    var stopId: TimetableAPI.ID
     
     @Published var isLoading: Bool = false
     @Published var entries = [TimetableQuery.Data.Timetable]()
@@ -36,7 +36,7 @@ class TimetableViewModel: ObservableObject {
                 case .success(let graphQLResult):
                     if let timetableConnection = graphQLResult.data?.timetable {
 //                        self?.lastConnection = routesConnection
-                        self?.entries.append(contentsOf: timetableConnection)
+                        self?.entries = timetableConnection
                     }
 
                     if let errors = graphQLResult.errors {

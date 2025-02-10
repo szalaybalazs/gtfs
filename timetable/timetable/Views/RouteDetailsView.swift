@@ -52,14 +52,10 @@ struct RouteDetailsView: View {
                             DirectionOption(direction: routeModel.directions[index])
                         }
                     }
+                    
                 }
-            }.listSectionSpacing(.compact)
-                .navigationBarItems(
-                    trailing:
-                        Button("Add 1") {
-                            
-                        }
-                )
+                TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId)
+            }   
         }
         .navigationTitle(shortName ?? id)
         .onAppear{
@@ -70,14 +66,6 @@ struct RouteDetailsView: View {
             if let closestStop = newValue.first(where: { $0.name == routeModel.closestStop?.name }) {
                 routeModel.stopId = closestStop.stopId
             }
-//            if let stops = routeModel.directions.first(where: { $0.directionId == newValue})?.stops {
-//                if let closestStop = stops.first(where: { $0.name == routeModel.closestStop?.name }) {
-//                    routeModel.stopId = closestStop.stopId
-//                } else {
-//                    routeModel.stopId = stops.first?.stopId ?? "__TEST__"
-//                }
-//
-//            }
         }
         
     }

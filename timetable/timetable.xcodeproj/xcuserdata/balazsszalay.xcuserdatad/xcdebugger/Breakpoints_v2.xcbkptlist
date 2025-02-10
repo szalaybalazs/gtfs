@@ -24,7 +24,7 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "0ECFC9FB-CCF1-463E-9A7C-570F6BF6F0DB"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "timetable/ViewModels/RouteDetailsViewModel.swift"
@@ -33,6 +33,22 @@
             startingLineNumber = "32"
             endingLineNumber = "32"
             landmarkName = "stops"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E25277EC-BE46-42CC-8E35-3D712D8EE6A2"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "timetable/Views/TimetableView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "41"
+            endingLineNumber = "41"
+            landmarkName = "minuteFormatter"
             landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>

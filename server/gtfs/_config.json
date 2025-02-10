@@ -1,0 +1,33 @@
+{
+  "agencies": [
+    {
+      "agency_key": "bkk",
+      "url": "https://go.bkk.hu/api/static/v1/public-gtfs/budapest_gtfs.zip",
+      "realtimeAlerts": {
+        "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/Alerts.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
+      },
+      "realtimeTripUpdates": {
+        "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/TripUpdates.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
+      },
+      "realtimeVehiclePositions": {
+        "url": "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full/VehiclePositions.pb?key=298638f9-a293-40c3-aafe-901cae368ae7"
+      }
+    }
+  ],
+  "csvOptions": {
+    "skip_lines_with_error": true
+  },
+  "downloadTimeout": 5000,
+  "ignoreDuplicates": false,
+  "ignoreErrors": false,
+  "sqlitePath": "./timetable.sqlite",
+  "exportPath": "./tmp/gtfs",
+  "bufferSizeMeters": 100,
+  "coordinatePrecision": 8,
+  "outputType": "agency",
+  "outputFormat": "lines-and-stops",
+  "verbose": true,
+  "zipOutput": false,
+  "startDate": "20240301",
+  "endDate": "20240331"
+}
