@@ -19,6 +19,7 @@ struct TripView: View {
     
     var body: some View {
         List {
+            
             Section(header: Text("Stations")) {
                 ForEach(0..<tripModel.stopTimes.count, id: \.self) { index in
                     NavigationLink(destination: Text("STOP")) {
@@ -57,6 +58,7 @@ struct TripView: View {
                                     Text(stopTime.stop?.name ?? "-")
                                     Spacer()
                                     Text(stopTimeDelta)
+                                        //.foregroundStyle(stopTimeDelta < 0 ? .secondary : .primary)
                                 }
                             }
                         }
@@ -70,6 +72,16 @@ struct TripView: View {
                     .alignmentGuide(.listRowSeparatorLeading) { viewDimensions in
                         return 28
                     }
+                }
+            }
+            Section(header: Text("Accessabilities")) {
+                HStack(spacing: 12) {
+                    Image(systemName: "accessibility").frame(width: 18, height: 18)
+                    Text("Wheelchair accessible").font(.footnote)
+                }
+                HStack(spacing: 12) {
+                    Image(systemName: "bicycle.circle").frame(width: 18, height: 18)
+                    Text("Bicycle allowed").font(.footnote)
                 }
             }
         }
