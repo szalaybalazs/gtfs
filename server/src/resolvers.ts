@@ -309,7 +309,6 @@ export const resolvers = {
   },
   Trip: {
     route: async (parent: any) => {
-      console.log(parent);
       return formatRoute(
         db.query("SELECT * FROM routes WHERE route_id = ?").get(parent.routeId)
       );

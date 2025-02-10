@@ -20,6 +20,19 @@ struct TimetableView: View {
     public let stopId: String
     
     @StateObject var timetableModel: TimetableViewModel
+    @State private var selectedEvent: TimetableQuery.Data.Timetable?
+    
+    var isEventSelected: Binding<Bool> {
+        Binding(
+            get: { selectedEvent != nil },
+            set: { newValue in
+                if !newValue {
+                    selectedEvent = nil
+                }
+            }
+        )
+    }
+
     
     init(routeId: String, stopId: String) {
         self.routeId = routeId
@@ -81,7 +94,7 @@ struct TimetableView: View {
                     } else {
                         HFlow(itemSpacing: 4, rowSpacing: 4) {
                             ForEach(events, id: \.self) { event in
-                                TimestampView(event: event)
+                                TimestampView(event: event, selectedEvent: $selectedEvent)
                             }
                         }
                         .padding(.vertical, 8)
@@ -95,6 +108,16 @@ struct TimetableView: View {
             }
         }
         .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
+        .toolbar {
+            NavigationLink(isActive: isEventSelected) {
+                if let selectedEvent {
+                    TripView(tripId: selectedEvent.tripId)
+                }
+                
+            } label: {
+                EmptyView()
+            }
+        }
         .onAppear {
             timetableModel.fetchTimetable()
         }
@@ -111,6 +134,7 @@ struct TimetableView: View {
 
 struct TimestampView: View {
     public let event: TimetableQuery.Data.Timetable
+    @Binding var selectedEvent: TimetableQuery.Data.Timetable?
     @State private var isPressed = false  // Add this state
     @Environment(\.navigationPath) private var path
     
@@ -132,8 +156,8 @@ struct TimestampView: View {
         let minute = minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date())
         Button(action: {
             print("TIMESTAMP \(minute)")
-            print("Tip id: \(event.tripId)")
-            path.wrappedValue.append(event)
+            print("Trip id: \(event.tripId)")
+            selectedEvent = event
             
         }) {
             HStack(alignment: .center, spacing: 0) {
@@ -155,13 +179,6 @@ struct TimestampView: View {
                 .buttonStyle(PlainButtonStyle())
         }
         .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded { _ in
-                    isPressed = false
-                }
-        )
     }
 }
 

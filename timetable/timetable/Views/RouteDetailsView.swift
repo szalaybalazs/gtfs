@@ -55,7 +55,8 @@ struct RouteDetailsView: View {
                     
                 }
                 TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId)
-            }   
+            }
+            .listStyle(.grouped)
         }
         .navigationTitle(shortName ?? id)
         .onAppear{
