@@ -33,6 +33,10 @@ class RouteDetailsViewModel: ObservableObject {
         return directions.first { $0.directionId == directionId }?.stops ?? []
     }
     
+    public var allStops: [RouteByIdQuery.Data.Route.Direction.Stop] {
+        return directions.flatMap { $0.stops }
+    }
+    
     private var locationManager = LocationManager()
 
     func loadRoute() {

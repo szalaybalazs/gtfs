@@ -29,7 +29,7 @@ struct StopListItem: View {
                             .offset(y: index == 0 ? height / 4 : index == numberOfStops - 1 ? -height / 4 : 0)
                         Circle()
                             .stroke(color, lineWidth: 8)
-                            .fill(Color(uiColor: .systemBackground))
+                            .fill(Color(UIColor.secondarySystemBackground))
                             .frame(width: 8, height: 8)
                     }
                     .frame(width: 20, height: height)

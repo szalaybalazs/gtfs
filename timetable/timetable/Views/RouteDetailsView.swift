@@ -27,6 +27,7 @@ struct RouteDetailsView: View {
     public let shortName: String?
     @StateObject private var routeModel: RouteDetailsViewModel
     @State private var selectedEvent: TimetableQuery.Data.Timetable?
+    @AppStorage("timetable.showHistoric") private var showHistoric: Bool = false
     
     var isEventSelected: Binding<Bool> {
         Binding(
@@ -64,7 +65,6 @@ struct RouteDetailsView: View {
                         ForEach(0..<stops.count, id: \.self) { index in
                             StopOption(stop: stops[index])
                         }
-                        Text("TEST").tag("__TEST__")
                     }
                     Picker("Direction", selection: $routeModel.directionId) {
                         ForEach(0..<routeModel.directions.count, id: \.self) { index in
@@ -73,18 +73,36 @@ struct RouteDetailsView: View {
                     }
                     
                 }
-                TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId, selectedEvent: $selectedEvent)
+                TimetableView(routeId: routeModel.routeId,
+                              stopId: routeModel.stopId,
+                              selectedEvent: $selectedEvent,
+                              showHistoric: $showHistoric)
             }
             .listStyle(.grouped)
         }
         .navigationTitle(shortName ?? id)
+        .toolbar {
+            ToolbarItem {
+                Button(action: {
+                    showHistoric.toggle()
+                }) {
+                    Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90")
+                        .tint(showHistoric ? .accentColor : .primary)
+                }
+                
+            }
+        }
         .onAppear{
             routeModel.loadRoute()
         }
         .onChange(of: routeModel.stops) { oldValue, newValue in
-            print("Closest stop: \(routeModel.closestStop?.name ?? "-")")
-            if let closestStop = newValue.first(where: { $0.name == routeModel.closestStop?.name }) {
-                routeModel.stopId = closestStop.stopId
+            // todo: improve this logic
+            if let currentStop = routeModel.allStops.first(where: { $0.stopId == routeModel.stopId }) {
+                if let newStop = newValue.first(where: { $0.name == currentStop.name }) {
+                    routeModel.stopId = newStop.stopId
+                } else {
+                    routeModel.stopId = newValue[0].stopId
+                }
             }
         }
         
@@ -92,5 +110,7 @@ struct RouteDetailsView: View {
 }
 
 #Preview {
-    RouteDetailsView(id: "3560", shortName: "56")
+    NavigationView {
+        RouteDetailsView(id: "3560", shortName: "56")
+    }
 }

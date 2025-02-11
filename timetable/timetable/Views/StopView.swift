@@ -1,101 +1,83 @@
-//
-//  StopView.swift
-//  timetable
-//
-//  Created by Balázs Szalay on 2025. 02. 10..
-//
-
 import SwiftUI
 import TimetableAPI
 
-struct DepartureListItem: View {
+// Separate model for processed departure data to avoid recalculations
+struct DepartureItem: Identifiable {
+    let id: String // Use a unique identifier from your data
     let stopTime: StopByIdQuery.Data.Stop.StopTime
+    let formattedTime: String
+    let minutesUntilDeparture: Int
+    
+    var formattedDifferenceTime: String {
+        if abs(minutesUntilDeparture) >= 60 {
+            let isNegative = minutesUntilDeparture < 0
+            let absoluteMinutes = abs(minutesUntilDeparture)
+            let hours = absoluteMinutes / 60
+            let remainingMinutes = absoluteMinutes % 60
+            return String(format: "%@%d:%02d", isNegative ? "-" : "", hours, remainingMinutes)
+        } else {
+            return "\(minutesUntilDeparture)"
+        }
+    }
+}
+
+struct DepartureListItem: View {
+    let item: DepartureItem
     
     private var trip: StopByIdQuery.Data.Stop.StopTime.Trip {
-        stopTime.trip
-    }
-    
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        formatter.timeZone = TimeZone(abbreviation: "UTC")
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter
-    }()
-    
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        formatter.timeZone = TimeZone(abbreviation: "UTC")
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter
-    }()
-    
-    var time: String {
-        guard let date = Self.dateFormatter.date(from: stopTime.arrival) else {
-            return "--:--"
-        }
-        return Self.timeFormatter.string(from: date)
+        item.stopTime.trip
     }
     
     var body: some View {
-        NavigationLink(destination: TripView(tripId: trip.tripId, headsign: trip.headsign)){
+        NavigationLink(destination: TripView(tripId: trip.tripId, headsign: trip.headsign)) {
             HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading) {
-                    RouteBanner(name: trip.route.shortName ?? "", color: trip.route.color, textColor: trip.route.textColor)
-                }.frame(width: 48)
+                    RouteBanner(name: trip.route.shortName ?? "",
+                              color: trip.route.color,
+                              textColor: trip.route.textColor)
+                }
+                .frame(width: 46)
+                
                 VStack(alignment: .leading) {
-                    Text(trip.headsign ??  "")
+                    Text(trip.headsign ?? "")
                         .font(.headline)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .fontWeight(.semibold)
-                    HStack {
-                        Text(time)
-                            .font(.subheadline)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
                     
+                    Text(item.formattedTime)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(.secondary)
                 }
                 
-                let diffInMinutes: Int = {
-                    let formatter = ISO8601DateFormatter()
-                    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                    
-                    guard let arrivalTime = formatter.date(from: stopTime.arrival) else {
-                        return 0
-                    }
-                    
-                    return Int(ceil(arrivalTime.timeIntervalSinceNow / 60))
-                }()
-
-                let formattedTime: String = {
-                    if abs(diffInMinutes) >= 60 {
-                        let isNegative = diffInMinutes < 0
-                        let absoluteMinutes = abs(diffInMinutes)
-                        let hours = absoluteMinutes / 60
-                        let remainingMinutes = absoluteMinutes % 60
-                        return String(format: "%@%d:%02d", isNegative ? "-" : "", hours, remainingMinutes)
-                    } else {
-                        return "\(diffInMinutes)"
-                    }
-                }()
-                
                 Spacer()
-                Text(formattedTime)
-                    .foregroundStyle(diffInMinutes < 0 ? .secondary : .primary)
+                
+                Text(item.formattedDifferenceTime)
+                    .foregroundStyle(item.minutesUntilDeparture < 0 ? .secondary : .primary)
             }
         }
+            .listRowInsets(EdgeInsets(
+                top: 8,
+                leading: 8,
+                bottom: 8,
+                trailing: 16
+            ))
+            .alignmentGuide(.listRowSeparatorLeading) { _ in
+                return 52
+            }
     }
-
-    
 }
 
 struct StopView: View {
     public let stopId: String
     public let name: String?
     @StateObject private var stopModel: StopViewModel
+    
+    // Store processed departures
+    @State private var processedDepartures: [DepartureItem] = []
     
     init(stopId: String, name: String?) {
         self.stopId = stopId
@@ -109,31 +91,75 @@ struct StopView: View {
         return formatter
     }()
     
-    private var departures: [StopByIdQuery.Data.Stop.StopTime] {
-        let now = Foundation.Date()
-       
-        return stopModel.departures.filter {
-            guard let date = Self.dateFormatter.date(from: $0.arrival) else { return false }
-            return date > now
-        }
-            .prefix(100)
-            .map { $0 }
-    }
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        formatter.timeZone = TimeZone(abbreviation: "UTC")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
     
-
+    private func processDepartures() {
+        let now = Foundation.Date()
+        
+        Task {
+            // Process departures in background
+            let processed = await withTaskGroup(of: DepartureItem?.self) { group in
+                for departure in stopModel.departures {
+                    group.addTask {
+                        guard let date = Self.dateFormatter.date(from: departure.arrival),
+                              date > now else { return nil }
+                        
+                        return DepartureItem(
+                            id: departure.arrival, // Use a better unique identifier if available
+                            stopTime: departure,
+                            formattedTime: Self.timeFormatter.string(from: date),
+                            minutesUntilDeparture: Int(ceil(date.timeIntervalSinceNow / 60))
+                        )
+                    }
+                }
+                
+                var results: [DepartureItem] = []
+                for await result in group {
+                    if let result = result {
+                        results.append(result)
+                    }
+                }
+                return results
+            }
+            
+            // Update UI on main thread
+            await MainActor.run {
+                processedDepartures = processed
+                    .sorted { $0.minutesUntilDeparture < $1.minutesUntilDeparture }
+            }
+        }
+    }
     
     var body: some View {
         List {
             Section(header: Text("Departures")) {
-                ForEach(0..<departures.count, id: \.self) { index in
-                    DepartureListItem(stopTime: departures[index])
+                ForEach(processedDepartures) { item in
+                    DepartureListItem(item: item)
                 }
             }
         }
         .listStyle(.grouped)
-        .navigationTitle(name ?? "Stop \(stopId)")
+        .listRowInsets(EdgeInsets(
+            top: 0,
+            leading: 0,  // Default horizontal padding
+            bottom: 0,
+            trailing: 0  // Default horizontal padding
+        ))
+        .alignmentGuide(.listRowSeparatorLeading) { viewDimensions in
+            return 50
+        }
+        .navigationTitle(stopModel.stop?.name ?? name ?? "Stop \(stopId)")
         .onAppear {
             stopModel.loadStop()
+        }
+        .onChange(of: stopModel.departures) { _ in
+            processDepartures()
         }
     }
 }
