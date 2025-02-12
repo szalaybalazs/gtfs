@@ -6,7 +6,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "gtfs:import": "gtfs-import --configPath ./gtfs/config.json",
     "gtfs:geojson": "gtfs-to-geojson --configPath ./gtfs/config.json",
-    "gtfs:update": "gtfsrealtime-update --configPath ./gtfs/config.json"
+    "gtfs:update": "gtfsrealtime-update --configPath ./gtfs/config.json",
+    "docker:build": "docker buildx create --use",
+    "docker:upload": "docker buildx build --platform linux/amd64 -t szalaybalazs/bun-app:latest --push ."
   },
   "keywords": [],
   "author": "",

@@ -1,7 +1,34 @@
-version: "3.8"
 services:
-  app:
-    build: .
-    container_name: my-bun-app
+  bun-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - PORT=3000 # Fixed syntax: use = instead of :
+    command: bun run ./src/server
+    networks:
+      - app-network # Add this network
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    command:
+      - "http"
+      - "--url=timetable.ngrok.app"
+      - "bun-app:3000" # Changed from host.docker.internal to service name
+    environment:
+      - NGROK_AUTHTOKEN=1qQRjwLKePwhM1hUiAbhFSJLPou_7oypScAYTBbgkt78ATVU6
+    ports:
+      - "4040:4040"
+    depends_on:
+      - bun-app # Make sure bun-app starts first
+    networks:
+      - app-network # Add this network
+
+networks:
+  app-network: # Define the network
+    driver: bridge

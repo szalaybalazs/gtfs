@@ -1,32 +1,27 @@
-# Use an official Bun image as the base
-FROM oven/bun:latest
+FROM --platform=linux/amd64 oven/bun:latest
 
-# Install cron (if not already available)
-USER root
-RUN apt-get update && apt-get install -y cron
+# Install Python and build dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
-# Copy all project files into the container
-COPY . .
+# Copy package files
+COPY package.json ./
+COPY bun.lock ./
 
-# Install dependencies using bun
+# Create .dockerignore if it doesn't exist
+RUN touch .dockerignore && echo "node_modules" >> .dockerignore
+
+# Install dependencies
 RUN bun install
 
-# Create a cron file with the schedule:
-# This cron job will change directory to /app and run "npm run gtfs:update" every 5 minutes.
-RUN echo "*/5 * * * * cd /app && npm run gtfs:update >> /var/log/cron.log 2>&1" \
-    > /etc/cron.d/gtfs-update
+# Copy the rest of the application
+COPY . .
 
-# Give execution rights on the cron job file and load it into crontab
-RUN chmod 0644 /etc/cron.d/gtfs-update && crontab /etc/cron.d/gtfs-update
-
-# Ensure the entrypoint script is executable
-RUN chmod +x /entrypoint.sh
-
-# Expose a necessary port if your Bun app listens on one
 EXPOSE 3000
 
-# Start the entrypoint script
-CMD ["/entrypoint.sh"]
+CMD ["bun", "run", "./src/server"]
