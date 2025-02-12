@@ -72,6 +72,7 @@ struct TimetableView: View {
     @Binding public var showHistoric: Bool
     
     init(routeId: String, stopId: String, selectedEvent: Binding<TimetableQuery.Data.Timetable?>, showHistoric: Binding<Bool>) {
+        print("INITTT")
         self.stopId = stopId
         _selectedEvent = selectedEvent
         _showHistoric = showHistoric

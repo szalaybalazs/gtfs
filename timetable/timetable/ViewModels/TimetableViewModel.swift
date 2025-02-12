@@ -46,6 +46,9 @@ struct ProcessedTimetableEvent: Identifiable, Hashable {
 
 
 class TimetableViewModel: ObservableObject {
+    // Add a flag to track if initial load has happened
+    private var hasInitialLoad = false
+
     var routeId: TimetableAPI.ID
     var stopId: TimetableAPI.ID
     
@@ -87,7 +90,10 @@ class TimetableViewModel: ObservableObject {
         fetchTimetable()
     }
 
-    func fetchTimetable() {
+    func fetchTimetable(forceRefresh: Bool = false) {
+        // Only proceed if it's the first load or we're forcing a refresh
+        guard !hasInitialLoad || forceRefresh else { return }
+        
         // Cancel any existing request
         activeRequest?.cancel()
         
@@ -99,6 +105,7 @@ class TimetableViewModel: ObservableObject {
             guard let self = self else { return }
             
             self.isLoading = false
+            self.hasInitialLoad = true
             
             switch result {
             case .success(let graphQLResult):
@@ -224,4 +231,5 @@ class TimetableViewModel: ObservableObject {
             }
         }
     }
+
 }

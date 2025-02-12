@@ -18,10 +18,11 @@ class RouteDetailsViewModel: ObservableObject {
     @Published var activeRequest: Apollo.Cancellable?
     @Published var lastConnection: RoutesQuery.Data.Routes?
     @Published var closestStop: RouteByIdQuery.Data.Route.ClosestStop?
-    
     @Published var stopId: String = "__TEST__"
     @Published var directionId: Int = 0
     @Published var directions: [RouteByIdQuery.Data.Route.Direction] = []
+    
+    private var loaded = false;
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -51,21 +52,25 @@ class RouteDetailsViewModel: ObservableObject {
                         if let route = graphQLResult.data?.route {
                             self?.route = route
                             
-                            self?.directions = route.directions ?? []
-                            
-                            if let closestStop = route.closestStop {
-                                self!.stopId = closestStop.stopId
+                            if !self!.loaded {
+                                self?.directions = route.directions ?? []
                                 
-                                self?.closestStop = closestStop
-                                
-                                // Find direction including the stop
-                                self!.directions.forEach { direction in
-                                    if direction.stops.contains(where: { $0.stopId == closestStop.stopId }) ?? false {
-                                        self!.directionId = direction.directionId
+                                if let closestStop = route.closestStop {
+                                    self!.stopId = closestStop.stopId
+                                    self!.directions.forEach { direction in
+                                        if direction.stops.contains(where: { $0.stopId == closestStop.stopId }) ?? false {
+                                            self!.directionId = direction.directionId
+                                        }
                                     }
+                                    
+                                    
+                                    self?.closestStop = closestStop
+                                    
+                                    // Find direction including the stop
+                                  
+                                } else {
+                                    self!.stopId = (route.directions ?? [])[0].stops[0].stopId ?? "__TEST__"
                                 }
-                            } else {
-                                self!.stopId = (route.directions ?? [])[0].stops[0].stopId ?? "__TEST__"
                             }
                         }
 

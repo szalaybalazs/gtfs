@@ -54,7 +54,7 @@ struct RouteDetailsView: View {
         VStack {
             NavigationLink(isActive: isEventSelected) {
                 if let selectedEvent {
-                    TripView(tripId: selectedEvent.tripId, headsign: "")
+                    TripView(tripId: selectedEvent.tripId, headsign: "", stopId: routeModel.stopId)
                 }
             } label: {
                 EmptyView()
@@ -93,6 +93,9 @@ struct RouteDetailsView: View {
             }
         }
         .onAppear{
+            routeModel.loadRoute()
+        }
+        .refreshable {
             routeModel.loadRoute()
         }
         .onChange(of: routeModel.stops) { oldValue, newValue in

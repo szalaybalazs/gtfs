@@ -23,13 +23,14 @@ struct DepartureItem: Identifiable {
 
 struct DepartureListItem: View {
     let item: DepartureItem
+    let stopId: String
     
     private var trip: StopByIdQuery.Data.Stop.StopTime.Trip {
         item.stopTime.trip
     }
     
     var body: some View {
-        NavigationLink(destination: TripView(tripId: trip.tripId, headsign: trip.headsign)) {
+        NavigationLink(destination: TripView(tripId: trip.tripId, headsign: trip.headsign, stopId: stopId)) {
             HStack(alignment: .center, spacing: 8) {
                 VStack(alignment: .leading) {
                     RouteBanner(name: trip.route.shortName ?? "",
@@ -44,6 +45,7 @@ struct DepartureListItem: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .fontWeight(.semibold)
+                    
                     
                     Text(item.formattedTime)
                         .font(.subheadline)
@@ -140,7 +142,7 @@ struct StopView: View {
         List {
             Section(header: Text("Departures")) {
                 ForEach(processedDepartures) { item in
-                    DepartureListItem(item: item)
+                    DepartureListItem(item: item, stopId: stopId)
                 }
             }
         }
