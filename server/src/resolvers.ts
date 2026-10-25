@@ -6,13 +6,33 @@ import {
   WHEELCHAIR_BOARDING,
 } from "./constants";
 import { db } from "./db";
+import { ensureRealtime } from "./realtime";
 import {
   Feature,
   FeatureCollection,
   LineString,
 } from "graphql-geojson-scalar-types";
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { snakeToCamel } from "./common/camel";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const TIMEZONE = "Europe/Budapest";
+
+// GTFS times are measured from "noon minus 12h" on the service day, so they
+// stay correct across DST changes and can exceed 24:00:00 for trips running
+// past midnight.
+const gtfsTime = (date: string, time: string, delaySeconds?: number | null) => {
+  const [h, m, s] = time.split(":").map(Number);
+  return dayjs
+    .tz(`${date} 12:00`, TIMEZONE)
+    .subtract(12, "hour")
+    .add(h * 3600 + m * 60 + s + (delaySeconds ?? 0), "second")
+    .toDate();
+};
 
 const formatRoute = (r: any) => {
   return {
@@ -347,10 +367,10 @@ export const resolvers = {
         .map(formatAgency);
       return {
         data: agencies,
-        total: agencies[0].total_count,
+        total: agencies[0]?.total_count ?? 0,
         page,
         limit,
-        pages: Math.ceil(agencies[0].total_count / limit),
+        pages: Math.ceil((agencies[0]?.total_count ?? 0) / limit),
       };
     },
     agency: async (_: any, { id }: { id: string }) => {
@@ -370,10 +390,10 @@ export const resolvers = {
         .map(formatRoute);
       return {
         data: routes,
-        total: routes[0].total_count,
+        total: routes[0]?.total_count ?? 0,
         page,
         limit,
-        pages: Math.ceil(routes[0].total_count / limit),
+        pages: Math.ceil((routes[0]?.total_count ?? 0) / limit),
       };
     },
 
@@ -395,10 +415,10 @@ export const resolvers = {
         .map(formatStop);
       return {
         data: stops,
-        total: stops[0].total_count,
+        total: stops[0]?.total_count ?? 0,
         page,
         limit,
-        pages: Math.ceil(stops[0].total_count / limit),
+        pages: Math.ceil((stops[0]?.total_count ?? 0) / limit),
       };
     },
     stopsByBbox: async (_: any, { bbox }: { bbox: any }) => {
@@ -459,6 +479,7 @@ export const resolvers = {
     },
 
     vehiclePositions: async () => {
+      await ensureRealtime();
       return db
         .query("SELECT * FROM vehicle_positions")
         .all()
@@ -502,10 +523,11 @@ export const resolvers = {
         range,
       }: { stopId: string; routeId: string; range?: { start: Date; end: Date } }
     ) => {
-      const start = dayjs(range?.start).startOf("day").format("YYYY-MM-DD");
-      const end = (range?.end ? dayjs(range.end) : dayjs().add(1, "day"))
-        .endOf("day")
-        .format("YYYY-MM-DD");
+      const start = dayjs(range?.start).tz(TIMEZONE).format("YYYY-MM-DD");
+      const end = (
+        range?.end ? dayjs(range.end).tz(TIMEZONE) : dayjs().tz(TIMEZONE).add(1, "day")
+      ).format("YYYY-MM-DD");
+      await ensureRealtime();
       const res = db
         .query(
           `
@@ -528,25 +550,54 @@ export const resolvers = {
               WHERE route_id = ? AND exception_type = 1
             )
 
-            SELECT _trips.*, stop_times.*, stop_time_updates.arrival_delay, stop_time_updates.departure_delay, schedule_relationship
+            SELECT _trips.*, stop_times.*,
+              stu.arrival_delay, stu.departure_delay,
+              stu.arrival_timestamp, stu.departure_timestamp,
+              stu.schedule_relationship
             FROM _trips
             LEFT JOIN stop_times USING (trip_id)
-            LEFT JOIN stop_time_updates USING (trip_id, stop_id)
-            WHERE stop_id = ?
+            LEFT JOIN stop_time_updates stu
+              ON stu.trip_id = _trips.trip_id
+              AND stu.stop_id = stop_times.stop_id
+              AND (stu.trip_start_date IS NULL OR stu.trip_start_date = REPLACE(_trips.date, '-', ''))
+            WHERE stop_times.stop_id = ?
             ORDER BY date, arrival_time;
           `
         )
         .all(start, end, routeId, stopId);
 
+      // BKK publishes absolute predicted times rather than delays, so derive
+      // the delay from whichever one the feed provides
+      const realtime = (
+        date: string,
+        time: string,
+        delay: number | null,
+        timestamp: string | null
+      ) => {
+        const scheduled = gtfsTime(date, time);
+        if (timestamp) {
+          const predicted = new Date(Number(timestamp) * 1000);
+          return {
+            at: predicted,
+            delay: Math.round((predicted.getTime() - scheduled.getTime()) / 1000),
+          };
+        }
+        return { at: gtfsTime(date, time, delay), delay };
+      };
+
       const stops = res.map((s: any) => {
+        const arrival = realtime(s.date, s.arrival_time, s.arrival_delay, s.arrival_timestamp);
+        const departure = realtime(s.date, s.departure_time, s.departure_delay, s.departure_timestamp);
         return {
           ...s,
-          arrival: dayjs(`${s.date}T${s.arrival_time}`)
-            .add(s.arrival_delay ?? 0, "second")
-            .toDate(),
-          departure: dayjs(`${s.date}T${s.departure_time}`)
-            .add(s.departure_delay ?? 0, "second")
-            .toDate(),
+          arrival_delay: arrival.delay,
+          departure_delay: departure.delay,
+          // Only stop-level values the schema's enum knows about
+          schedule_relationship: ["SCHEDULED", "NO_DATA"].includes(s.schedule_relationship)
+            ? s.schedule_relationship
+            : null,
+          arrival: arrival.at,
+          departure: departure.at,
         };
       });
 

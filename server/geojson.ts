@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 
-const folders = fs.readdirSync(path.join(__dirname, "geojson"));
+const folders = fs.readdirSync(path.join(import.meta.dirname, "geojson"));
 
 const files = folders.map((folder) =>
-  path.join(__dirname, "geojson", folder, `${folder}.geojson`)
+  path.join(import.meta.dirname, "geojson", folder, `${folder}.geojson`)
 );
 
 const collection = [];
@@ -31,6 +31,6 @@ const output = {
 };
 
 fs.writeFileSync(
-  path.join(__dirname, "geojson", "all.geojson"),
+  path.join(import.meta.dirname, "geojson", "all.geojson"),
   JSON.stringify(output, null, 2)
 );
