@@ -3,7 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useState } from 'react'
 import { CircleMarker, MapContainer, Marker, Polygon, Popup, useMap, useMapEvents } from 'react-leaflet'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { LocationIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, VEHICLES_QUERY, type NearbyStations, type RouteRef, type Station, type Vehicles } from '../lib/api'
@@ -26,6 +26,12 @@ function mainCategory(routes: RouteRef[]): Category {
 
 const esc = (s: string) => s.replace(/[<>&"]/g, '')
 
+/** CSS mask for a pictogram inside an HTML string (inlined data URLs contain quotes). */
+const maskCss = (url: string) => {
+  const u = url.replace(/"/g, '%22').replace(/'/g, '%27')
+  return `-webkit-mask:url('${u}') center/contain no-repeat;mask:url('${u}') center/contain no-repeat`
+}
+
 /** Tiny badges row (HTML, for map markers). */
 function badgesHtml(routes: RouteRef[], max = 4) {
   const shown = routes.slice(0, max)
@@ -43,17 +49,30 @@ function badgesHtml(routes: RouteRef[], max = 4) {
   )
 }
 
-/** Stop group marker: white disc with a category-coloured ring and BKK pictogram. */
+/**
+ * Stop group marker: a rounded card with the pictogram, the name and its
+ * first lines. Big enough to hit with a thumb; tap opens the stop.
+ */
 function groupIcon(station: Station, withBadges: boolean) {
   const c = mainCategory(station.routes)
-  const mask = `-webkit-mask:url('${c.icon}') center/contain no-repeat;mask:url('${c.icon}') center/contain no-repeat`
+  const mask = maskCss(c.icon)
+  if (!withBadges) {
+    // Zoomed out: just the pictogram, so labels don't pile up
+    return L.divIcon({
+      className: '',
+      html: `<div style="width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);display:flex;align-items:center;justify-content:center;cursor:pointer"><span style="width:20px;height:20px;background:${c.color};${mask}"></span></div>`,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    })
+  }
   const html =
-    `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-11px)">` +
-    `<div style="width:22px;height:22px;border-radius:50%;background:#fff;border:2.5px solid ${c.color};box-shadow:0 1px 3px rgb(0 0 0/.25);display:flex;align-items:center;justify-content:center">` +
-    `<span style="width:16px;height:16px;background:${c.color};${mask}"></span></div>` +
-    (withBadges ? badgesHtml(station.routes) : '') +
-    `</div>`
-  return L.divIcon({ className: '', html, iconSize: [80, 44], iconAnchor: [40, 11] })
+    `<div style="transform:translate(-50%,-100%);display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 7px;background:#fff;border-radius:10px;border:2px solid ${c.color};box-shadow:0 2px 6px rgb(0 0 0/.25);white-space:nowrap;cursor:pointer">` +
+    `<div style="display:flex;align-items:center;gap:5px;font:600 12px/14px system-ui;color:#111">` +
+    `<span style="width:16px;height:16px;flex:none;background:${c.color};${mask}"></span>${esc(station.name)}</div>` +
+    (withBadges ? badgesHtml(station.routes, 4).replace('justify-content:center;margin-top:3px', 'justify-content:flex-start;margin-top:0') : '') +
+    `</div>` +
+    `<div style="position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:${c.color};border:2px solid #fff"></div>`
+  return L.divIcon({ className: '', html, iconSize: [0, 0], iconAnchor: [0, 0] })
 }
 
 /** Single stop marker: small ring in its main category colour, with its lines below. */
@@ -67,22 +86,35 @@ function stopIcon(routes: RouteRef[]) {
   return L.divIcon({ className: '', html, iconSize: [80, 34], iconAnchor: [40, 6] })
 }
 
-/** Vehicle: coloured dot; zoomed in, a small badge in the line's colours. */
-function vehicleIcon(route: RouteRef | null, zoom: number) {
+/**
+ * Vehicle: a round marker in the line's colour with its number; a small arrow
+ * on the rim shows the heading. Zoomed out, just a coloured dot.
+ */
+function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom: number, selected: boolean) {
   const c = route ? categoryOf(route) : CATEGORIES[CATEGORIES.length - 1]
-  if (zoom < BADGES_ZOOM || !route) {
+  const bg = hex(route?.color, c.color)
+  const fg = hex(route?.textColor, '#ffffff')
+  if (zoom < GROUPS_ZOOM || !route) {
     return L.divIcon({
       className: '',
-      html: `<div style="width:10px;height:10px;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 3px rgb(0 0 0/.35)"></div>`,
+      html: `<div style="width:10px;height:10px;border-radius:50%;background:${bg};border:2px solid #fff;box-shadow:0 1px 3px rgb(0 0 0/.35)"></div>`,
       iconSize: [14, 14],
       iconAnchor: [7, 7],
     })
   }
+  const label = esc(route.shortName ?? '')
+  const size = label.length > 3 ? 34 : 28
+  const arrow =
+    bearing != null
+      ? `<div style="position:absolute;inset:-7px;transform:rotate(${bearing}deg)"><div style="margin:0 auto;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid ${bg}"></div></div>`
+      : ''
   return L.divIcon({
     className: '',
-    html: `<div style="background:${hex(route.color, c.color)};color:${hex(route.textColor, '#fff')};font:700 11px/18px system-ui;padding:0 5px;min-width:18px;text-align:center;border-radius:5px;border:1.5px solid #fff;box-shadow:0 1px 4px rgb(0 0 0/.35);white-space:nowrap">${esc(route.shortName ?? '')}</div>`,
-    iconSize: [40, 20],
-    iconAnchor: [20, 10],
+    html:
+      `<div style="position:relative;width:${size}px;height:${size}px">${arrow}` +
+      `<div style="position:absolute;inset:0;border-radius:50%;background:${bg};color:${fg};border:2px solid ${selected ? '#111' : '#fff'};box-shadow:0 1px 4px rgb(0 0 0/.4);display:flex;align-items:center;justify-content:center;font:700 ${label.length > 3 ? 10 : 12}px system-ui">${label}</div></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   })
 }
 
@@ -138,6 +170,8 @@ function FlyTo({ coords }: { coords: { lat: number; lon: number } | null }) {
 /** Everything that depends on the visible area and zoom. */
 function Layers({ onVehicleCount }: { onVehicleCount: (n: number) => void }) {
   const map = useMap()
+  const navigate = useNavigate()
+  const [selected, setSelected] = useState<string | null>(null)
   const [view, setView] = useState(() => ({ center: map.getCenter(), bounds: map.getBounds(), zoom: map.getZoom() }))
   useMapEvents({ moveend: () => setView({ center: map.getCenter(), bounds: map.getBounds(), zoom: map.getZoom() }) })
 
@@ -190,35 +224,67 @@ function Layers({ onVehicleCount }: { onVehicleCount: (n: number) => void }) {
                   />
                 )}
                 {stops.map((s) => (
-                  <Marker key={s.stopId} position={[s.lat!, s.lon!]} icon={stopIcon((s.routes ?? []).filter((r) => r != null))}>
-                    <Popup>
-                      <Link to={`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`}>
-                        {s.name}
-                      </Link>
-                    </Popup>
-                  </Marker>
+                  <Marker
+                    key={s.stopId}
+                    position={[s.lat!, s.lon!]}
+                    icon={stopIcon((s.routes ?? []).filter((r) => r != null))}
+                    eventHandlers={{
+                      click: () => navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`),
+                    }}
+                  />
                 ))}
               </span>
             )
           }
           return (
-            <Marker key={station.stationId} position={[station.lat, station.lon]} icon={groupIcon(station, view.zoom >= BADGES_ZOOM)}>
-              <Popup>
-                <Link to={`/stations/${encodeURIComponent(station.stationId)}`}>{station.name}</Link>
-              </Popup>
-            </Marker>
+            <Marker
+              key={station.stationId}
+              position={[station.lat, station.lon]}
+              icon={groupIcon(station, view.zoom >= BADGES_ZOOM)}
+              eventHandlers={{ click: () => navigate(`/stations/${encodeURIComponent(station.stationId)}`) }}
+            />
           )
         })}
       {vehicles.map((v) =>
         v && v.latitude != null && v.longitude != null && view.bounds.contains([v.latitude, v.longitude]) ? (
-          <Marker key={v.id} position={[v.latitude, v.longitude]} icon={vehicleIcon(v.trip?.route ?? null, view.zoom)}>
+          <Marker
+            key={v.id}
+            position={[v.latitude, v.longitude]}
+            icon={vehicleIcon(v.trip?.route ?? null, v.bearing, view.zoom, selected === v.id)}
+            eventHandlers={{
+              // First tap: details. Tap the same vehicle again: open its trip.
+              click: () => {
+                if (selected === v.id && v.trip) navigate(tripUrl(v))
+                else setSelected(v.id)
+              },
+              popupclose: () => setSelected((s) => (s === v.id ? null : s)),
+            }}
+          >
             <Popup>
-              <strong>{v.trip?.route?.shortName}</strong> {v.trip?.headsign}
-              {v.vehicleLabel && <div>Vehicle {v.vehicleLabel}</div>}
+              <div style={{ minWidth: 160 }}>
+                <strong>
+                  {v.trip?.route?.shortName} → {v.trip?.headsign ?? '?'}
+                </strong>
+                {v.vehicleLicensePlate && <div>Plate: {v.vehicleLicensePlate}</div>}
+                {v.vehicleLabel && <div>Vehicle: {v.vehicleLabel}</div>}
+                {v.vehicleId && <div style={{ opacity: 0.6 }}>ID: {v.vehicleId}</div>}
+                {v.trip && (
+                  <div style={{ marginTop: 6 }}>
+                    <Link to={tripUrl(v)}>Open trip →</Link> <span style={{ opacity: 0.6 }}>(or tap again)</span>
+                  </div>
+                )}
+              </div>
             </Popup>
           </Marker>
         ) : null,
       )}
     </>
   )
+}
+
+/** Trip page link for a vehicle; tripStartDate comes as YYYYMMDD. */
+function tripUrl(v: { trip: { tripId: string } | null; tripStartDate: string | null }) {
+  const d = v.tripStartDate
+  const date = d && /^\d{8}$/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : ''
+  return `/trips/${encodeURIComponent(v.trip!.tripId)}${date ? `?date=${date}` : ''}`
 }

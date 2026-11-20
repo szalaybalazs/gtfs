@@ -198,7 +198,10 @@ export type VehiclePosition = {
   longitude: number | null
   bearing: number | null
   vehicleLabel: string | null
-  trip: { headsign: string | null; route: RouteRef | null } | null
+  vehicleId: string | null
+  vehicleLicensePlate: string | null
+  tripStartDate: string | null
+  trip: { tripId: string; headsign: string | null; route: RouteRef | null } | null
 }
 
 export type Vehicles = { vehiclePositions: (VehiclePosition | null)[] }
@@ -210,8 +213,8 @@ export const VEHICLES_QUERY = /* GraphQL */ `
       latitude
       longitude
       bearing
-      vehicleLabel
-      trip { headsign route { routeId shortName color textColor type } }
+      vehicleLabel vehicleId vehicleLicensePlate tripStartDate
+      trip { tripId headsign route { routeId shortName color textColor type } }
     }
   }
 `
