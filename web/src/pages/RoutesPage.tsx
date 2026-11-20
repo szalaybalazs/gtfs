@@ -1,9 +1,10 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router'
-import { LocationIcon, SearchIcon } from '../components/Icons'
+import { LocationIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import CategoryIcon from '../components/CategoryIcon'
+import SearchInput from '../components/SearchInput'
 import { gql, ROUTES_QUERY, type RoutesPage as RoutesData } from '../lib/api'
 import { CATEGORIES, categoryOf } from '../lib/categories'
 import RouteTile from '../components/RouteTile'
@@ -96,16 +97,7 @@ export default function RoutesPage() {
         }
       >
         <div className="pb-2">
-          <div className="flex h-9 items-center gap-1.5 rounded-[10px] bg-fill px-2 text-secondary">
-            <SearchIcon className="h-4 w-4 shrink-0" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setParam('q', e.target.value || null)}
-              placeholder="Search"
-              className="w-full bg-transparent text-[17px] text-label outline-none placeholder:text-secondary"
-            />
-          </div>
+          <SearchInput value={search} onChange={(v) => setParam('q', v || null)} />
         </div>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none]">
           <button

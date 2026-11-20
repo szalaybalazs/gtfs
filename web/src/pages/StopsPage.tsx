@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { SearchIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
+import SearchInput from '../components/SearchInput'
 import StationRow from '../components/StationRow'
 import { gql, STATIONS_QUERY, type StationsPage } from '../lib/api'
 import { score } from '../lib/search'
@@ -56,25 +56,20 @@ export default function StopsPage() {
     <div className="min-h-dvh">
       <NavBar title="All stops" menu>
         <div className="pb-2">
-          <div className="flex h-9 items-center gap-1.5 rounded-[10px] bg-fill px-2 text-secondary">
-            <SearchIcon className="h-4 w-4 shrink-0" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) =>
-                setParams(
-                  (p) => {
-                    if (e.target.value) p.set('q', e.target.value)
-                    else p.delete('q')
-                    return p
-                  },
-                  { replace: true },
-                )
-              }
-              placeholder="Search stops"
-              className="w-full bg-transparent text-[17px] text-label outline-none placeholder:text-secondary"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search stops"
+            value={search}
+            onChange={(v) =>
+              setParams(
+                (p) => {
+                  if (v) p.set('q', v)
+                  else p.delete('q')
+                  return p
+                },
+                { replace: true },
+              )
+            }
+          />
         </div>
       </NavBar>
       <main className="mx-auto max-w-2xl px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
