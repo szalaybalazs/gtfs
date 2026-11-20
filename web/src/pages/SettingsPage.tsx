@@ -11,7 +11,7 @@ const THEMES: { value: Theme; label: string }[] = [
 
 export default function SettingsPage() {
   const [theme, setThemeState] = useState(getTheme)
-  const { favorites, toggle } = useFavorites()
+  const { favorites, clear } = useFavorites()
 
   return (
     <div className="min-h-dvh">
@@ -42,13 +42,13 @@ export default function SettingsPage() {
           <h2 className="px-1 pb-2 text-xl font-bold">Favourites</h2>
           <div className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3">
             <span>
-              {favorites.length} saved route{favorites.length === 1 ? '' : 's'}
+              {favorites.length} favourite{favorites.length === 1 ? '' : 's'}
               <span className="block text-[13px] text-secondary">Stored in this browser only</span>
             </span>
             <button
               type="button"
               disabled={favorites.length === 0}
-              onClick={() => favorites.forEach(toggle)}
+              onClick={clear}
               className="font-medium text-late disabled:opacity-40"
             >
               Clear

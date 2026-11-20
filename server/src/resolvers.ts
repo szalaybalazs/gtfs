@@ -5,7 +5,7 @@ import {
   ROUTE_TYPES,
   WHEELCHAIR_BOARDING,
 } from "./constants";
-import { db } from "./db";
+import { db, generation } from "./db";
 import { ensureRealtime } from "./realtime";
 import {
   Feature,
@@ -17,6 +17,8 @@ import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { snakeToCamel } from "./common/camel";
 import { distanceM, stationIndex, type Station } from "./stations";
+import { score } from "./search";
+import { getAlerts } from "./alerts";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -187,6 +189,23 @@ const stopsByIds = (ids: string[]) =>
         .all(...ids)
         .map(formatStop);
 
+/**
+ * Per-timetable memo for static lookups (a stop's lines, its directions).
+ * Cleared whenever a new timetable is loaded.
+ */
+const memoCache = new Map<string, unknown>();
+let memoGeneration = -1;
+function memo<T>(key: string, compute: () => T): T {
+  if (memoGeneration !== generation) {
+    memoCache.clear();
+    memoGeneration = generation;
+  }
+  // Bounded: drop everything rather than grow without limit on a long-lived Lambda
+  if (memoCache.size > 200_000) memoCache.clear();
+  if (!memoCache.has(key)) memoCache.set(key, compute());
+  return memoCache.get(key) as T;
+}
+
 /** Distinct routes serving any of the stops, in the feed's sort order */
 const routesAtStops = (ids: string[]): any[] =>
   ids.length === 0
@@ -342,7 +361,7 @@ export const resolvers = {
       return res.map((r: any) => {
         return {
           directionId: r.direction_id,
-          headsign: r.trip_headsign,
+          headsign: r.trip_headsign ?? "",
           stops: db
             .query(
               `
@@ -370,6 +389,7 @@ export const resolvers = {
   Stop: {
     station: (parent: any) => stationIndex().byStop.get(parent.stop_id) ?? null,
     headsigns: (parent: any) =>
+      memo(`headsigns:${parent.stop_id}`, () =>
       db
         .query(
           `
@@ -387,33 +407,9 @@ export const resolvers = {
           `
         )
         .all(parent.stop_id)
-        .map((r: any) => r.headsign),
-    routes: async (parent: any) => {
-      const res = db
-        .query(
-          `
-            SELECT * 
-            FROM stop_times 
-            LEFT JOIN trips USING (trip_id)
-            LEFT JOIN routes USING (route_id)
-            WHERE stop_id = ?;
-          `
-        )
-        .all(parent.stop_id);
-      const routeIds = Array.from(new Set(res.map((r: any) => r.route_id)));
-
-      const routes = routeIds.map((routeId: string) => {
-        const route: any = res.find((r: any) => r.route_id === routeId);
-        if (!route) return null;
-
-        route.trips = res
-          .filter((r: any) => r.route_id === routeId)
-          .map(formatTrip);
-        return formatRoute(route);
-      });
-
-      return uniqueRoutes(routes.filter(Boolean));
-    },
+        .map((r: any) => r.headsign)),
+    // Distinct lines only (was: every stop time at the stop), cached per timetable
+    routes: (parent: any) => memo(`routes:${parent.stop_id}`, () => routesAtStops([parent.stop_id])),
     trips: async (parent: any) => {
       return db
         .query(
@@ -430,6 +426,18 @@ export const resolvers = {
     },
   },
   VehiclePosition: {
+    // Positions only carry a trip id; resolve it to the trip with its route,
+    // so vehicles can be coloured and labelled by line
+    // Static per timetable, so memoised: the map asks for ~1,300 of these every 15 s
+    trip: (vp: any) =>
+      !vp.trip_id
+        ? null
+        : memo(`vehicleTrip:${vp.trip_id}`, () => {
+            const t: any = db.query("SELECT * FROM trips WHERE trip_id = ?").get(vp.trip_id);
+            if (!t) return null;
+            const r = db.query("SELECT * FROM routes WHERE route_id = ?").get(t.route_id);
+            return { ...formatTrip(t), route: r ? formatRoute(r) : null };
+          }),
     timestamp: (parent: any) => new Date(Number(`${parent.timestamp}000`)),
     createdTimestamp: (parent: any) =>
       new Date(Number(`${parent.created_timestamp}000`)),
@@ -483,9 +491,8 @@ export const resolvers = {
       };
     },
     agency: async (_: any, { id }: { id: string }) => {
-      return formatAgency(
-        db.query("SELECT * FROM agency WHERE agency_id = ?").get(id)
-      );
+      const a = db.query("SELECT * FROM agency WHERE agency_id = ?").get(id);
+      return a ? formatAgency(a) : null;
     },
     routes: async (
       _: any,
@@ -507,9 +514,8 @@ export const resolvers = {
     },
 
     route: async (_: any, { id, ...rest }: { id: string }) => {
-      return formatRoute(
-        db.query("SELECT * FROM routes WHERE route_id = ?").get(id)
-      );
+      const r = db.query("SELECT * FROM routes WHERE route_id = ?").get(id);
+      return r ? formatRoute(r) : null;
     },
 
     stops: async (
@@ -582,9 +588,8 @@ export const resolvers = {
     },
 
     stop: async (_: any, { id }: { id: string }) => {
-      return formatStop(
-        db.query("SELECT * FROM stops WHERE stop_id = ?").get(id)
-      );
+      const st = db.query("SELECT * FROM stops WHERE stop_id = ?").get(id);
+      return st ? formatStop(st) : null;
     },
 
 
@@ -592,10 +597,14 @@ export const resolvers = {
       _: any,
       { limit = 50, page = 0, search }: { limit: number; page: number; search?: string }
     ) => {
-      const needle = search?.trim().toLocaleLowerCase("hu");
-      const all = stationIndex().stations.filter(
-        (s) => !needle || s.name.toLocaleLowerCase("hu").includes(needle)
-      );
+      // Accent-insensitive, ranked: exact > prefix > word prefix > contains > fuzzy
+      const all = search?.trim()
+        ? stationIndex()
+            .stations.map((st) => ({ st, s: score(search, st.name) }))
+            .filter((x) => x.s > 0)
+            .sort((a, b) => b.s - a.s || a.st.name.localeCompare(b.st.name, "hu"))
+            .map((x) => x.st)
+        : stationIndex().stations;
       return {
         page,
         total: all.length,
@@ -622,24 +631,45 @@ export const resolvers = {
       _: any,
       {
         stopIds,
+        routeIds,
         limit = 30,
         hours = 3,
         after,
-      }: { stopIds: string[]; limit: number; hours: number; after?: Date }
+      }: { stopIds: string[]; routeIds?: string[]; limit: number; hours: number; after?: Date }
     ) => {
+      // Client-controlled sizes are clamped so one request can't do unbounded work
+      stopIds = stopIds.slice(0, 60);
+      limit = Math.min(Math.max(1, limit), 200);
+      hours = Math.min(Math.max(1, hours), 6);
       if (stopIds.length === 0) return [];
       await ensureRealtime();
       const start = after ? new Date(after).getTime() : Date.now();
-      const now = dayjs(start).tz(TIMEZONE);
-      // Yesterday too: trips past midnight belong to the previous service day
-      const dates = [now.subtract(1, "day"), now].map((d) => d.format("YYYY-MM-DD"));
+      const from = start - 60_000;
+      const to = start + hours * 3_600_000;
+      // Service days that can have departures in [from, to]: yesterday (trips
+      // past midnight), today, and the day of `to` (window crossing midnight)
+      const dates = [
+        ...new Set(
+          [dayjs(from).tz(TIMEZONE).subtract(1, "day"), dayjs(from).tz(TIMEZONE), dayjs(to).tz(TIMEZONE)].map((d) =>
+            d.format("YYYY-MM-DD")
+          )
+        ),
+      ];
+      // Filter by scheduled time in SQL (per service day, in GTFS seconds), padded
+      // 30 min early / 5 min late so delayed realtime departures still qualify
+      const windows = dates.map((d) => {
+        const base = gtfsTime(d, "00:00:00").getTime();
+        return [d, Math.floor((from - 30 * 60_000 - base) / 1000), Math.ceil((to + 5 * 60_000 - base) / 1000)];
+      });
       const placeholders = stopIds.map(() => "?").join(", ");
+      const routeFilter = routeIds?.length ? `AND t.route_id IN (${routeIds.map(() => "?").join(", ")})` : "";
       const rows = db
         .query(
           `
-            WITH active AS (
-              SELECT d.date AS date, cd.service_id
-              FROM (SELECT ? AS date UNION ALL SELECT ?) d
+            WITH d(date, lo, hi) AS (VALUES ${windows.map(() => "(?, ?, ?)").join(", ")}),
+            active AS (
+              SELECT d.date AS date, d.lo, d.hi, cd.service_id
+              FROM d
               JOIN calendar_dates cd
                 ON cd.date = REPLACE(d.date, '-', '') AND cd.exception_type = 1
             )
@@ -655,6 +685,9 @@ export const resolvers = {
               AND stu.stop_id = st.stop_id
               AND (stu.trip_start_date IS NULL OR stu.trip_start_date = REPLACE(active.date, '-', ''))
             WHERE st.stop_id IN (${placeholders})
+              ${routeFilter}
+              -- st.departure_timestamp: GTFS seconds of the scheduled departure
+              AND (st.departure_timestamp IS NULL OR st.departure_timestamp BETWEEN active.lo AND active.hi)
               -- Not the last stop: nothing departs from a trip's terminus
               AND EXISTS (
                 SELECT 1 FROM stop_times n
@@ -662,10 +695,8 @@ export const resolvers = {
               )
           `
         )
-        .all(...dates, ...stopIds);
+        .all(...windows.flat(), ...stopIds, ...(routeIds ?? []));
 
-      const from = start - 60_000;
-      const to = start + hours * 3_600_000;
       const routes = new Map<string, any>();
       const routeById = (id: string) => {
         if (!routes.has(id))
@@ -691,7 +722,7 @@ export const resolvers = {
           stopId: r.stop_id,
           route: routeById(r.route_id),
           headsign: r.trip_headsign,
-          via: viaStop(r.trip_id, r.stop_sequence),
+          stopSequence: r.stop_sequence,
           arrival: arrival.at,
           departure: departure.at,
           arrivalDelay: arrival.delay,
@@ -706,7 +737,16 @@ export const resolvers = {
       const trip: any = db.query("SELECT * FROM trips WHERE trip_id = ?").get(id);
       if (!trip) return null;
       await ensureRealtime();
-      const date = serviceDate ?? today().format("YYYY-MM-DD");
+      // Validate; without a date, a trip whose times run past midnight that
+      // already started belongs to yesterday's service day
+      let date = serviceDate && /^\d{4}-\d{2}-\d{2}$/.test(serviceDate) ? serviceDate : null;
+      if (!date) {
+        const first: any = db.query("SELECT departure_time FROM stop_times WHERE trip_id = ? ORDER BY stop_sequence LIMIT 1").get(id);
+        const todayStr = today().format("YYYY-MM-DD");
+        const yesterday = today().subtract(1, "day").format("YYYY-MM-DD");
+        const startsToday = first ? gtfsTime(todayStr, first.departure_time).getTime() : 0;
+        date = startsToday > Date.now() + 6 * 3_600_000 ? yesterday : todayStr;
+      }
       const rows = db
         .query(
           `
@@ -751,8 +791,44 @@ export const resolvers = {
         }),
       };
     },
-    vehiclePositions: async () => {
+    alerts: async (
+      _: any,
+      { routeIds = [], stopIds = [], lang = "en" }: { routeIds?: string[]; stopIds?: string[]; lang?: string }
+    ) => {
+      const now = Date.now() / 1000;
+      const routes = new Set(routeIds ?? []);
+      const stops = new Set(stopIds ?? []);
+      const pick = (t: Record<string, string>) => t[lang] ?? t.en ?? t.hu ?? Object.values(t)[0] ?? "";
+      return (await getAlerts())
+        .filter((a) => !a.end || a.end > now)
+        .filter((a) => (routes.size === 0 && stops.size === 0) || a.routeIds.some((r) => routes.has(r)) || a.stopIds.some((st) => stops.has(st)))
+        .sort((a, b) => (a.start ?? 0) - (b.start ?? 0))
+        .map((a) => ({
+          id: a.id,
+          header: pick(a.header),
+          description: pick(a.description) || null,
+          url: a.url,
+          start: a.start ? new Date(a.start * 1000) : null,
+          end: a.end ? new Date(a.end * 1000) : null,
+          effect: a.effect,
+          stopIds: a.stopIds,
+          routes: uniqueRoutes(
+            a.routeIds
+              .map((id) => db.query("SELECT * FROM routes WHERE route_id = ?").get(id))
+              .filter(Boolean)
+              .map(formatRoute)
+          ),
+        }));
+    },
+    // Optional bbox: the map only asks for the visible area
+    vehiclePositions: async (_: any, { bbox }: { bbox?: { minLat: number; minLon: number; maxLat: number; maxLon: number } }) => {
       await ensureRealtime();
+      if (bbox) {
+        return db
+          .query("SELECT * FROM vehicle_positions WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?")
+          .all(bbox.minLat, bbox.maxLat, bbox.minLon, bbox.maxLon)
+          .map(formatVehiclePosition);
+      }
       return db
         .query("SELECT * FROM vehicle_positions")
         .all()
@@ -876,7 +952,11 @@ export const resolvers = {
 
   Station: {
     stops: (station: Station) => stopsByIds(station.stopIds),
-    routes: (station: Station) => routesAtStops(station.stopIds),
+    routes: (station: Station) => memo(`stationRoutes:${station.stationId}`, () => routesAtStops(station.stopIds)),
+  },
+  Departure: {
+    // Only computed when a client asks for it (it costs a query per departure)
+    via: (d: any) => memo(`via:${d.tripId}:${d.stopSequence}`, () => viaStop(d.tripId, d.stopSequence)),
   },
   TripDetails: {
     path: (trip: any) => ({

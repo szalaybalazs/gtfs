@@ -16,6 +16,7 @@ import StationPage from './pages/StationPage'
 import StopPage from './pages/StopPage'
 import StopsPage from './pages/StopsPage'
 import TripPage from './pages/TripPage'
+import UxMapPage from './pages/UxMapPage'
 
 applyTheme()
 
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/phone" element={<PhonePreviewPage />} />
+          <Route path="/ux" element={<UxMapPage />} />
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/routes" element={<RoutesPage />} />
@@ -48,3 +50,10 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 )
+
+// Installable app + offline shell. Production only, so dev reloads stay fresh.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}

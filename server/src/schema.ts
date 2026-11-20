@@ -141,6 +141,19 @@ export const typeDefs = `#graphql
     departureDelay: Int
     realtime: Boolean!
   }
+  "BKK service alert: works, diversions, replacement services"
+  type Alert {
+    id: ID!
+    header: String!
+    description: String
+    url: String
+    start: DateTime
+    end: DateTime
+    effect: String
+    routes: [Route!]!
+    stopIds: [ID!]!
+  }
+
   "A trip on one service day, with realtime where available"
   type TripDetails {
     tripId: ID!
@@ -310,7 +323,7 @@ export const typeDefs = `#graphql
     stopsByRadius(lat: Float!, lon: Float!, radius: Float!): [Stop]!
     stop(id: ID!): Stop
 
-    vehiclePositions: [VehiclePosition]!
+    vehiclePositions(bbox: BboxInput): [VehiclePosition]!
 
     shapes: FeatureCollection!
 
@@ -320,7 +333,9 @@ export const typeDefs = `#graphql
     station(id: ID!): Station
     stationsByRadius(lat: Float!, lon: Float!, radius: Float!): [Station!]!
     "Next departures from any of the stops, across all routes"
-    departures(stopIds: [ID!]!, limit: Int, hours: Int, after: DateTime): [Departure!]!
+    departures(stopIds: [ID!]!, routeIds: [ID!], limit: Int, hours: Int, after: DateTime): [Departure!]!
     trip(id: ID!, serviceDate: String): TripDetails
+    "Current and upcoming alerts touching any of these lines or stops (all when both are empty)"
+    alerts(routeIds: [ID!], stopIds: [ID!], lang: String): [Alert!]!
   }
 `;

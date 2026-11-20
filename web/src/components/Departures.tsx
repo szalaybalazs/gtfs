@@ -19,7 +19,14 @@ export default function Departures({
   title = 'Departures',
   empty = 'No more departures in the next few hours.',
   toolbar,
+  includePast = false,
+  highlightTrip,
 }: {
+  // includePast also means "not live": departed rows stay (faded) instead of collapsing away
+  /** Keep departures that already left (after "⋯ Earlier"); shown greyed */
+  includePast?: boolean
+  /** The trip you arrived on, marked "Your trip" */
+  highlightTrip?: string | null
   /** Shown at the top of the card, e.g. the time filter. */
   toolbar?: ReactNode
   departures: Departure[]
@@ -30,7 +37,8 @@ export default function Departures({
   empty?: string
 }) {
   const now = useNow(1_000)
-  const upcoming = departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 30_000)
+  // Departed rows linger for 20 s (counting -1, -2…), collapsing from -15 s
+  const upcoming = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 20_000)
 
   return (
     <section>
@@ -57,7 +65,7 @@ export default function Departures({
         ) : (
           <ul className="divide-y divide-separator">
             {upcoming.map((d) => (
-              <DepartureRow key={`${d.tripId}-${d.serviceDate}-${d.stopId}`} departure={d} now={now} />
+              <DepartureRow key={`${d.tripId}-${d.serviceDate}-${d.stopId}`} departure={d} now={now} mine={d.tripId === highlightTrip} autoHide={!includePast} />
             ))}
           </ul>
         )}
@@ -66,38 +74,52 @@ export default function Departures({
   )
 }
 
-export function DepartureRow({ departure: d, now }: { departure: Departure; now: Date }) {
+export function DepartureRow({ departure: d, now, mine, autoHide = true }: { departure: Departure; now: Date; mine?: boolean; autoHide?: boolean }) {
   const time = new Date(d.departure)
   const status = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay)
-  const { value, unit } = countdown((time.getTime() - now.getTime()) / 1000)
-
+  const seconds = (time.getTime() - now.getTime()) / 1000
+  // Just departed: count -1, -2… in plain text, faded; then collapse away
+  const justLeft = seconds < 0 && seconds >= -60
+  // Only when showing "Now": with a chosen time or your trip, nothing vanishes
+  const collapsing = autoHide && seconds < -15 && seconds >= -60
+  const left = seconds < -60
+  const { value, unit } = left
+    ? { value: String(Math.round(-seconds / 60)), unit: 'min ago' }
+    : justLeft
+      ? { value: `-${Math.ceil(-seconds)}`, unit: 'sec' }
+      : countdown(seconds)
   return (
-    <li>
+    // grid-rows 1fr → 0fr animates the row's height down so the list slides up
+    <li className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${collapsing ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr]'}`}>
+      <div className="min-h-0 overflow-hidden">
       <Link
         to={`/trips/${encodeURIComponent(d.tripId)}?date=${d.serviceDate}&from=${encodeURIComponent(d.stopId)}`}
-        className="flex items-center gap-3 px-4 py-3 active:bg-fill"
+        className={`flex items-center gap-3 px-4 py-3 active:bg-fill ${left || justLeft ? 'opacity-45' : ''} ${mine ? 'bg-accent/10' : ''}`}
       >
         {d.route && <RouteBadge route={d.route} />}
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-[17px] leading-snug font-medium">{d.headsign ?? '—'}</p>
-          {/* Secondary details: quieter, after the main info */}
-          {(d.wheelchairAccessible === 'AVAILABLE' || d.bikesAllowed === 'ALLOWED') && (
-            <p className="mt-0.5 flex items-center gap-1.5 text-secondary">
-              {d.wheelchairAccessible === 'AVAILABLE' && <WheelchairIcon className="h-3.5 w-3.5 opacity-70" aria-label="Wheelchair accessible" />}
-              {d.bikesAllowed === 'ALLOWED' && <BikeIcon className="h-3.5 w-3.5 opacity-70" aria-label="Bikes allowed" />}
-            </p>
-          )}
+          {/* Accessibility/bike icons trail the destination inline, so row heights stay even */}
+          {mine && <p className="text-[12px] font-semibold text-accent uppercase">Your trip</p>}
+          <p className="line-clamp-2 text-[17px] leading-snug font-medium">
+            {d.headsign ?? '—'}
+            {d.wheelchairAccessible === 'AVAILABLE' && (
+              <WheelchairIcon className="ml-1.5 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label="Wheelchair accessible" />
+            )}
+            {d.bikesAllowed === 'ALLOWED' && (
+              <BikeIcon className="ml-1 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label="Bikes allowed" />
+            )}
+          </p>
         </div>
         {/* Countdown only: colour says live/on time (green), early (purple), late (red) */}
-        <div className={`min-w-14 text-right ${statusColor[status]}`} title={statusLabel[status]}>
-          <p className="flex items-start justify-end gap-0.5 text-2xl leading-none font-bold tabular-nums">
-            {value}
-            {status !== 'scheduled' && <LiveIcon className="h-3 w-3" aria-label={statusLabel[status]} />}
-          </p>
+        {/* Live icon sits in its own gutter so the number and unit share a right edge */}
+        <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : justLeft ? 'text-label' : statusColor[status]}`} title={statusLabel[status]}>
+          {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3" aria-label={statusLabel[status]} />}
+          <p className="text-2xl leading-none font-bold tabular-nums">{value}</p>
           <p className={`text-[11px] font-medium ${status === 'scheduled' ? 'text-secondary' : ''}`}>{unit}</p>
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
+      </div>
     </li>
   )
 }

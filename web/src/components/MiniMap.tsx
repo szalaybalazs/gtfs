@@ -1,7 +1,9 @@
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
-import { CircleMarker, MapContainer, Marker, Polygon, Polyline, TileLayer, useMap } from 'react-leaflet'
+import Basemap from './Basemap'
+import { hull } from '../lib/geo'
+import { CircleMarker, MapContainer, Marker, Polygon, Polyline, useMap } from 'react-leaflet'
 
 export type MapPoint = { lat: number; lon: number; label?: string; strong?: boolean }
 
@@ -34,7 +36,7 @@ export default function MiniMap({
         zoomControl={false}
         scrollWheelZoom={false}
       >
-        <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <Basemap />
         <FitBounds points={all} />
         {area && points.length > 2 && (
           <Polygon positions={hull(points.map((p) => [p.lat, p.lon]))} pathOptions={{ color, weight: 2, fillOpacity: 0.15 }} />
@@ -73,29 +75,4 @@ function FitBounds({ points }: { points: [number, number][] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, map])
   return null
-}
-
-/** Convex hull (monotone chain) of [lat, lon] points, padded slightly. */
-function hull(points: [number, number][]): [number, number][] {
-  const pts = [...points].sort((a, b) => a[1] - b[1] || a[0] - b[0])
-  const cross = (o: number[], a: number[], b: number[]) => (a[1] - o[1]) * (b[0] - o[0]) - (a[0] - o[0]) * (b[1] - o[1])
-  const lower: [number, number][] = []
-  for (const p of pts) {
-    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop()
-    lower.push(p)
-  }
-  const upper: [number, number][] = []
-  for (const p of [...pts].reverse()) {
-    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop()
-    upper.push(p)
-  }
-  const ring = [...lower.slice(0, -1), ...upper.slice(0, -1)]
-  // Push each corner ~15 m away from the centre so platform dots sit inside
-  const c = ring.reduce((acc, p) => [acc[0] + p[0] / ring.length, acc[1] + p[1] / ring.length], [0, 0])
-  return ring.map(([lat, lon]) => {
-    const dLat = lat - c[0]
-    const dLon = lon - c[1]
-    const len = Math.hypot(dLat, dLon) || 1
-    return [lat + (dLat / len) * 0.00014, lon + (dLon / len) * 0.0002]
-  })
 }

@@ -5,6 +5,8 @@ import { SearchIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import StationRow from '../components/StationRow'
 import { gql, STATIONS_QUERY, type StationsPage } from '../lib/api'
+import { score } from '../lib/search'
+import { rank } from '../lib/usage'
 
 const PAGE_SIZE = 20
 
@@ -29,8 +31,12 @@ export default function StopsPage() {
     placeholderData: (prev) => prev,
   })
   const stations = useMemo(
-    () => (query.data?.pages.flatMap((p) => p.stations.data) ?? []).filter((s) => s.routes.length > 0),
-    [query.data],
+    () => {
+      const list = (query.data?.pages.flatMap((p) => p.stations.data) ?? []).filter((s) => s.routes.length > 0)
+      // The server ranks by text match; stops you open often move up
+      return debounced ? rank(list, debounced, (s) => [s.name], (s) => `station:${s.stationId}`, score) : list
+    },
+    [query.data, debounced],
   )
 
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query

@@ -6,19 +6,9 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "cd web && API_PROXY=http://127.0.0.1:4010 pnpm dev --port 5173 --host"
+        "cd web && pnpm dev --port 5173 --host"
       ],
       "port": 5173
-    },
-    {
-      "name": "api",
-      "runtimeExecutable": "sh",
-      "runtimeArgs": [
-        "-c",
-        "cd server && PORT=4010 AWS_PROFILE=akos npx sst shell --stage production -- npx tsx src/server.ts"
-      ],
-      "port": 4010,
-      "autoPort": false
     }
   ]
 }

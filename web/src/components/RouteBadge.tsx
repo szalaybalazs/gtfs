@@ -1,30 +1,47 @@
+import type { CSSProperties } from 'react'
 import type { RouteSummary } from '../lib/api'
+import { hex } from '../lib/geo'
 
-const hex = (value: string | null | undefined, fallback: string) => {
-  if (!value) return fallback
-  return value.startsWith('#') ? value : `#${value}`
-}
+/** Badge height in px; BKK's "vh-size". */
+const SIZES = { sm: 24, lg: 32 } as const
 
+/**
+ * Line badge with BKK's proportions (bkk.hu .bkk-grid-vh-num): a 2s × s
+ * rounded rectangle with a 5px radius at s = 24px. Always rectangular; round
+ * shapes are for vehicle-type pictograms, not line numbers.
+ * Uses the app's system font (BKK's Open Sans looked worse here).
+ */
 export default function RouteBadge({
   route,
   size = 'sm',
+  fit = false,
 }: {
-  route: Pick<RouteSummary, 'shortName' | 'routeId' | 'color' | 'textColor'>
+  /** Hug the label instead of the fixed 2:1 width (for dense rows) */
+  fit?: boolean
+  route: Pick<RouteSummary, 'shortName' | 'routeId' | 'color' | 'textColor'> & { type?: RouteSummary['type'] }
   size?: 'sm' | 'lg'
 }) {
+  const s = SIZES[size]
+  const label = route.shortName ?? route.routeId
+  // Shrink long labels so they fit the 2s width
+  const base = s * 0.58
+  const fontSize = fit ? base : Math.min(base, (s * 1.75) / (label.length * 0.62))
+  const style: CSSProperties = {
+    backgroundColor: hex(route.color, '#000000'),
+    color: hex(route.textColor, '#ffffff'),
+    height: s,
+    lineHeight: `${s}px`,
+    width: fit ? undefined : s * 2,
+    minWidth: fit ? s * 1.25 : undefined,
+    paddingInline: fit ? s * 0.25 : undefined,
+    borderRadius: (5 * s) / 24,
+    fontSize,
+    fontWeight: 700,
+    letterSpacing: label.length > 3 ? '-0.02em' : undefined,
+  }
   return (
-    <span
-      className={
-        size === 'lg'
-          ? 'inline-flex min-w-11 items-center justify-center rounded-[10px] px-2.5 py-1 text-lg font-bold'
-          : 'inline-flex min-w-9 items-center justify-center rounded-lg px-1.5 py-[3px] text-[13px] font-semibold'
-      }
-      style={{
-        backgroundColor: hex(route.color, '#000000'),
-        color: hex(route.textColor, '#ffffff'),
-      }}
-    >
-      {route.shortName ?? route.routeId}
+    <span className="inline-flex shrink-0 items-center justify-center font-sans whitespace-nowrap tabular-nums" style={style}>
+      {label}
     </span>
   )
 }

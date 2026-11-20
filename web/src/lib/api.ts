@@ -138,6 +138,7 @@ export type StopSummary = {
   lat: number | null
   lon: number | null
   routes?: (Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 'textColor'> | null)[] | null
+  headsigns?: string[]
 }
 
 const STOP_FIELDS = /* GraphQL */ `
@@ -185,6 +186,7 @@ export const STOP_QUERY = /* GraphQL */ `
   query Stop($stopId: ID!) {
     stop(id: $stopId) {
       ${STOP_FIELDS}
+      headsigns
       routes { routeId shortName color textColor }
     }
   }
@@ -196,20 +198,20 @@ export type VehiclePosition = {
   longitude: number | null
   bearing: number | null
   vehicleLabel: string | null
-  trip: { headsign: string | null; route: Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 'textColor'> | null } | null
+  trip: { headsign: string | null; route: RouteRef | null } | null
 }
 
 export type Vehicles = { vehiclePositions: (VehiclePosition | null)[] }
 
 export const VEHICLES_QUERY = /* GraphQL */ `
-  query Vehicles {
-    vehiclePositions {
+  query Vehicles($bbox: BboxInput) {
+    vehiclePositions(bbox: $bbox) {
       id
       latitude
       longitude
       bearing
       vehicleLabel
-      trip { headsign route { routeId shortName color textColor } }
+      trip { headsign route { routeId shortName color textColor type } }
     }
   }
 `
@@ -223,7 +225,7 @@ export type Departure = {
   stopId: string
   route: RouteRef | null
   headsign: string | null
-  via: string | null
+  via?: string | null
   arrival: string
   departure: string
   arrivalDelay: number | null
@@ -236,9 +238,9 @@ export type Departure = {
 export type Departures = { departures: Departure[] }
 
 export const DEPARTURES_QUERY = /* GraphQL */ `
-  query Departures($stopIds: [ID!]!, $limit: Int, $hours: Int, $after: DateTime) {
-    departures(stopIds: $stopIds, limit: $limit, hours: $hours, after: $after) {
-      tripId serviceDate stopId headsign via arrival departure arrivalDelay departureDelay
+  query Departures($stopIds: [ID!]!, $routeIds: [ID!], $limit: Int, $hours: Int, $after: DateTime) {
+    departures(stopIds: $stopIds, routeIds: $routeIds, limit: $limit, hours: $hours, after: $after) {
+      tripId serviceDate stopId headsign arrival departure arrivalDelay departureDelay
       realtime wheelchairAccessible bikesAllowed
       route { ${ROUTE_REF} }
     }
@@ -339,6 +341,46 @@ export const TRIP_QUERY = /* GraphQL */ `
         vehicleWheelchairAccessible currentStopSequence timestamp
       }
       path { coordinates }
+    }
+  }
+`
+
+/** Map: stop groups only (lines for colour + badges), cheap enough for a wide area. */
+export const MAP_GROUPS_QUERY = /* GraphQL */ `
+  query MapGroups($lat: Float!, $lon: Float!, $radius: Float!) {
+    stationsByRadius(lat: $lat, lon: $lon, radius: $radius) {
+      stationId name lat lon routes { ${ROUTE_REF} }
+    }
+  }
+`
+
+/** Map, zoomed in: each stop of each group with its lines (no directions). */
+export const MAP_STOPS_QUERY = /* GraphQL */ `
+  query MapStops($lat: Float!, $lon: Float!, $radius: Float!) {
+    stationsByRadius(lat: $lat, lon: $lon, radius: $radius) {
+      stationId name lat lon routes { ${ROUTE_REF} }
+      stops { stopId name lat lon routes { ${ROUTE_REF} } }
+    }
+  }
+`
+
+export type Alert = {
+  id: string
+  header: string
+  description: string | null
+  url: string | null
+  start: string | null
+  end: string | null
+  effect: string | null
+  routes: RouteRef[]
+  stopIds: string[]
+}
+
+export const ALERTS_QUERY = /* GraphQL */ `
+  query Alerts($routeIds: [ID!], $stopIds: [ID!], $lang: String) {
+    alerts(routeIds: $routeIds, stopIds: $stopIds, lang: $lang) {
+      id header description url start end effect stopIds
+      routes { ${ROUTE_REF} }
     }
   }
 `

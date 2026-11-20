@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { Link, useNavigate } from 'react-router'
-import { MenuIcon } from './Icons'
+import { Link, useLocation, useNavigate } from 'react-router'
+import { HomeIcon, MenuIcon } from './Icons'
 import { useOpenMenu } from './Layout'
 
 export default function NavBar({
@@ -22,6 +22,7 @@ export default function NavBar({
 }) {
   const openMenu = useOpenMenu()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   return (
     <header className="sticky top-0 z-10 border-b border-separator bg-canvas/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto max-w-2xl px-4">
@@ -51,7 +52,15 @@ export default function NavBar({
             )}
             {leading}
           </div>
-          <div className="flex flex-1 items-center justify-end gap-1">{trailing}</div>
+          <div className="flex flex-1 items-center justify-end gap-1">
+            {trailing}
+            {/* Always one tap back to Home (favourites), from anywhere */}
+            {pathname !== '/' && (
+              <Link to="/" aria-label="Home" className="rounded-md p-2 active:opacity-50">
+                <HomeIcon className="h-6 w-6" />
+              </Link>
+            )}
+          </div>
         </div>
         {title && <h1 className="line-clamp-2 pb-2 text-[30px] leading-tight font-bold tracking-tight">{title}</h1>}
         {children}

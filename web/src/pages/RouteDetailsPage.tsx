@@ -1,16 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
-import AfterFilter, { useAfter } from '../components/AfterFilter'
+import AfterFilter, { TimeControl, useAfter } from '../components/AfterFilter'
+import Alerts from '../components/Alerts'
 import Departures from '../components/Departures'
-import { LocationIcon, StarIcon, SwapIcon, UpDownIcon } from '../components/Icons'
+import { LocationIcon, StarIcon, SwapIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
-import Segmented from '../components/Segmented'
+import StationStops from '../components/StationStops'
+import StopPicker from '../components/StopPicker'
 import Timetable from '../components/Timetable'
+import ViewToggle, { useView } from '../components/ViewToggle'
 import { gql, ROUTE_QUERY, type Direction, type RouteDetails, type Stop } from '../lib/api'
-import { useFavorites } from '../lib/favorites'
-import { distance, formatDistance } from '../lib/geo'
+import FavoriteSheet from '../components/FavoriteSheet'
+import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
+import { distance, formatDistance, hex } from '../lib/geo'
+import { recordVisit } from '../lib/usage'
 import { useDepartures } from '../lib/useDepartures'
 import { useGeolocation, type Coords } from '../lib/useGeolocation'
 
@@ -65,9 +70,11 @@ export default function RouteDetailsPage() {
   const [params, setParams] = useSearchParams()
   const dirParam = params.has('dir') ? Number(params.get('dir')) : null
   const stopParam = params.get('stop')
-  const view = params.get('view') === 'timetable' ? 'timetable' : 'departures'
+  const [view] = useView()
   const location = useGeolocation(true)
-  const { isFavorite, toggle } = useFavorites()
+  const { has } = useFavorites()
+  useEffect(() => recordVisit(`route:${routeId}`), [routeId])
+  const [sheet, setSheet] = useState(false)
 
   const routeQuery = useQuery({
     queryKey: ['route', routeId],
@@ -80,9 +87,14 @@ export default function RouteDetailsPage() {
   const direction = choice?.direction
   const stop = choice?.stop
 
-  const [after] = useAfter()
-  const departuresQuery = useDepartures(stop ? [stop.stopId] : [], { limit: 40, after })
-  const departures = (departuresQuery.data?.departures ?? []).filter((d) => d.route?.routeId === routeId).slice(0, 8)
+  const { after } = useAfter()
+  const arrivedOn = useSearchParams()[0].get('trip')
+  // Everything on this line in the next 90 minutes (filtered by line on the server)
+  const departuresQuery = useDepartures(stop ? [stop.stopId] : [], { limit: 60, after, routeIds: [routeId] })
+  const windowEnd = (after?.getTime() ?? Date.now()) + 90 * 60_000
+  const departures = (departuresQuery.data?.departures ?? []).filter(
+    (d) => d.route?.routeId === routeId && new Date(d.departure).getTime() <= windowEnd,
+  )
 
   const setParam = (changes: Record<string, string | null>) =>
     setParams(
@@ -105,7 +117,15 @@ export default function RouteDetailsPage() {
   }
 
   const otherDirection = directions.find((d) => d.directionId !== direction?.directionId)
-  const favorite = isFavorite(routeId)
+  const favoriteOptions: FavoriteDraft[] = route
+    ? [
+        ...(stop && direction
+          ? [{ kind: 'lineStop' as const, route, stopId: stop.stopId, stationId: stop.stopId, stopName: stop.name ?? stop.stopId, headsign: direction.headsign }]
+          : []),
+        { kind: 'line' as const, route },
+      ]
+    : []
+  const favorite = favoriteOptions.some((o) => has(favoriteId(o)))
 
   const hint =
     choice?.reason === 'nearest'
@@ -125,15 +145,18 @@ export default function RouteDetailsPage() {
         leading={route && <RouteBadge route={route} size="lg" />}
         trailing={
           route && (
-            <button
+            <>
+              <TimeControl />
+              <ViewToggle />
+              <button
               type="button"
-              onClick={() => toggle(route)}
-              aria-pressed={favorite}
-              aria-label={favorite ? 'Remove from favourites' : 'Add to favourites'}
+              onClick={() => setSheet(true)}
+              aria-label="Favourites"
               className={`rounded-md p-2 active:opacity-50 ${favorite ? 'text-accent' : 'text-label'}`}
             >
               <StarIcon filled={favorite} className="h-6 w-6" />
-            </button>
+              </button>
+            </>
           )
         }
       />
@@ -149,6 +172,8 @@ export default function RouteDetailsPage() {
         )}
         {routeQuery.isPending && <div className="h-32 animate-pulse rounded-2xl bg-surface" />}
 
+        {route && <Alerts routeIds={[routeId]} />}
+
         {route && direction && stop && (
           <section className="space-y-2">
             <div className="rounded-2xl bg-surface p-4">
@@ -156,25 +181,12 @@ export default function RouteDetailsPage() {
               {hint && <p className="mt-1 text-[15px] text-secondary">{hint}</p>}
             </div>
             <div className="flex gap-2">
-              {/* Native select under a styled row: the system picker on phones */}
-              <label className="relative flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3 has-focus-visible:ring-2 has-focus-visible:ring-accent">
-                <span className="text-secondary">From</span>
-                <span className="min-w-0 flex-1 truncate font-medium">{stop.name}</span>
-                <UpDownIcon className="h-4 w-4 shrink-0 text-secondary" />
-                <select
-                  aria-label="Stop"
-                  className="absolute inset-0 cursor-pointer opacity-0"
-                  value={stop.stopId}
-                  onChange={(e) => setParam({ dir: String(direction.directionId), stop: e.target.value })}
-                >
-                  {/* Not the last stop: nothing departs from there */}
-                  {direction.stops.slice(0, -1).map((s) => (
-                    <option key={s.stopId} value={s.stopId}>
-                      {s.name ?? s.stopId}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <StopPicker
+                stops={direction.stops.slice(0, -1) /* not the last stop: nothing departs there */}
+                value={stop}
+                color={hex(route.color, 'var(--color-secondary)')}
+                onChange={(id) => setParam({ dir: String(direction.directionId), stop: id })}
+              />
               {choice.reason === 'chosen' && (
                 <button
                   type="button"
@@ -204,20 +216,14 @@ export default function RouteDetailsPage() {
 
         {route && stop && (
           <>
-            <Segmented
-              label="View"
-              value={view}
-              onChange={(v) => setParam({ view: v === 'timetable' ? v : null })}
-              options={[
-                { value: 'departures', label: 'Departures' },
-                { value: 'timetable', label: 'Timetable' },
-              ]}
-            />
             {view === 'departures' ? (
               <Departures
                 toolbar={<AfterFilter />}
+                includePast={!!after}
+                highlightTrip={arrivedOn}
                 title={null}
                 departures={departures}
+                empty="No departures in the next 90 minutes."
                 isPending={departuresQuery.isPending}
                 error={departuresQuery.isError}
                 onRetry={() => departuresQuery.refetch()}
@@ -228,7 +234,9 @@ export default function RouteDetailsPage() {
           </>
         )}
 
+        {stop && <StationStops id={stop.stopId} current={stop.stopId} />}
       </main>
+      {sheet && <FavoriteSheet options={favoriteOptions} onClose={() => setSheet(false)} />}
     </div>
   )
 }

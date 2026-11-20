@@ -1,13 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import FavoriteSheet from '../components/FavoriteSheet'
+import { StarIcon } from '../components/Icons'
+import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
 import { useParams, useSearchParams } from 'react-router'
-import AfterFilter, { useAfter } from '../components/AfterFilter'
+import AfterFilter, { TimeControl, useAfter } from '../components/AfterFilter'
+import Alerts from '../components/Alerts'
 import Departures from '../components/Departures'
-import MiniMap from '../components/MiniMap'
 import NavBar from '../components/NavBar'
-import RouteBadge from '../components/RouteBadge'
-import Segmented from '../components/Segmented'
-import StopRow from '../components/StopRow'
+import StationStops from '../components/StationStops'
+import StopInfoCard from '../components/StopInfoCard'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
+import { recordVisit } from '../lib/usage'
 import { useDepartures } from '../lib/useDepartures'
 
 /**
@@ -19,7 +23,6 @@ export default function StationPage() {
   const { stationId = '' } = useParams()
   const [params, setParams] = useSearchParams()
   const from = params.get('from')
-  const scope = params.get('scope') === 'all' || !from ? 'all' : 'platform'
 
   const query = useQuery({
     queryKey: ['station', stationId],
@@ -27,16 +30,63 @@ export default function StationPage() {
     staleTime: 60 * 60_000,
   })
   const station = query.data?.station
+  useEffect(() => {
+    if (station) recordVisit(`station:${station.stationId}`)
+  }, [station])
   const platforms = (station?.stops ?? []).filter((s) => (s.routes ?? []).some(Boolean))
   const fromPlatform = platforms.find((s) => s.stopId === from) ?? station?.stops?.find((s) => s.stopId === from)
 
-  const ids = scope === 'platform' && from ? [from] : platforms.map((s) => s.stopId)
-  const [after] = useAfter()
+  const { has } = useFavorites()
+  const [sheet, setSheet] = useState(false)
+  const favStop = fromPlatform ?? (platforms.length === 1 ? platforms[0] : undefined)
+  const favoriteOptions: FavoriteDraft[] = favStop
+    ? [
+        {
+          kind: 'stop' as const,
+          stopId: favStop.stopId,
+          stationId: station?.stationId ?? stationId,
+          name: favStop.name ?? favStop.stopId,
+          headsigns: favStop.headsigns ?? [],
+          routes: (favStop.routes ?? []).filter((r) => r != null),
+        },
+        ...(favStop.routes ?? []).filter((r) => r != null).map((route) => ({
+          kind: 'lineStop' as const,
+          route,
+          stopId: favStop.stopId,
+          stationId: station?.stationId ?? stationId,
+          stopName: favStop.name ?? favStop.stopId,
+          headsign: null,
+        })),
+      ]
+    : []
+  const favorite = favoriteOptions.some((o) => has(favoriteId(o)))
+
+  // The selected stop (from ?from=) narrows the departures; none selected = every stop in the group
+  const ids = from ? [from] : platforms.map((s) => s.stopId)
+  const { after } = useAfter()
+  const arrivedOn = useSearchParams()[0].get('trip')
   const departures = useDepartures(ids, { limit: 8, enabled: !!station, after })
 
   return (
     <div className="min-h-dvh">
-      <NavBar back={{ label: 'Back' }} title={station?.name ?? (query.isPending ? '' : stationId)} />
+      <NavBar
+        back={{ label: 'Back' }}
+        trailing={
+          <>
+            <TimeControl />
+            {favoriteOptions.length > 0 && (
+              <button
+              type="button"
+              onClick={() => setSheet(true)}
+              aria-label="Favourites"
+              className={`rounded-md p-2 active:opacity-50 ${favorite ? 'text-accent' : 'text-label'}`}
+            >
+              <StarIcon filled={favorite} className="h-6 w-6" />
+            </button>
+            )}
+          </>
+        }
+      />
       <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isPending && <div className="h-32 animate-pulse rounded-2xl bg-surface" />}
         {query.isError && (
@@ -50,47 +100,31 @@ export default function StationPage() {
 
         {station && (
           <>
-            {station.routes.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {station.routes.map((r) => (
-                  <RouteBadge key={r.routeId} route={r} />
-                ))}
-              </div>
+            {fromPlatform ? (
+              <StopInfoCard
+                id={fromPlatform.code && fromPlatform.code !== fromPlatform.stopId ? fromPlatform.code : fromPlatform.stopId}
+                name={fromPlatform.name ?? station.name}
+                headsigns={fromPlatform.headsigns}
+                routes={(fromPlatform.routes ?? []).filter((r) => r != null)}
+              />
+            ) : (
+              <StopInfoCard
+                name={station.name}
+                note={`${platforms.length} stop${platforms.length === 1 ? '' : 's'} in this group · tap one below to narrow the departures`}
+                routes={station.routes}
+              />
             )}
 
+            <Alerts
+              routeIds={(fromPlatform?.routes ?? station.routes).filter((r) => r != null).map((r) => r!.routeId)}
+              stopIds={fromPlatform ? [fromPlatform.stopId] : platforms.map((p) => p.stopId)}
+            />
+
             <section className="space-y-2">
-              {from && (
-                <Segmented
-                  label="Departures from"
-                  value={scope}
-                  onChange={(v) =>
-                    setParams(
-                      (p) => {
-                        if (v === 'all') p.set('scope', 'all')
-                        else p.delete('scope')
-                        return p
-                      },
-                      { replace: true },
-                    )
-                  }
-                  options={[
-                    {
-                      value: 'platform',
-                      ariaLabel: 'Lines at the stop you came from',
-                      label: (
-                        <span className="flex flex-wrap justify-center gap-1">
-                          {(fromPlatform?.routes ?? []).filter((r) => r != null).slice(0, 5).map((r) => (
-                            <RouteBadge key={r.routeId} route={r} />
-                          ))}
-                        </span>
-                      ),
-                    },
-                    { value: 'all', label: <span className="truncate">{station.name}</span> },
-                  ]}
-                />
-              )}
               <Departures
                 toolbar={<AfterFilter />}
+                includePast={!!after}
+                highlightTrip={arrivedOn}
                 title={null}
                 departures={departures.data?.departures ?? []}
                 isPending={departures.isPending}
@@ -99,28 +133,24 @@ export default function StationPage() {
               />
             </section>
 
-            <section>
-              <h2 className="px-1 pb-2 text-xl font-bold">Stops here</h2>
-              <ul className="overflow-hidden rounded-2xl bg-surface">
-                {platforms.map((stop) => (
-                  <StopRow key={stop.stopId} stop={stop} highlighted={stop.stopId === from} />
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="px-1 pb-2 text-xl font-bold">Map</h2>
-              <MiniMap
-                area
-                height={220}
-                points={platforms
-                  .filter((s) => s.lat != null && s.lon != null)
-                  .map((s) => ({ lat: s.lat!, lon: s.lon!, strong: s.stopId === from }))}
-              />
-            </section>
+            <StationStops
+              id={station.stationId}
+              current={from}
+              onSelect={(stopId) =>
+                setParams(
+                  (p) => {
+                    if (stopId && stopId !== from) p.set('from', stopId)
+                    else p.delete('from')
+                    return p
+                  },
+                  { replace: true },
+                )
+              }
+            />
           </>
         )}
       </main>
+      {sheet && <FavoriteSheet options={favoriteOptions} onClose={() => setSheet(false)} />}
     </div>
   )
 }

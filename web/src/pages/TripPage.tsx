@@ -1,10 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { ChevronIcon, LiveIcon } from '../components/Icons'
+import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
+import Alerts from '../components/Alerts'
 import MiniMap from '../components/MiniMap'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
 import { gql, TRIP_QUERY, type RouteRef, type TripDetails, type TripStop } from '../lib/api'
+import { distance } from '../lib/geo'
+import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
+import CategoryIcon from '../components/CategoryIcon'
 import { hex } from '../lib/geo'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { formatTime, formatTimeParts } from '../lib/time'
@@ -16,7 +20,7 @@ export default function TripPage() {
   const [params] = useSearchParams()
   const date = params.get('date') || undefined
   const from = params.get('from')
-  const now = useNow(10_000)
+  const now = useNow(1_000)
 
   const query = useQuery({
     queryKey: ['trip', tripId, date],
@@ -59,12 +63,7 @@ export default function TripPage() {
 
         {trip && (
           <>
-            {delay != null && started && !finished && <DelayBanner delay={delay} />}
-            {vehicleAge != null && vehicleAge >= 2 && (
-              <p className="rounded-2xl bg-[#fde68a] px-4 py-3 text-[15px] text-black">
-                The vehicle position was updated {Math.round(vehicleAge)} minutes ago, so estimates can be off by about as much.
-              </p>
-            )}
+            {route && <Alerts routeIds={[route.routeId]} />}
 
             <section className="rounded-2xl bg-surface p-4">
               <div className="flex items-center gap-2">
@@ -82,15 +81,20 @@ export default function TripPage() {
                   <span className="ml-auto rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">Scheduled</span>
                 )}
               </div>
-              <h1 className="mt-1 text-2xl leading-tight font-bold">{trip.headsign ?? stops.at(-1)?.stop.name}</h1>
+              <div className="mt-1 flex items-start gap-3">
+                <h1 className="min-w-0 flex-1 text-2xl leading-tight font-bold">{trip.headsign ?? stops.at(-1)?.stop.name}</h1>
+                {delay != null && started && !finished && <DelayIndicator delay={delay} />}
+              </div>
               {viaStops(stops).length > 0 && (
                 <p className="mt-1 text-[15px]">
                   <span className="text-secondary">via </span>
                   {viaStops(stops).join(' · ')}
                 </p>
               )}
+              {stats(trip) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip)}</p>}
               <p className="mt-1 text-[15px] text-secondary">
                 {finished ? 'This trip has finished.' : !started ? `Starts at ${formatTime(new Date(stops[0].departure))}` : 'On its way'}
+                {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
               </p>
             </section>
 
@@ -115,9 +119,10 @@ export default function TripPage() {
                     highlighted={s.stop.stopId === from}
                     color={color}
                     vehicleLabel={route?.shortName ?? ''}
-                    textColor={hex(route?.textColor, '#ffffff')}
+                    category={route ? categoryOf(route) : CATEGORIES[CATEGORIES.length - 1]}
                     currentRouteId={route?.routeId}
                     referenceTime={referenceTime}
+                    tripId={tripId}
                     showSeconds={hasSeconds}
                   />
                 ))}
@@ -173,17 +178,6 @@ function latestDelay(stops: TripStop[], nextIndex: number) {
   return null
 }
 
-function DelayBanner({ delay }: { delay: number }) {
-  const minutes = Math.round(Math.abs(delay) / 60)
-  if (minutes === 0) return <p className="rounded-2xl bg-live px-4 py-3 text-[17px] text-white">The vehicle is on time.</p>
-  const amount = minutes === 1 ? 'about a minute' : `about ${minutes} minutes`
-  return delay > 0 ? (
-    <p className="rounded-2xl bg-late px-4 py-3 text-[17px] text-white">The vehicle is currently {amount} late.</p>
-  ) : (
-    <p className="rounded-2xl bg-early px-4 py-3 text-[17px] text-white">The vehicle is currently {amount} early.</p>
-  )
-}
-
 function TripStopRow({
   stop: s,
   first,
@@ -193,14 +187,16 @@ function TripStopRow({
   highlighted,
   color,
   vehicleLabel,
-  textColor,
+  category,
   currentRouteId,
   referenceTime,
+  tripId,
   showSeconds,
 }: {
   showSeconds: boolean
   currentRouteId?: string
   referenceTime: number | null
+  tripId: string
   stop: TripStop
   first: boolean
   last: boolean
@@ -209,7 +205,7 @@ function TripStopRow({
   highlighted: boolean
   color: string
   vehicleLabel: string
-  textColor: string
+  category: Category
 }) {
   const arrival = new Date(s.arrival)
   const departure = new Date(s.departure)
@@ -226,16 +222,18 @@ function TripStopRow({
   return (
     <li className="relative">
       {vehicleBefore && (
+        // The vehicle: BKK pictogram for its type, in the line's colour, on a white disc
         <span
-          className="absolute -top-3 left-1 z-10 flex h-6 min-w-9 items-center justify-center rounded-full px-1.5 text-[12px] font-bold shadow-md ring-2 ring-surface"
-          style={{ backgroundColor: color, color: textColor }}
+          className="absolute -top-3.5 left-[3px] z-10 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-md"
           aria-label="Vehicle is here"
+          title={vehicleLabel}
         >
-          {vehicleLabel}
+          <CategoryIcon category={category} color={color} className="h-6 w-6" />
         </span>
       )}
       <Link
-        to={`/stations/${encodeURIComponent(s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}`}
+        // Opening a stop from a trip starts its departures at this trip, marked "Your trip"
+        to={`/stations/${encodeURIComponent(s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(new Date(s.departure).getTime() - 60_000).toISOString())}`}
         className={`flex items-center gap-2 pr-3 active:bg-fill ${passed ? 'opacity-45' : ''}`}
       >
         <span className="relative flex h-12 w-9 shrink-0 justify-center" aria-hidden>
@@ -277,12 +275,15 @@ function TripStopRow({
 }
 
 /**
- * Interchange markers next to a stop: metro, rail and suburban rail lines
- * reachable at that stop group (not the line you're on). Buses and trams are
- * everywhere, so they'd only add noise.
+ * Interchange markers next to a stop: metro and HÉV lines reachable at that
+ * stop group (not the line you're on). Our own choice, not from the data:
+ * buses and trams are everywhere, and other "rail" in the feed (mainline
+ * trains, the Children's Railway) would mostly be noise.
  */
 function transferLines(routes: RouteRef[], currentRouteId?: string) {
-  const major = routes.filter((r) => r.routeId !== currentRouteId && (r.type === 'SUBWAY' || r.type === 'RAIL'))
+  const major = routes.filter(
+    (r) => r.routeId !== currentRouteId && (r.type === 'SUBWAY' || /^H\d+$/.test(r.shortName ?? '')),
+  )
   const seen = new Set<string>()
   return major.filter((r) => {
     const key = r.shortName ?? r.routeId
@@ -300,4 +301,71 @@ function viaStops(stops: TripStop[]) {
   return Array.from({ length: n }, (_, i) => middle[Math.floor(((i + 1) * middle.length) / (n + 1))]?.stop.name).filter(
     (name): name is string => !!name,
   )
+}
+
+/**
+ * " · updated 42s ago", counting every second. BKK's data is already 10–15 s
+ * old when it arrives, so only call it out past 30 s. The number sits in a
+ * fixed two-digit box (right-aligned, tabular figures) so it doesn't jiggle.
+ */
+function UpdatedAgo({ seconds }: { seconds: number }) {
+  if (seconds < 30) return null
+  const s = Math.floor(seconds)
+  return (
+    <span>
+      {' · updated '}
+      {s < 60 ? (
+        <>
+          <span className="inline-block min-w-[2ch] text-right tabular-nums">{s}</span>s ago
+        </>
+      ) : (
+        <>
+          <span className="tabular-nums">{Math.floor(s / 60)}</span> min ago
+        </>
+      )}
+    </span>
+  )
+}
+
+/** Big coloured delay: "3 min late" red, "2 min early" purple, ✓ on time. */
+function DelayIndicator({ delay }: { delay: number }) {
+  const minutes = Math.round(Math.abs(delay) / 60)
+  if (minutes === 0)
+    return (
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-live/15 text-live" title="On time" aria-label="On time">
+        <CheckIcon className="h-5 w-5" />
+      </span>
+    )
+  const late = delay > 0
+  return (
+    <span className={`shrink-0 text-right leading-none ${late ? 'text-late' : 'text-early'}`}>
+      <span className="block text-3xl font-bold tabular-nums">{minutes}</span>
+      <span className="text-[12px] font-semibold">min {late ? 'late' : 'early'}</span>
+    </span>
+  )
+}
+
+/**
+ * "34 min · 12.4 km · 23 stops". Distance follows the route shape when the
+ * feed has one, otherwise straight lines between stops (marked ~).
+ */
+function stats(trip: NonNullable<TripDetails['trip']>) {
+  const stops = trip.stops
+  if (stops.length < 2) return null
+  const minutes = Math.round((new Date(stops[stops.length - 1].arrival).getTime() - new Date(stops[0].departure).getTime()) / 60_000)
+  const path = trip.path?.coordinates ?? []
+  let metres = 0
+  let approx = false
+  if (path.length > 1) {
+    for (let i = 1; i < path.length; i++) metres += distance({ lat: path[i - 1][1], lon: path[i - 1][0] }, { lat: path[i][1], lon: path[i][0] })
+  } else {
+    approx = true
+    for (let i = 1; i < stops.length; i++) {
+      const a = stops[i - 1].stop
+      const b = stops[i].stop
+      if (a.lat != null && a.lon != null && b.lat != null && b.lon != null) metres += distance({ lat: a.lat, lon: a.lon }, { lat: b.lat, lon: b.lon })
+    }
+  }
+  const km = metres > 0 ? `${approx ? '~' : ''}${(metres / 1000).toFixed(1)} km` : null
+  return [`${minutes} min`, km, `${stops.length} stops`].filter(Boolean).join(' · ')
 }
