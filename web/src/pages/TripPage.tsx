@@ -37,6 +37,8 @@ export default function TripPage() {
   // Reference for the relative-minutes column: the stop you came from
   const reference = stops.find((x) => x.stop.stopId === from)
   const referenceTime = reference ? new Date(reference.departure).getTime() : null
+  // Only show seconds when the data has them (realtime predictions, MÁV); plain schedules are all :00
+  const hasSeconds = stops.some((x) => new Date(x.arrival).getSeconds() !== 0 || new Date(x.departure).getSeconds() !== 0)
   const vehicleAge = vehicle?.timestamp ? (now.getTime() - new Date(vehicle.timestamp).getTime()) / 60_000 : null
 
   return (
@@ -116,6 +118,7 @@ export default function TripPage() {
                     textColor={hex(route?.textColor, '#ffffff')}
                     currentRouteId={route?.routeId}
                     referenceTime={referenceTime}
+                    showSeconds={hasSeconds}
                   />
                 ))}
               </ol>
@@ -193,7 +196,9 @@ function TripStopRow({
   textColor,
   currentRouteId,
   referenceTime,
+  showSeconds,
 }: {
+  showSeconds: boolean
   currentRouteId?: string
   referenceTime: number | null
   stop: TripStop
@@ -261,7 +266,7 @@ function TripStopRow({
           {waits && <span className="text-[12px] opacity-75">{formatTime(arrival)}</span>}
           <span className={`text-[16px] ${status !== 'scheduled' ? 'font-semibold' : ''}`}>
             {mainParts.hm}
-            <span className="text-[11px] opacity-70">:{mainParts.s}</span>
+            {showSeconds && <span className="text-[11px] opacity-70">:{mainParts.s}</span>}
           </span>
           {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5 self-center" aria-label="Realtime" />}
         </span>
