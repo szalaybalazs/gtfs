@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router'
 import { CATEGORIES } from '../lib/categories'
 import CategoryIcon from './CategoryIcon'
 import { BusIcon, CloseIcon, GearIcon, HomeIcon, MapIcon, PinIcon } from './Icons'
@@ -29,9 +29,58 @@ export default function Layout() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  // Pages slide in from the right when opened and from the left when going
+  // back. Replace-navigations (search typing, filters, time picker) keep the
+  // page as is, so inputs keep focus.
+  const navType = useNavigationType()
+  const [page, setPage] = useState({ key: location.key, dir: 'none' as 'none' | 'forward' | 'back' })
+  if (navType !== 'REPLACE' && page.key !== location.key) setPage({ key: location.key, dir: navType === 'POP' ? 'back' : 'forward' })
+  useLayoutEffect(() => {
+    if (page.dir === 'forward') window.scrollTo(0, 0)
+  }, [page])
+
+  // Swipe right from the left edge opens the menu, swipe left closes it (home screen apps have no browser gestures)
+  const swipe = useRef<{ x: number; y: number; opening: boolean } | null>(null)
+  useEffect(() => {
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (e.touches.length !== 1) return
+      // Not while panning the map
+      if ((e.target as Element | null)?.closest?.('.leaflet-container')) return
+      if (open || t.clientX < 24) swipe.current = { x: t.clientX, y: t.clientY, opening: !open }
+    }
+    const onMove = (e: TouchEvent) => {
+      const s = swipe.current
+      if (!s) return
+      const dx = e.touches[0].clientX - s.x
+      const dy = e.touches[0].clientY - s.y
+      if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) swipe.current = null
+      else if (s.opening && dx > 50) {
+        setOpen(true)
+        swipe.current = null
+      } else if (!s.opening && dx < -50) {
+        setOpen(false)
+        swipe.current = null
+      }
+    }
+    const onEnd = () => (swipe.current = null)
+    window.addEventListener('touchstart', onStart, { passive: true })
+    window.addEventListener('touchmove', onMove, { passive: true })
+    window.addEventListener('touchend', onEnd)
+    window.addEventListener('touchcancel', onEnd)
+    return () => {
+      window.removeEventListener('touchcancel', onEnd)
+      window.removeEventListener('touchstart', onStart)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onEnd)
+    }
+  }, [open])
+
   return (
     <MenuContext.Provider value={() => setOpen(true)}>
-      <Outlet />
+      <div key={page.key} className={page.dir === 'forward' ? 'page-forward' : page.dir === 'back' ? 'page-back' : undefined}>
+        <Outlet />
+      </div>
       <div
         className={`fixed inset-0 z-[1100] bg-black/30 transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={() => setOpen(false)}

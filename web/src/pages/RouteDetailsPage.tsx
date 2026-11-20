@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
-import AfterFilter, { TimeControl, useAfter } from '../components/AfterFilter'
+import AfterFilter, { useAfter } from '../components/AfterFilter'
 import Alerts from '../components/Alerts'
 import Departures from '../components/Departures'
 import { LocationIcon, StarIcon, SwapIcon } from '../components/Icons'
@@ -93,7 +93,7 @@ export default function RouteDetailsPage() {
   const departuresQuery = useDepartures(stop ? [stop.stopId] : [], { limit: 60, after, routeIds: [routeId] })
   const windowEnd = (after?.getTime() ?? Date.now()) + 90 * 60_000
   const departures = (departuresQuery.data?.departures ?? []).filter(
-    (d) => d.route?.routeId === routeId && new Date(d.departure).getTime() <= windowEnd,
+    (d) => d.route?.routeId === (route?.routeId ?? routeId) && new Date(d.departure).getTime() <= windowEnd,
   )
 
   const setParam = (changes: Record<string, string | null>) =>
@@ -146,7 +146,6 @@ export default function RouteDetailsPage() {
         trailing={
           route && (
             <>
-              <TimeControl />
               <ViewToggle />
               <button
               type="button"

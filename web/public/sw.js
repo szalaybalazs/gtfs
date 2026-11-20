@@ -3,7 +3,7 @@
 // - Page loads are network-first, falling back to the cached app shell.
 // - API calls (/graphql) and other origins are never cached: timetable data
 //   must be live.
-const CACHE = 'timetable-v1'
+const CACHE = 'timetable-v2'
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', (event) => {

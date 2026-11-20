@@ -107,6 +107,12 @@ export const typeDefs = `#graphql
     stops: [Stop!]!
     routes: [Route!]!
   }
+  "A stop group and which of the requested lines stop there"
+  type SharedStation {
+    station: Station!
+    routes: [Route!]!
+    distance: Float
+  }
   type StationPaginated {
     page: Int!
     pages: Int!
@@ -332,6 +338,8 @@ export const typeDefs = `#graphql
     stations(limit: Int, page: Int, search: String): StationPaginated!
     station(id: ID!): Station
     stationsByRadius(lat: Float!, lon: Float!, radius: Float!): [Station!]!
+    "Stop groups served by at least two of the lines (all of them first), nearest first"
+    sharedStations(routeIds: [ID!]!, lat: Float, lon: Float): [SharedStation!]!
     "Next departures from any of the stops, across all routes"
     departures(stopIds: [ID!]!, routeIds: [ID!], limit: Int, hours: Int, after: DateTime): [Departure!]!
     trip(id: ID!, serviceDate: String): TripDetails

@@ -22,20 +22,29 @@ export function useGeolocation(auto = false) {
       return
     }
     setState((s) => ({ ...s, loading: true, error: null }))
+    const ok = (pos: GeolocationPosition) =>
+      setState({ coords: { lat: pos.coords.latitude, lon: pos.coords.longitude }, error: null, loading: false })
+    const fail = (err: GeolocationPositionError) =>
+      setState((s) => ({
+        ...s,
+        loading: false,
+        // Distinguish the cases: home screen apps on iOS often fail with a timeout, not a denial
+        error:
+          err.code === err.PERMISSION_DENIED
+            ? 'Location access is not allowed'
+            : err.code === err.TIMEOUT
+              ? 'Location timed out (no GPS fix yet)'
+              : `Location unavailable${err.message ? `: ${err.message}` : ''}`,
+      }))
+    // High accuracy first; iOS home screen apps frequently time out or report
+    // "unavailable" with it, so fall back to a coarse fix before giving up.
     navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        setState({
-          coords: { lat: pos.coords.latitude, lon: pos.coords.longitude },
-          error: null,
-          loading: false,
-        }),
-      (err) =>
-        setState((s) => ({
-          ...s,
-          loading: false,
-          error: err.code === err.PERMISSION_DENIED ? 'Location access is not allowed' : err.message,
-        })),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+      ok,
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) return fail(err)
+        navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: 20_000, maximumAge: 5 * 60_000 })
+      },
+      { enableHighAccuracy: true, timeout: 8_000, maximumAge: 60_000 },
     )
   }, [])
 

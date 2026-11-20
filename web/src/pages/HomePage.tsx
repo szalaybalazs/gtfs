@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { LineStopCard, StopCard } from '../components/FavoriteCards'
+import { LinesCard, LineStopCard, StopCard } from '../components/FavoriteCards'
 import NavBar from '../components/NavBar'
 import NearbyList from '../components/NearbyList'
 import RouteTile from '../components/RouteTile'
@@ -7,7 +7,7 @@ import TimeModeMenu from '../components/TimeModeMenu'
 import { useFavorites } from '../lib/favorites'
 
 export default function HomePage() {
-  const { favorites, lines, lineStops, stops } = useFavorites()
+  const { favorites, lines, lineStops, stops, multiLines } = useFavorites()
   return (
     <div className="min-h-dvh">
       <NavBar title="Home" menu trailing={<TimeModeMenu />} />
@@ -32,13 +32,18 @@ export default function HomePage() {
           </section>
         )}
 
-        {lineStops.length > 0 && (
+        {(lineStops.length > 0 || multiLines.length > 0) && (
           <section>
             <h2 className="px-1 pb-2 text-xl font-bold">Lines from stops</h2>
             <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
               {lineStops.map((f) => (
                 <li key={f.id}>
                   <LineStopCard fav={f} />
+                </li>
+              ))}
+              {multiLines.map((f) => (
+                <li key={f.id}>
+                  <LinesCard fav={f} />
                 </li>
               ))}
             </ul>

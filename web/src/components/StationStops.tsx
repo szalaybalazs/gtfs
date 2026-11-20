@@ -12,18 +12,23 @@ export default function StationStops({
   id,
   current,
   onSelect,
+  lines,
 }: {
   id: string
   current?: string | null
   /** When set, tapping a stop selects it (tap again to clear) instead of opening it. */
   onSelect?: (stopId: string | null) => void
+  /** Only stops served by any of these lines */
+  lines?: string[]
 }) {
   const query = useQuery({
     queryKey: ['station', id],
     queryFn: () => gql<StationDetails>(STATION_QUERY, { id }),
     staleTime: 60 * 60_000,
   })
-  const stops = (query.data?.station?.stops ?? []).filter((s) => (s.routes ?? []).some(Boolean))
+  const stops = (query.data?.station?.stops ?? []).filter((s) =>
+    (s.routes ?? []).some((r) => r && (!lines?.length || lines.includes(r.routeId))),
+  )
   if (stops.length === 0) return null
   return (
     <>

@@ -10,6 +10,7 @@ import MapPage from './pages/MapPage'
 import NearbyPage from './pages/NearbyPage'
 import PhonePreviewPage from './pages/PhonePreviewPage'
 import RouteDetailsPage from './pages/RouteDetailsPage'
+import LinesPage from './pages/LinesPage'
 import RoutesPage from './pages/RoutesPage'
 import SettingsPage from './pages/SettingsPage'
 import StationPage from './pages/StationPage'
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<HomePage />} />
             <Route path="/routes" element={<RoutesPage />} />
             <Route path="/routes/:routeId" element={<RouteDetailsPage />} />
+            <Route path="/lines" element={<LinesPage />} />
             <Route path="/stops" element={<StopsPage />} />
             <Route path="/stops/:stopId" element={<StopPage />} />
             <Route path="/stations/:stationId" element={<StationPage />} />

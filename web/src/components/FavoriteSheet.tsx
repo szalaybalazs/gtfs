@@ -7,6 +7,7 @@ const TITLES: Record<FavoriteDraft['kind'], string> = {
   line: 'Just the line',
   lineStop: 'This line from this stop',
   stop: 'The whole stop',
+  lines: 'These lines from here',
 }
 
 /**

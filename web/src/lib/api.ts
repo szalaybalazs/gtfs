@@ -387,3 +387,16 @@ export const ALERTS_QUERY = /* GraphQL */ `
     }
   }
 `
+
+export type SharedStation = { station: Station; routes: RouteRef[]; distance: number | null }
+export type SharedStations = { sharedStations: SharedStation[] }
+
+export const SHARED_STATIONS_QUERY = /* GraphQL */ `
+  query SharedStations($routeIds: [ID!]!, $lat: Float, $lon: Float) {
+    sharedStations(routeIds: $routeIds, lat: $lat, lon: $lon) {
+      distance
+      routes { ${ROUTE_REF} }
+      station { stationId name lat lon stops { stopId name code headsigns routes { ${ROUTE_REF} } } }
+    }
+  }
+`

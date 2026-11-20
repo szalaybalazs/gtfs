@@ -60,26 +60,35 @@ function budapestTime(hhmm: string) {
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /**
- * Top-bar control: clock icon + "Now" or the chosen time. Opens an app-styled
+ * Departures-header control: clock icon + "Now" or the chosen time. Opens an app-styled
  * picker (hour/minute steppers, quick offsets), no native time input.
  */
 export function TimeControl() {
-  const { picked, setTime } = useAfter()
+  const { picked, after, earlier, setTime } = useAfter()
   const [open, setOpen] = useState(false)
   const base = picked ?? new Date()
   const parts = localParts(base)
   const [h, setH] = useState(+parts.hour)
   const [m, setM] = useState(Math.ceil(+parts.minute / 5) * 5 % 60)
   const ref = useRef<HTMLDivElement>(null)
+  // Fixed, so the departures card's rounded overflow doesn't clip it
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
 
   useEffect(() => {
     if (!open) return
+    const r = ref.current?.getBoundingClientRect()
+    if (r) setPos({ top: r.bottom + 4, left: Math.max(8, Math.min(r.left, window.innerWidth - 264)) })
+    const onScroll = () => setOpen(false)
+    window.addEventListener('scroll', onScroll, { passive: true, once: true })
     const p = localParts(picked ?? new Date())
     setH(+p.hour)
     setM((Math.ceil(+p.minute / 5) * 5) % 60)
     const onDown = (e: PointerEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false)
     window.addEventListener('pointerdown', onDown)
-    return () => window.removeEventListener('pointerdown', onDown)
+    return () => {
+      window.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('scroll', onScroll)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
@@ -111,13 +120,16 @@ export function TimeControl() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className={`flex items-center gap-1 rounded-md p-2 text-[15px] font-semibold active:opacity-50 ${picked ? 'text-accent' : ''}`}
+        className={`-ml-1.5 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[15px] font-semibold active:opacity-50 ${after ? 'text-accent' : ''}`}
       >
-        <ClockIcon className="h-6 w-6" />
-        <span className="tabular-nums">{picked ? formatTime(picked) : 'Now'}</span>
+        <ClockIcon className="h-5 w-5" />
+        <span className="tabular-nums">
+          {after ? `From ${formatTime(after)}` : 'Now'}
+          {earlier > 0 && !picked && <span className="font-normal text-secondary"> (earlier)</span>}
+        </span>
       </button>
-      {open && (
-        <div role="dialog" aria-label="Departures from" className="absolute top-full right-0 z-[1200] mt-1 w-64 rounded-2xl bg-surface p-4 shadow-xl ring-1 ring-separator">
+      {open && pos && (
+        <div role="dialog" aria-label="Departures from" style={{ top: pos.top, left: pos.left }} className="fixed z-[1200] w-64 rounded-2xl bg-surface p-4 shadow-xl ring-1 ring-separator">
           <p className="text-[12px] font-semibold text-secondary uppercase">Departures from</p>
           <div className="my-2 flex items-center justify-center gap-2">
             <Stepper value={h} onChange={setH} max={24} step={1} />
@@ -145,21 +157,12 @@ export function TimeControl() {
   )
 }
 
-/** Header row of a departures card: what the list starts from, and "⋯ Earlier". */
+/** Header row of a departures card: the time picker (Now / From HH:MM) and "⋯ Earlier". */
 export default function AfterFilter() {
-  const { after, picked, earlier, loadEarlier } = useAfter()
+  const { loadEarlier } = useAfter()
   return (
     <div className="flex items-center justify-between gap-3 border-b border-separator px-4 py-2.5 text-[15px]">
-      <span className="text-secondary">
-        {after ? (
-          <>
-            From <span className="font-semibold text-label tabular-nums">{formatTime(after)}</span>
-            {earlier > 0 && !picked && ' (earlier)'}
-          </>
-        ) : (
-          'Now'
-        )}
-      </span>
+      <TimeControl />
       <button type="button" onClick={loadEarlier} className="flex items-center gap-1 font-medium text-accent active:opacity-60" aria-label="Show earlier departures">
         <span className="text-lg leading-none">⋯</span> Earlier
       </button>

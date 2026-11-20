@@ -9,6 +9,15 @@
         "cd web && pnpm dev --port 5173 --host"
       ],
       "port": 5173
+    },
+    {
+      "name": "web-local",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd web && API_PROXY=http://127.0.0.1:4000 pnpm dev --port 5174"
+      ],
+      "port": 5174
     }
   ]
 }

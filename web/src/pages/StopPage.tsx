@@ -4,7 +4,7 @@ import FavoriteSheet from '../components/FavoriteSheet'
 import { StarIcon } from '../components/Icons'
 import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
 import { Link, useParams, useSearchParams } from 'react-router'
-import AfterFilter, { TimeControl, useAfter } from '../components/AfterFilter'
+import AfterFilter, { useAfter } from '../components/AfterFilter'
 import Alerts from '../components/Alerts'
 import Departures from '../components/Departures'
 import { ChevronIcon } from '../components/Icons'
@@ -65,7 +65,6 @@ export default function StopPage() {
         trailing={
           favoriteOptions.length > 0 && (
             <>
-              <TimeControl />
               <ViewToggle />
               <button
               type="button"

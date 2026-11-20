@@ -6,18 +6,21 @@ import type { RouteRef } from './api'
  * - line: just the line (a small badge)
  * - lineStop: one line from one stop (its next departures)
  * - stop: a stop with all its lines and departures
+ * - lines: several lines from one stop group (or one of its stops), e.g. "4 or 6 from Blaha"
  */
 export type Favorite =
   | { kind: 'line'; id: string; route: RouteRef }
   | { kind: 'lineStop'; id: string; route: RouteRef; stopId: string; stationId: string; stopName: string; headsign: string | null }
   | { kind: 'stop'; id: string; stopId: string; stationId: string; name: string; headsigns: string[]; routes: RouteRef[] }
+  | { kind: 'lines'; id: string; routes: RouteRef[]; stationId: string; stopIds: string[]; from: string | null; name: string; headsigns: string[] }
 
 type Draft<K extends Favorite['kind']> = Omit<Extract<Favorite, { kind: K }>, 'id'>
-export type FavoriteDraft = Draft<'line'> | Draft<'lineStop'> | Draft<'stop'>
+export type FavoriteDraft = Draft<'line'> | Draft<'lineStop'> | Draft<'stop'> | Draft<'lines'>
 
 export function favoriteId(f: FavoriteDraft): string {
   if (f.kind === 'line') return `line:${f.route.routeId}`
   if (f.kind === 'lineStop') return `lineStop:${f.route.routeId}:${f.stopId}`
+  if (f.kind === 'lines') return `lines:${f.routes.map((r) => r.routeId).sort().join(',')}:${f.from ?? f.stationId}`
   return `stop:${f.stopId}`
 }
 
@@ -75,6 +78,7 @@ export function useFavorites() {
       lines: favorites.filter((f): f is Extract<Favorite, { kind: 'line' }> => f.kind === 'line'),
       lineStops: favorites.filter((f): f is Extract<Favorite, { kind: 'lineStop' }> => f.kind === 'lineStop'),
       stops: favorites.filter((f): f is Extract<Favorite, { kind: 'stop' }> => f.kind === 'stop'),
+      multiLines: favorites.filter((f): f is Extract<Favorite, { kind: 'lines' }> => f.kind === 'lines'),
     }),
     [favorites],
   )

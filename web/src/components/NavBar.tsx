@@ -11,7 +11,7 @@ export default function NavBar({
   children,
   menu,
 }: {
-  /** Show the side-menu button (top-level pages). */
+  /** Show the side-menu button (also shown whenever there's a back button). */
   menu?: boolean
   title?: ReactNode
   /** Without `to`, goes back in history (falls back to home). */
@@ -28,7 +28,8 @@ export default function NavBar({
       <div className="mx-auto max-w-2xl px-4">
         <div className="flex h-11 items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center">
-            {menu && (
+            {/* The menu is on every page, not only top-level ones */}
+            {(menu || back) && (
               <button type="button" onClick={openMenu} aria-label="Open menu" className="-ml-2 rounded-md p-2 active:opacity-50">
                 <MenuIcon className="h-6 w-6" />
               </button>

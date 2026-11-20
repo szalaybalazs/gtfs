@@ -85,7 +85,8 @@ const uniqueRoutes = (routes: any[]) => {
 const formatRoute = (r: any) => {
   return {
     ...r,
-    routeId: r.route_id,
+    // Variants of one line (e.g. a temporarily shortened 61) share one public ID
+    routeId: canonicalRoute(r.route_id),
     shortName: trainLabel(r),
     longName: r.route_long_name,
     desc: r.route_desc,
@@ -206,6 +207,65 @@ function memo<T>(key: string, compute: () => T): T {
   return memoCache.get(key) as T;
 }
 
+
+/**
+ * BKK sometimes publishes a temporary variant of a line (a shortened 61 during
+ * works) as a separate route with the same name, type and colour. Treat those
+ * as one line: the lowest route_id is the public ID, and every query that takes
+ * a route expands it back to all variants. Per-train rail routes have no short
+ * name and are left alone (uniqueRoutes handles their badges).
+ */
+type VariantIndex = { canonical: Map<string, string>; variants: Map<string, string[]> };
+const variantIndex = (): VariantIndex =>
+  memo("routeVariants", () => {
+    const rows = db
+      .query("SELECT route_id, agency_id, route_type, route_short_name, route_color FROM routes WHERE agency_id = 'BKK' AND route_short_name IS NOT NULL AND route_short_name != ''")
+      .all() as any[];
+    const groups = new Map<string, string[]>();
+    for (const r of rows) {
+      const key = `${r.agency_id}|${r.route_type}|${r.route_short_name}|${r.route_color ?? ""}`;
+      const list = groups.get(key) ?? [];
+      list.push(String(r.route_id));
+      groups.set(key, list);
+    }
+    const canonical = new Map<string, string>();
+    const variants = new Map<string, string[]>();
+    for (const ids of groups.values()) {
+      if (ids.length < 2) continue;
+      ids.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+      for (const id of ids) canonical.set(id, ids[0]);
+      variants.set(ids[0], ids);
+    }
+    return { canonical, variants };
+  });
+const canonicalRoute = (id: string): string => variantIndex().canonical.get(String(id)) ?? id;
+/** Every route_id behind a (canonical or variant) ID */
+const routeVariants = (id: string): string[] => variantIndex().variants.get(canonicalRoute(id)) ?? [id];
+const expandRoutes = (ids: string[]): string[] => [...new Set(ids.flatMap(routeVariants))];
+const placeholders = (ids: unknown[]) => ids.map(() => "?").join(", ");
+
+/** The variant running the most trips today (falls back to the canonical one) */
+const activeVariant = (id: string): string => {
+  const ids = routeVariants(id);
+  if (ids.length === 1) return ids[0];
+  return memo(`activeVariant:${ids[0]}:${today().format("YYYYMMDD")}`, () => {
+    const row = db
+      .query(
+        `SELECT t.route_id, COUNT(*) AS n FROM trips t
+         JOIN calendar_dates cd ON cd.service_id = t.service_id
+         WHERE t.route_id IN (${placeholders(ids)}) AND cd.date = ? AND cd.exception_type = 1
+         GROUP BY t.route_id ORDER BY n DESC LIMIT 1`
+      )
+      .get(...ids, today().format("YYYYMMDD")) as any;
+    if (row?.route_id) return row.route_id;
+    // No service today: the variant with the most trips overall
+    const any = db
+      .query(`SELECT route_id, COUNT(*) AS n FROM trips WHERE route_id IN (${placeholders(ids)}) GROUP BY route_id ORDER BY n DESC LIMIT 1`)
+      .get(...ids) as any;
+    return any?.route_id ?? ids[0];
+  });
+};
+
 /** Distinct routes serving any of the stops, in the feed's sort order */
 const routesAtStops = (ids: string[]): any[] =>
   ids.length === 0
@@ -279,13 +339,13 @@ export const resolvers = {
                 st.stop_sequence;
           `
         )
-        .all(parent.route_id)
+        .all(activeVariant(parent.route_id))
         .map(formatStop);
     },
     trips: async (parent: any) => {
       return db
-        .query("SELECT * FROM trips WHERE route_id = ?")
-        .all(parent.route_id)
+        .query(`SELECT * FROM trips WHERE route_id IN (${placeholders(routeVariants(parent.route_id))})`)
+        .all(...routeVariants(parent.route_id))
         .map(formatTrip);
     },
     closestStop: async (parent: any, args: any) => {
@@ -310,7 +370,7 @@ export const resolvers = {
                   st.stop_sequence;
             `
           )
-          .all(parent.route_id)
+          .all(activeVariant(parent.route_id))
           .map(formatStop);
 
       const closestStop = stops.reduce((acc, stop) => {
@@ -326,6 +386,7 @@ export const resolvers = {
       return closestStop;
     },
     directions: async (parent: any) => {
+      const variant = activeVariant(parent.route_id);
       const res = db
         .query(
           `
@@ -356,7 +417,7 @@ export const resolvers = {
             LIMIT 2;
         `
         )
-        .all(parent.route_id);
+        .all(variant);
 
       return res.map((r: any) => {
         return {
@@ -380,7 +441,7 @@ export const resolvers = {
                   st.stop_sequence;
               `
             )
-            .all(parent.route_id, r.direction_id)
+            .all(variant, r.direction_id)
             .map(formatStop),
         };
       });
@@ -498,23 +559,25 @@ export const resolvers = {
       _: any,
       { limit = 50, page = 0 }: { limit: number; page: number }
     ) => {
-      const routes = db
+      const rows = db
         .query(
           "SELECT *, COUNT(*) OVER() AS total_count FROM routes WHERE agency_id = 'BKK' ORDER BY route_sort_order LIMIT ? OFFSET ?"
         )
-        .all(limit, page * limit)
-        .map(formatRoute);
+        .all(limit, page * limit) as any[];
+      const total = rows[0]?.total_count ?? 0;
+      // One entry per line: variants collapse into their canonical route (counts stay raw so paging is stable)
+      const routes = rows.map(formatRoute).filter((r: any) => r.routeId === r.route_id);
       return {
         data: routes,
-        total: routes[0]?.total_count ?? 0,
+        total,
         page,
         limit,
-        pages: Math.ceil((routes[0]?.total_count ?? 0) / limit),
+        pages: Math.ceil(total / limit),
       };
     },
 
     route: async (_: any, { id, ...rest }: { id: string }) => {
-      const r = db.query("SELECT * FROM routes WHERE route_id = ?").get(id);
+      const r = db.query("SELECT * FROM routes WHERE route_id = ?").get(canonicalRoute(id));
       return r ? formatRoute(r) : null;
     },
 
@@ -617,6 +680,49 @@ export const resolvers = {
       // Accept any member stop id too, so a platform id leads to its station
       return index.byId.get(id) ?? index.byStop.get(id) ?? null;
     },
+    sharedStations: (
+      _: any,
+      { routeIds, lat, lon }: { routeIds: string[]; lat?: number | null; lon?: number | null }
+    ) => {
+      const lines = [...new Set(routeIds.slice(0, 12).map(canonicalRoute))];
+      if (lines.length < 2) return [];
+      const index = stationIndex();
+      // Stop groups each line serves (any variant, any platform), cached per timetable
+      const stationsOf = (id: string) =>
+        memo(`routeStations:${id}`, () => {
+          const ids = routeVariants(id);
+          const rows = db
+            .query(
+              `SELECT DISTINCT st.stop_id FROM trips t JOIN stop_times st ON st.trip_id = t.trip_id
+               WHERE t.route_id IN (${placeholders(ids)})`
+            )
+            .all(...ids) as { stop_id: string }[];
+          return new Set(rows.map((r) => index.byStop.get(r.stop_id)?.stationId).filter(Boolean) as string[]);
+        });
+      const served = new Map<string, string[]>();
+      for (const line of lines)
+        for (const stationId of stationsOf(line)) served.set(stationId, [...(served.get(stationId) ?? []), line]);
+      const routes = new Map(
+        lines.map((id) => [id, db.query("SELECT * FROM routes WHERE route_id = ?").get(id)] as const)
+      );
+      return [...served.entries()]
+        .filter(([, ids]) => ids.length >= 2)
+        .map(([stationId, ids]) => {
+          const station = index.byId.get(stationId)!;
+          return {
+            station,
+            routes: ids.map((id) => routes.get(id)).filter(Boolean).map(formatRoute),
+            distance: lat != null && lon != null ? distanceM(lat, lon, station.lat, station.lon) : null,
+          };
+        })
+        .sort(
+          (a, b) =>
+            b.routes.length - a.routes.length ||
+            (a.distance ?? 0) - (b.distance ?? 0) ||
+            a.station.name.localeCompare(b.station.name, "hu")
+        )
+        .slice(0, 40);
+    },
     stationsByRadius: (
       _: any,
       { lat, lon, radius }: { lat: number; lon: number; radius: number }
@@ -639,6 +745,7 @@ export const resolvers = {
     ) => {
       // Client-controlled sizes are clamped so one request can't do unbounded work
       stopIds = stopIds.slice(0, 60);
+      if (routeIds?.length) routeIds = expandRoutes(routeIds.slice(0, 60));
       limit = Math.min(Math.max(1, limit), 200);
       hours = Math.min(Math.max(1, hours), 6);
       if (stopIds.length === 0) return [];
@@ -796,7 +903,7 @@ export const resolvers = {
       { routeIds = [], stopIds = [], lang = "en" }: { routeIds?: string[]; stopIds?: string[]; lang?: string }
     ) => {
       const now = Date.now() / 1000;
-      const routes = new Set(routeIds ?? []);
+      const routes = new Set(expandRoutes(routeIds ?? []));
       const stops = new Set(stopIds ?? []);
       const pick = (t: Record<string, string>) => t[lang] ?? t.en ?? t.hu ?? Object.values(t)[0] ?? "";
       return (await getAlerts())
@@ -896,7 +1003,7 @@ export const resolvers = {
               FROM _dates
               LEFT JOIN calendar_dates USING (date)
               LEFT JOIN trips USING (service_id)
-              WHERE route_id = ? AND exception_type = 1
+              WHERE route_id IN (${placeholders(routeVariants(routeId))}) AND exception_type = 1
             )
 
             SELECT _trips.*, stop_times.*,
@@ -913,7 +1020,7 @@ export const resolvers = {
             ORDER BY date, arrival_time;
           `
         )
-        .all(start, end, routeId, stopId);
+        .all(start, end, ...routeVariants(routeId), stopId);
 
       const stops = res.map((s: any) => {
         const arrival = realtime(s.date, s.arrival_time, s.arrival_delay, s.arrival_timestamp);

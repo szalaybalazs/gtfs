@@ -61,3 +61,18 @@ body {
   @apply bg-canvas text-label font-sans antialiased;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Page transitions (Layout): opened pages slide in from the right, going back slides in from the left */
+@keyframes page-from-right {
+  from { transform: translateX(100%); }
+}
+@keyframes page-from-left {
+  from { transform: translateX(-30%); opacity: 0.6; }
+}
+.page-forward { animation: page-from-right 280ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.page-back { animation: page-from-left 240ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .page-forward, .page-back { animation: none; }
+}
+/* No sideways page scroll while a page slides in */
+html, body { overflow-x: clip; }

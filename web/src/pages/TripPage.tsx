@@ -81,10 +81,7 @@ export default function TripPage() {
                   <span className="ml-auto rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">Scheduled</span>
                 )}
               </div>
-              <div className="mt-1 flex items-start gap-3">
-                <h1 className="min-w-0 flex-1 text-2xl leading-tight font-bold">{trip.headsign ?? stops.at(-1)?.stop.name}</h1>
-                {delay != null && started && !finished && <DelayIndicator delay={delay} />}
-              </div>
+              <h1 className="mt-1 text-2xl leading-tight font-bold">{trip.headsign ?? stops.at(-1)?.stop.name}</h1>
               {viaStops(stops).length > 0 && (
                 <p className="mt-1 text-[15px]">
                   <span className="text-secondary">via </span>
@@ -92,21 +89,16 @@ export default function TripPage() {
                 </p>
               )}
               {stats(trip) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip)}</p>}
-              <p className="mt-1 text-[15px] text-secondary">
+              {/* Delay sits bottom-left, on the status line, so it adds no height to the destination */}
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[15px] text-secondary">
+                {delay != null && started && !finished && <DelayIndicator delay={delay} />}
                 {finished ? 'This trip has finished.' : !started ? `Starts at ${formatTime(new Date(stops[0].departure))}` : 'On its way'}
                 {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
               </p>
             </section>
 
             <section>
-              <div className="flex items-baseline justify-between px-1 pb-2">
-                <h2 className="text-xl font-bold">Stops</h2>
-                <span className="flex gap-2 text-[12px] font-medium">
-                  <span className="text-live">on time</span>
-                  <span className="text-early">early</span>
-                  <span className="text-late">late</span>
-                </span>
-              </div>
+              <h2 className="px-1 pb-2 text-xl font-bold">Stops</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
                 {stops.map((s, i) => (
                   <TripStopRow
@@ -221,22 +213,27 @@ function TripStopRow({
   const transfers = transferLines(s.stop.station?.routes ?? [], currentRouteId)
   return (
     <li className="relative">
-      {vehicleBefore && (
-        // The vehicle: BKK pictogram for its type, in the line's colour, on a white disc
-        <span
-          className="absolute -top-3.5 left-[3px] z-10 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-md"
-          aria-label="Vehicle is here"
-          title={vehicleLabel}
-        >
-          <CategoryIcon category={category} color={color} className="h-6 w-6" />
-        </span>
-      )}
       <Link
         // Opening a stop from a trip starts its departures at this trip, marked "Your trip"
         to={`/stations/${encodeURIComponent(s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(new Date(s.departure).getTime() - 60_000).toISOString())}`}
-        className={`flex items-center gap-2 pr-3 active:bg-fill ${passed ? 'opacity-45' : ''}`}
+        className={`flex items-center pr-3 active:bg-fill ${passed ? 'opacity-45' : ''} ${referenceTime != null ? 'pl-2' : ''}`}
       >
-        <span className="relative flex h-12 w-9 shrink-0 justify-center" aria-hidden>
+        {referenceTime != null && (
+          <span className="w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary" aria-label={relative != null ? `${relative} minutes` : undefined}>
+            {relative == null ? '' : `${String(relative).padStart(2, ' ')}'`}
+          </span>
+        )}
+        <span className="relative mr-1.5 flex h-12 w-7 shrink-0 justify-center">
+        {vehicleBefore && (
+          // The vehicle: BKK pictogram for its type, in the line's colour, on a white disc
+          <span
+            className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-md"
+            aria-label="Vehicle is here"
+            title={vehicleLabel}
+          >
+            <CategoryIcon category={category} color={color} className="h-6 w-6" />
+          </span>
+        )}
           <span
             className={`absolute w-2 ${first ? 'top-1/2' : 'top-0'} ${last ? 'bottom-1/2' : 'bottom-0'}`}
             style={{ backgroundColor: color }}
@@ -246,12 +243,7 @@ function TripStopRow({
             style={{ borderColor: highlighted ? 'var(--color-label)' : color }}
           />
         </span>
-        {referenceTime != null && (
-          <span className="w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary" aria-label={relative != null ? `${relative} minutes` : undefined}>
-            {relative == null ? '' : `${String(relative).padStart(2, ' ')}'`}
-          </span>
-        )}
-        <span className="flex min-w-0 flex-1 items-center gap-1.5">
+        <span className="mr-2 flex min-w-0 flex-1 items-center gap-1.5">
           <span className={`truncate text-[17px] ${highlighted ? 'font-bold' : ''}`}>{s.stop.name ?? s.stop.stopId}</span>
           {transfers.map((r) => (
             <RouteBadge key={r.routeId} route={r} />
@@ -327,22 +319,18 @@ function UpdatedAgo({ seconds }: { seconds: number }) {
   )
 }
 
-/** Big coloured delay: "3 min late" red, "2 min early" purple, ✓ on time. */
+/** Coloured delay on the status line: "3 min late" red, "2 min early" purple, ✓ on time. */
 function DelayIndicator({ delay }: { delay: number }) {
   const minutes = Math.round(Math.abs(delay) / 60)
   if (minutes === 0)
     return (
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-live/15 text-live" title="On time" aria-label="On time">
-        <CheckIcon className="h-5 w-5" />
+      <span className="flex items-center gap-1 font-semibold text-live">
+        <CheckIcon className="h-4 w-4" />
+        On time
       </span>
     )
   const late = delay > 0
-  return (
-    <span className={`shrink-0 text-right leading-none ${late ? 'text-late' : 'text-early'}`}>
-      <span className="block text-3xl font-bold tabular-nums">{minutes}</span>
-      <span className="text-[12px] font-semibold">min {late ? 'late' : 'early'}</span>
-    </span>
-  )
+  return <span className={`font-semibold tabular-nums ${late ? 'text-late' : 'text-early'}`}>{minutes} min {late ? 'late' : 'early'}</span>
 }
 
 /**

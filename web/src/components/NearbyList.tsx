@@ -12,9 +12,14 @@ export default function NearbyList({ radius, limit }: { radius: number; limit?: 
     message = (
       <>
         {location.error}.
-        <span className="mt-1 block text-[13px]">
-          On iPhone, allow it in Settings → Privacy &amp; Security → Location Services → Safari Websites.
-        </span>
+        {location.error.includes('not allowed') ? (
+          <span className="mt-1 block text-[13px]">
+            On iPhone, check both: Settings → Privacy &amp; Security → Location Services → Safari Websites (While Using), and Settings →
+            Apps → Safari → Location (Ask or Allow). Then tap Use my location.
+          </span>
+        ) : (
+          <span className="mt-1 block text-[13px]">Tap Use my location to try again.</span>
+        )}
       </>
     )
   else if (location.loading || !location.coords) message = 'Finding your location…'
