@@ -136,16 +136,18 @@ export default function StationPage() {
             <StationStops
               id={station.stationId}
               current={from}
-              onSelect={(stopId) =>
-                setParams(
-                  (p) => {
-                    if (stopId && stopId !== from) p.set('from', stopId)
-                    else p.delete('from')
-                    return p
-                  },
-                  { replace: true },
-                )
-              }
+              onSelect={(stopId) => {
+                // Feels like opening that stop's page: new history entry (Back returns) and back to the top
+                setParams((p) => {
+                  if (stopId && stopId !== from) p.set('from', stopId)
+                  else p.delete('from')
+                  p.delete('trip')
+                  p.delete('at')
+                  p.delete('earlier')
+                  return p
+                })
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
             />
           </>
         )}
