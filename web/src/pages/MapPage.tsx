@@ -53,7 +53,7 @@ function badgesHtml(routes: RouteRef[], max = 4) {
  * Stop group marker: a rounded card with the pictogram, the name and its
  * first lines. Big enough to hit with a thumb; tap opens the stop.
  */
-function groupIcon(station: Station, withBadges: boolean) {
+function groupIcon(station: Station, withBadges: boolean, selected = false) {
   const c = mainCategory(station.routes)
   const mask = maskCss(c.icon)
   if (!withBadges) {
@@ -66,7 +66,7 @@ function groupIcon(station: Station, withBadges: boolean) {
     })
   }
   const html =
-    `<div style="transform:translate(-50%,-100%);display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 7px;background:#fff;border-radius:10px;border:2px solid ${c.color};box-shadow:0 2px 6px rgb(0 0 0/.25);white-space:nowrap;cursor:pointer">` +
+    `<div style="transform:translate(-50%,-100%);display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 7px;background:#fff;border-radius:10px;border:${selected ? 3 : 2}px solid ${c.color};box-shadow:0 ${selected ? 4 : 2}px ${selected ? 12 : 6}px rgb(0 0 0/${selected ? '.4' : '.25'});white-space:nowrap;cursor:pointer">` +
     `<div style="display:flex;align-items:center;gap:5px;font:600 12px/14px system-ui;color:#111">` +
     `<span style="width:16px;height:16px;flex:none;background:${c.color};${mask}"></span>${esc(station.name)}</div>` +
     (withBadges ? badgesHtml(station.routes, 4).replace('justify-content:center;margin-top:3px', 'justify-content:flex-start;margin-top:0') : '') +
@@ -172,6 +172,9 @@ function Layers({ onVehicleCount }: { onVehicleCount: (n: number) => void }) {
   const map = useMap()
   const navigate = useNavigate()
   const [selected, setSelected] = useState<string | null>(null)
+  const [selectedStop, setSelectedStop] = useState<string | null>(null)
+  // Tapping empty map clears the selected stop
+  useMapEvents({ click: () => setSelectedStop(null) })
   const [view, setView] = useState(() => ({ center: map.getCenter(), bounds: map.getBounds(), zoom: map.getZoom() }))
   useMapEvents({ moveend: () => setView({ center: map.getCenter(), bounds: map.getBounds(), zoom: map.getZoom() }) })
 
@@ -227,9 +230,17 @@ function Layers({ onVehicleCount }: { onVehicleCount: (n: number) => void }) {
                   <Marker
                     key={s.stopId}
                     position={[s.lat!, s.lon!]}
-                    icon={stopIcon((s.routes ?? []).filter((r) => r != null))}
+                    icon={
+                      selectedStop === s.stopId
+                        ? groupIcon({ ...station, name: s.name ?? station.name, routes: (s.routes ?? []).filter((r) => r != null) }, true, true)
+                        : stopIcon((s.routes ?? []).filter((r) => r != null))
+                    }
+                    zIndexOffset={selectedStop === s.stopId ? 1000 : 0}
                     eventHandlers={{
-                      click: () => navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`),
+                      click: () =>
+                        selectedStop === s.stopId
+                          ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`)
+                          : setSelectedStop(s.stopId),
                     }}
                   />
                 ))}
@@ -240,8 +251,15 @@ function Layers({ onVehicleCount }: { onVehicleCount: (n: number) => void }) {
             <Marker
               key={station.stationId}
               position={[station.lat, station.lon]}
-              icon={groupIcon(station, view.zoom >= BADGES_ZOOM)}
-              eventHandlers={{ click: () => navigate(`/stations/${encodeURIComponent(station.stationId)}`) }}
+              // First tap shows the card (or highlights it); tapping the card again opens the stop
+              icon={groupIcon(station, view.zoom >= BADGES_ZOOM || selectedStop === station.stationId, selectedStop === station.stationId)}
+              zIndexOffset={selectedStop === station.stationId ? 1000 : 0}
+              eventHandlers={{
+                click: () =>
+                  selectedStop === station.stationId
+                    ? navigate(`/stations/${encodeURIComponent(station.stationId)}`)
+                    : setSelectedStop(station.stationId),
+              }}
             />
           )
         })}
