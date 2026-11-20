@@ -138,3 +138,86 @@ export const TIMETABLE_QUERY = /* GraphQL */ `
     }
   }
 `
+
+export type StopSummary = {
+  stopId: string
+  name: string | null
+  code?: string | null
+  lat: number | null
+  lon: number | null
+  routes?: (Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 'textColor'> | null)[] | null
+}
+
+const STOP_FIELDS = /* GraphQL */ `
+  stopId
+  name
+  code
+  lat
+  lon
+`
+
+export type StopsPage = { stops: { page: number; pages: number; data: StopSummary[] } }
+
+export const STOPS_QUERY = /* GraphQL */ `
+  query Stops($limit: Int, $page: Int) {
+    stops(limit: $limit, page: $page) {
+      page
+      pages
+      data { ${STOP_FIELDS} }
+    }
+  }
+`
+
+export type NearbyStops = { stopsByRadius: (StopSummary | null)[] }
+
+export const NEARBY_STOPS_QUERY = /* GraphQL */ `
+  query NearbyStops($lat: Float!, $lon: Float!, $radius: Float!) {
+    stopsByRadius(lat: $lat, lon: $lon, radius: $radius) {
+      ${STOP_FIELDS}
+      routes { routeId shortName color textColor }
+    }
+  }
+`
+
+export type StopsInBox = { stopsByBbox: (StopSummary | null)[] }
+
+export const STOPS_BBOX_QUERY = /* GraphQL */ `
+  query StopsInBox($bbox: BboxInput!) {
+    stopsByBbox(bbox: $bbox) { ${STOP_FIELDS} }
+  }
+`
+
+export type StopDetails = { stop: StopSummary | null }
+
+export const STOP_QUERY = /* GraphQL */ `
+  query Stop($stopId: ID!) {
+    stop(id: $stopId) {
+      ${STOP_FIELDS}
+      routes { routeId shortName color textColor }
+    }
+  }
+`
+
+export type VehiclePosition = {
+  id: string
+  latitude: number | null
+  longitude: number | null
+  bearing: number | null
+  vehicleLabel: string | null
+  trip: { headsign: string | null; route: Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 'textColor'> | null } | null
+}
+
+export type Vehicles = { vehiclePositions: (VehiclePosition | null)[] }
+
+export const VEHICLES_QUERY = /* GraphQL */ `
+  query Vehicles {
+    vehiclePositions {
+      id
+      latitude
+      longitude
+      bearing
+      vehicleLabel
+      trip { headsign route { routeId shortName color textColor } }
+    }
+  }
+`

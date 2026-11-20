@@ -1,10 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { ChevronIcon, LocationIcon, SearchIcon } from '../components/Icons'
+import { useSearchParams } from 'react-router'
+import { LocationIcon, SearchIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
-import RouteBadge from '../components/RouteBadge'
 import { gql, ROUTES_QUERY, type RoutesPage as RoutesData, type RouteType } from '../lib/api'
+import RouteTile from '../components/RouteTile'
+import { useFavorites } from '../lib/favorites'
 import { useGeolocation } from '../lib/useGeolocation'
 
 const PAGE_SIZE = 50
@@ -24,6 +25,7 @@ export default function RoutesPage() {
   const search = params.get('q') ?? ''
   const filter = FILTERS.find((f) => f.label === params.get('type')) ?? FILTERS[0]
   const location = useGeolocation()
+  const { favorites } = useFavorites()
 
   const setParam = (key: string, value: string | null) =>
     setParams(
@@ -80,6 +82,7 @@ export default function RoutesPage() {
     <div className="min-h-dvh">
       <NavBar
         title="Routes"
+        menu
         leading={
           <button
             type="button"
@@ -132,20 +135,27 @@ export default function RoutesPage() {
           </p>
         )}
 
-        <ul className="bg-surface sm:my-4 sm:rounded-xl sm:mx-4 sm:overflow-hidden">
-          {routes.map((route) => (
-            <li key={route.routeId} className="border-b border-separator last:border-b-0">
-              <Link
-                to={`/routes/${encodeURIComponent(route.routeId)}`}
-                className="flex min-h-11 items-center gap-3 px-4 py-2 active:bg-fill"
-              >
-                <RouteBadge route={route} />
-                <span className="min-w-0 flex-1 truncate text-[15px]">{route.desc ?? route.longName ?? ''}</span>
-                <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {favorites.length > 0 && !narrowing && (
+          <section className="px-4 pt-4">
+            <h2 className="pb-2 text-xl font-bold">Favourites</h2>
+            <div className="flex flex-wrap gap-2">
+              {favorites.map((route) => (
+                <RouteTile key={route.routeId} route={route} round />
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="px-4 pt-4">
+          {favorites.length > 0 && !narrowing && <h2 className="pb-2 text-xl font-bold">All routes</h2>}
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
+            {routes.map((route) => (
+              <li key={route.routeId}>
+                <RouteTile route={route} />
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {query.isPending || isFetchingNextPage ? (
           <p className="p-6 text-center text-sm text-secondary">Loading…</p>
@@ -158,3 +168,4 @@ export default function RoutesPage() {
     </div>
   )
 }
+

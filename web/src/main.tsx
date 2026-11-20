@@ -3,8 +3,18 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import './index.css'
+import Layout from './components/Layout'
+import { applyTheme } from './lib/theme'
+import HomePage from './pages/HomePage'
+import MapPage from './pages/MapPage'
+import NearbyPage from './pages/NearbyPage'
 import RouteDetailsPage from './pages/RouteDetailsPage'
 import RoutesPage from './pages/RoutesPage'
+import SettingsPage from './pages/SettingsPage'
+import StopPage from './pages/StopPage'
+import StopsPage from './pages/StopsPage'
+
+applyTheme()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,8 +27,16 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<RoutesPage />} />
-          <Route path="/routes/:routeId" element={<RouteDetailsPage />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/routes" element={<RoutesPage />} />
+            <Route path="/routes/:routeId" element={<RouteDetailsPage />} />
+            <Route path="/stops" element={<StopsPage />} />
+            <Route path="/stops/:stopId" element={<StopPage />} />
+            <Route path="/nearby" element={<NearbyPage />} />
+            <Route path="/map" element={<MapPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

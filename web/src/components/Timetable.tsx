@@ -1,32 +1,15 @@
-import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import { gql, TIMETABLE_QUERY, type Timetable as TimetableData, type TimetableEntry } from '../lib/api'
+import type { TimetableEntry } from '../lib/api'
+import { REFRESH_MS, useNow, useTimetable } from '../lib/useTimetable'
 import { formatDelay, formatTime, hourKey, localParts } from '../lib/time'
 import { BikeIcon, RefreshIcon, WheelchairIcon } from './Icons'
 
 const HOURS = 24
-const REFRESH_MS = 30_000
-
-function useNow(intervalMs: number) {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs)
-    return () => clearInterval(id)
-  }, [intervalMs])
-  return now
-}
-
 export default function Timetable({ routeId, stopId }: { routeId: string; stopId: string }) {
   const now = useNow(REFRESH_MS)
   const [selected, setSelected] = useState<TimetableEntry | null>(null)
 
-  const query = useQuery({
-    queryKey: ['timetable', routeId, stopId],
-    queryFn: () => gql<TimetableData>(TIMETABLE_QUERY, { routeId, stopId }),
-    refetchInterval: REFRESH_MS,
-    placeholderData: (prev, prevQuery) =>
-      prevQuery?.queryKey[1] === routeId ? prev : undefined,
-  })
+  const query = useTimetable(routeId, stopId)
 
   const byHour = useMemo(() => {
     const groups = new Map<string, TimetableEntry[]>()

@@ -7,11 +7,24 @@ export default $config({
       protect: input?.stage === "production",
       home: "aws",
       providers: {
-        aws: { profile: "personal", region: "eu-central-1" },
+        aws: { profile: process.env.AWS_PROFILE ?? "personal", region: "eu-central-1" },
       },
     };
   },
   async run() {
+    // Preview stages (anything but production) deploy only the web app, with
+    // /graphql proxied to the production API. No secrets, data or domain needed.
+    if ($app.stage !== "production") {
+      const router = new sst.aws.Router("Router");
+      router.route("/graphql", "https://gtfs.szalay.me");
+      const web = new sst.aws.StaticSite("Web", {
+        path: "../web",
+        build: { command: "pnpm install && pnpm run build", output: "dist" },
+        router: { instance: router },
+      });
+      return { url: web.url };
+    }
+
     const bucket = new sst.aws.Bucket("Gtfs");
     const bkkApiKey = new sst.Secret("BkkApiKey");
     const mavAuth = new sst.Secret("MavAuth");

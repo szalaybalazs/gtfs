@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useParams, useSearchParams } from 'react-router'
-import { LocationIcon } from '../components/Icons'
+import Departures from '../components/Departures'
+import { LocationIcon, StarIcon, SwapIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
-import PickerRow from '../components/PickerRow'
 import RouteBadge from '../components/RouteBadge'
+import StopLine from '../components/StopLine'
 import Timetable from '../components/Timetable'
 import {
   CLOSEST_STOP_QUERY,
@@ -15,6 +16,7 @@ import {
   type RouteDetails,
   type Stop,
 } from '../lib/api'
+import { useFavorites } from '../lib/favorites'
 import { useGeolocation } from '../lib/useGeolocation'
 
 /**
@@ -52,6 +54,7 @@ export default function RouteDetailsPage() {
   const dirParam = params.has('dir') ? Number(params.get('dir')) : null
   const stopParam = params.get('stop')
   const location = useGeolocation(true)
+  const { isFavorite, toggle } = useFavorites()
 
   const routeQuery = useQuery({
     queryKey: ['route', routeId],
@@ -104,18 +107,26 @@ export default function RouteDetailsPage() {
 
   const isClosest = !!closest && !!stop && (stop.stopId === closest.stopId || stop.name === closest.name)
 
+  const otherDirection = directions.find((d) => d.directionId !== direction?.directionId)
+  const lineColor = route?.color ? (route.color.startsWith('#') ? route.color : `#${route.color}`) : 'var(--color-secondary)'
+  const favorite = isFavorite(routeId)
+
   return (
     <div className="min-h-dvh">
       <NavBar
-        back={{ to: '/', label: 'Routes' }}
-        title={
-          route ? (
-            <span className="flex items-center gap-3">
-              <RouteBadge route={route} size="lg" />
-              <span className="truncate text-2xl font-semibold">{route.desc ?? route.longName}</span>
-            </span>
-          ) : (
-            routeId
+        back={{ to: '/routes', label: 'Routes' }}
+        leading={route && <RouteBadge route={route} size="lg" />}
+        trailing={
+          route && (
+            <button
+              type="button"
+              onClick={() => toggle(route)}
+              aria-pressed={favorite}
+              aria-label={favorite ? 'Remove from favourites' : 'Add to favourites'}
+              className={`rounded-md p-2 active:opacity-50 ${favorite ? 'text-accent' : 'text-label'}`}
+            >
+              <StarIcon filled={favorite} className="h-6 w-6" />
+            </button>
           )
         }
       />
@@ -124,48 +135,73 @@ export default function RouteDetailsPage() {
         {routeQuery.isError && (
           <p className="p-6 text-center text-secondary">
             Couldn't load this route.{' '}
-            <button type="button" className="text-accent" onClick={() => routeQuery.refetch()}>
+            <button type="button" className="font-medium text-accent" onClick={() => routeQuery.refetch()}>
               Retry
             </button>
           </p>
         )}
+        {routeQuery.isPending && <div className="h-32 animate-pulse rounded-2xl bg-surface" />}
 
-        <section>
-          <div className="divide-y divide-separator overflow-hidden rounded-xl bg-surface">
-            <PickerRow
-              label="Stop"
-              value={stop?.stopId}
-              options={(direction?.stops ?? []).map((s) => ({ value: s.stopId, label: s.name ?? s.stopId }))}
-              onChange={(id) => direction && select({ dir: direction.directionId, stop: id })}
+        {route && direction && (
+          <section className="space-y-2">
+            <div className="rounded-2xl bg-surface p-4">
+              <h1 className="text-2xl leading-tight font-bold">{route.desc ?? route.longName}</h1>
+              <p className="mt-1 text-[15px] text-secondary">
+                {location.loading
+                  ? 'Finding the closest stop…'
+                  : isClosest
+                    ? 'Showing the stop closest to you'
+                    : (location.error ?? '')}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3">
+                <span className="text-secondary">From</span>
+                <span className="truncate font-medium">{stop?.name}</span>
+              </div>
+              {!isClosest && !location.loading && (
+                <button
+                  type="button"
+                  onClick={useClosest}
+                  aria-label="Closest stop"
+                  className="flex w-12 shrink-0 items-center justify-center rounded-2xl bg-surface text-accent active:opacity-50"
+                >
+                  <LocationIcon className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              disabled={!otherDirection}
+              onClick={() => otherDirection && changeDirection(otherDirection.directionId)}
+              className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill disabled:active:bg-surface"
+            >
+              <span className="text-secondary">Towards</span>
+              <span className="min-w-0 flex-1 truncate font-medium">{direction.headsign}</span>
+              {otherDirection && <SwapIcon className="h-5 w-5 shrink-0" aria-label="Swap direction" />}
+            </button>
+          </section>
+        )}
+
+        {direction && stop && <Departures routeId={routeId} stopId={stop.stopId} />}
+
+        {direction && (
+          <section>
+            <h2 className="px-1 pb-2 text-xl font-bold">Stops</h2>
+            <StopLine
+              stops={direction.stops}
+              selectedId={stop?.stopId}
+              closestId={closest?.stopId}
+              color={lineColor}
+              onSelect={(id) => {
+                select({ dir: direction.directionId, stop: id })
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
             />
-            <PickerRow
-              label="Direction"
-              value={direction?.directionId}
-              options={directions.map((d) => ({ value: d.directionId, label: d.headsign }))}
-              onChange={changeDirection}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-2 px-4 pt-1.5 text-[13px] text-secondary">
-            <span>
-              {location.loading
-                ? 'Finding the closest stop…'
-                : isClosest
-                  ? 'Closest stop to you'
-                  : location.error
-                    ? location.error
-                    : null}
-            </span>
-            {!isClosest && !location.loading && (
-              <button type="button" onClick={useClosest} className="flex items-center gap-1 text-accent">
-                <LocationIcon className="h-3.5 w-3.5" />
-                Closest stop
-              </button>
-            )}
-          </div>
-        </section>
+          </section>
+        )}
 
         {direction && stop && <Timetable routeId={routeId} stopId={stop.stopId} />}
-        {routeQuery.isPending && <p className="p-6 text-center text-sm text-secondary">Loading…</p>}
       </main>
     </div>
   )
