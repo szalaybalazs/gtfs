@@ -7,7 +7,7 @@ import RouteBadge from '../components/RouteBadge'
 import { gql, TRIP_QUERY, type RouteRef, type TripDetails, type TripStop } from '../lib/api'
 import { hex } from '../lib/geo'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
-import { formatTime } from '../lib/time'
+import { formatTime, formatTimeParts } from '../lib/time'
 import { REFRESH_MS, useNow } from '../lib/useTimetable'
 
 /** One vehicle's run: where it is, when it reaches each stop. */
@@ -34,6 +34,9 @@ export default function TripPage() {
   const finished = nextIndex === -1 && stops.length > 0
   const delay = latestDelay(stops, nextIndex)
   const vehicle = trip?.vehicle
+  // Reference for the relative-minutes column: the stop you came from
+  const reference = stops.find((x) => x.stop.stopId === from)
+  const referenceTime = reference ? new Date(reference.departure).getTime() : null
   const vehicleAge = vehicle?.timestamp ? (now.getTime() - new Date(vehicle.timestamp).getTime()) / 60_000 : null
 
   return (
@@ -112,6 +115,7 @@ export default function TripPage() {
                     vehicleLabel={route?.shortName ?? ''}
                     textColor={hex(route?.textColor, '#ffffff')}
                     currentRouteId={route?.routeId}
+                    referenceTime={referenceTime}
                   />
                 ))}
               </ol>
@@ -188,8 +192,10 @@ function TripStopRow({
   vehicleLabel,
   textColor,
   currentRouteId,
+  referenceTime,
 }: {
   currentRouteId?: string
+  referenceTime: number | null
   stop: TripStop
   first: boolean
   last: boolean
@@ -208,12 +214,15 @@ function TripStopRow({
   const status = realtimeStatus(s.realtime, delay)
   // Show the arrival too when the vehicle waits here for a minute or more
   const waits = !last && !first && departure.getTime() - arrival.getTime() >= 60_000
+  // Minutes to or from the selected stop, always positive; blank on the stop itself
+  const relative = referenceTime == null || highlighted ? null : Math.round(Math.abs(main.getTime() - referenceTime) / 60_000)
+  const mainParts = formatTimeParts(main)
   const transfers = transferLines(s.stop.station?.routes ?? [], currentRouteId)
   return (
     <li className="relative">
       {vehicleBefore && (
         <span
-          className="absolute -top-3 left-3 z-10 flex h-6 min-w-9 items-center justify-center rounded-full px-1.5 text-[12px] font-bold shadow-md ring-2 ring-surface"
+          className="absolute -top-3 left-1 z-10 flex h-6 min-w-9 items-center justify-center rounded-full px-1.5 text-[12px] font-bold shadow-md ring-2 ring-surface"
           style={{ backgroundColor: color, color: textColor }}
           aria-label="Vehicle is here"
         >
@@ -222,9 +231,9 @@ function TripStopRow({
       )}
       <Link
         to={`/stations/${encodeURIComponent(s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}`}
-        className={`flex items-center gap-3 pr-4 active:bg-fill ${passed ? 'opacity-45' : ''}`}
+        className={`flex items-center gap-2 pr-3 active:bg-fill ${passed ? 'opacity-45' : ''}`}
       >
-        <span className="relative flex h-12 w-12 shrink-0 justify-center" aria-hidden>
+        <span className="relative flex h-12 w-9 shrink-0 justify-center" aria-hidden>
           <span
             className={`absolute w-2 ${first ? 'top-1/2' : 'top-0'} ${last ? 'bottom-1/2' : 'bottom-0'}`}
             style={{ backgroundColor: color }}
@@ -234,6 +243,11 @@ function TripStopRow({
             style={{ borderColor: highlighted ? 'var(--color-label)' : color }}
           />
         </span>
+        {referenceTime != null && (
+          <span className="w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary" aria-label={relative != null ? `${relative} minutes` : undefined}>
+            {relative == null ? '' : `${String(relative).padStart(2, ' ')}'`}
+          </span>
+        )}
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
           <span className={`truncate text-[17px] ${highlighted ? 'font-bold' : ''}`}>{s.stop.name ?? s.stop.stopId}</span>
           {transfers.map((r) => (
@@ -245,7 +259,10 @@ function TripStopRow({
             <span className="text-[12px] text-secondary line-through">{formatTime(new Date(main.getTime() - delay! * 1000))}</span>
           ) : null}
           {waits && <span className="text-[12px] opacity-75">{formatTime(arrival)}</span>}
-          <span className={`text-[16px] ${status !== 'scheduled' ? 'font-semibold' : ''}`}>{formatTime(main)}</span>
+          <span className={`text-[16px] ${status !== 'scheduled' ? 'font-semibold' : ''}`}>
+            {mainParts.hm}
+            <span className="text-[11px] opacity-70">:{mainParts.s}</span>
+          </span>
           {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5 self-center" aria-label="Realtime" />}
         </span>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />

@@ -57,11 +57,34 @@ const realtime = (
 
 const today = () => dayjs().tz(TIMEZONE);
 
+/**
+ * Rail feeds (MÁV, GYSEV, Gyermekvasút) add every train as its own route with
+ * no short name and a long name like "Sz 30129" or "IC 989 ARRABONA". Label
+ * those by train type instead of showing a number per train.
+ */
+const trainLabel = (r: any): string | null => {
+  if (r.route_short_name) return r.route_short_name;
+  if (r.agency_id === "1743") return "GyV"; // Gyermekvasút (Children's Railway)
+  const type = String(r.route_long_name ?? "").split(" ")[0];
+  return type || null;
+};
+
+/** One badge per (agency, label, colour): collapses per-train rail "routes". */
+const uniqueRoutes = (routes: any[]) => {
+  const seen = new Set<string>();
+  return routes.filter((r) => {
+    const key = `${r.agency_id}|${r.shortName}|${r.color}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const formatRoute = (r: any) => {
   return {
     ...r,
     routeId: r.route_id,
-    shortName: r.route_short_name,
+    shortName: trainLabel(r),
     longName: r.route_long_name,
     desc: r.route_desc,
     type: ROUTE_TYPES[r.route_type],
@@ -165,10 +188,10 @@ const stopsByIds = (ids: string[]) =>
         .map(formatStop);
 
 /** Distinct routes serving any of the stops, in the feed's sort order */
-const routesAtStops = (ids: string[]) =>
+const routesAtStops = (ids: string[]): any[] =>
   ids.length === 0
     ? []
-    : db
+    : uniqueRoutes(db
         .query(
           `
             SELECT DISTINCT r.*
@@ -180,7 +203,7 @@ const routesAtStops = (ids: string[]) =>
           `
         )
         .all(...ids)
-        .map(formatRoute);
+        .map(formatRoute))
 
 /**
  * A stop about halfway between `fromSequence` and the end of the trip, so a
@@ -389,9 +412,7 @@ export const resolvers = {
         return formatRoute(route);
       });
 
-      return routes;
-
-      // .map(formatRoute);
+      return uniqueRoutes(routes.filter(Boolean));
     },
     trips: async (parent: any) => {
       return db

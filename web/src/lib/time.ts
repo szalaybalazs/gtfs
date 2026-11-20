@@ -39,3 +39,17 @@ export function formatDelay(seconds: number) {
   if (minutes === 0) return 'on time'
   return minutes > 0 ? `${minutes} min late` : `${-minutes} min early`
 }
+
+const secondsFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
+
+/** HH:MM and :SS separately, so the seconds can be set smaller. */
+export function formatTimeParts(date: Date) {
+  const parts = Object.fromEntries(secondsFormatter.formatToParts(date).map((p) => [p.type, p.value]))
+  return { hm: `${parts.hour}:${parts.minute}`, s: parts.second }
+}
