@@ -7,7 +7,6 @@
 
 import SwiftUI
 import TimetableAPI
-import Apollo
 
 struct RouteListItem: View {
     let route: RoutesQuery.Data.Routes.Datum
@@ -38,39 +37,38 @@ struct RouteListItem: View {
 
 
 struct RoutesView: View {
-    @StateObject private var viewModel = RoutesViewModel()
-    @StateObject var locationManager = LocationManager()
+    @State private var viewModel = RoutesViewModel()
     @State private var searchText: String = ""
-    
+
     var body: some View {
         VStack {
             List {
                 Section {
-                    ForEach(0..<viewModel.routes.count, id: \.self) { index in
-                        RouteListItem(route: viewModel.routes[index])
+                    ForEach(viewModel.routes, id: \.routeId) { route in
+                        RouteListItem(route: route)
                             .onAppear {
-                                if index == viewModel.routes.count - 10 {
-                                    viewModel.loadRoutes()
+                                // Prefetch when one of the last 10 rows shows up.
+                                if viewModel.routes.suffix(10).contains(where: { $0.routeId == route.routeId }) {
+                                    Task { await viewModel.loadNextPage() }
                                 }
                             }
                     }
                 }
-            }
-            .listStyle(.plain)
-            .navigationTitle("Routes")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: {
-                        locationManager.requestOneTimeLocation { location in
-                            if let location = location {
-//                                    currentLocation = location
-                                print("Received location: \(location.latitude), \(location.longitude)")
-                            }
+                Section {
+                    if let message = viewModel.state.errorMessage {
+                        ErrorView(message: message) {
+                            if viewModel.routes.isEmpty { await viewModel.reload() } else { await viewModel.loadNextPage() }
                         }
-                    }) {
-                        Image(systemName: "location.slash.fill").toolbarTitleDisplayMode(.automatic)
+                    } else if viewModel.state.isLoading {
+                        ProgressView().frame(maxWidth: .infinity)
                     }
                 }
+                .listRowSeparator(.hidden)
+            }
+            .listStyle(.plain)
+            .refreshable { await viewModel.reload() }
+            .navigationTitle("Routes")
+            .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                      Menu(content: {
                          ControlGroup {
@@ -147,8 +145,8 @@ struct RoutesView: View {
             }
         }
         .searchable(text: $searchText)
-        .onAppear {
-            viewModel.fetchRoutes()
+        .task {
+            if viewModel.routes.isEmpty { await viewModel.loadNextPage() }
         }
     }
 }

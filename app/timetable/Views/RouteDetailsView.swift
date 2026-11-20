@@ -8,69 +8,47 @@
 import SwiftUI
 import TimetableAPI
 
-struct StopOption: View {
-    public let stop: RouteByIdQuery.Data.Route.Direction.Stop
-    var body: some View {
-        Text(stop.name ?? "").tag(stop.stopId ?? "")
-    }
-}
-
-struct DirectionOption: View {
-    public let direction: RouteByIdQuery.Data.Route.Direction
-    var body: some View {
-        Text(direction.headsign ?? "").tag(direction.directionId)
-    }
-}
-
 struct RouteDetailsView: View {
     public let id: String
     public let shortName: String?
-    @StateObject private var routeModel: RouteDetailsViewModel
-        
+    @State private var routeModel: RouteDetailsViewModel
+
     init(id: String, shortName: String? = nil) {
         self.id = id
         self.shortName = shortName
-        _routeModel = StateObject(wrappedValue: RouteDetailsViewModel(routeId: id))
+        _routeModel = State(initialValue: RouteDetailsViewModel(routeId: id))
     }
-    
-    private var stops: [RouteByIdQuery.Data.Route.Direction.Stop] {
-        routeModel.stops
-    }
-    
+
     var body: some View {
-        VStack {
-            List {
+        List {
+            if let message = routeModel.state.errorMessage {
+                ErrorView(message: message) { await routeModel.load() }
+            } else if routeModel.route == nil {
+                ProgressView().frame(maxWidth: .infinity)
+            } else {
                 Section {
-                    Picker("Stop", selection: $routeModel.stopId) {
-                        ForEach(0..<stops.count, id: \.self) { index in
-                            StopOption(stop: stops[index])
-                        }
-                        Text("TEST").tag("__TEST__")
-                    }
                     Picker("Direction", selection: $routeModel.directionId) {
-                        ForEach(0..<routeModel.directions.count, id: \.self) { index in
-                            DirectionOption(direction: routeModel.directions[index])
+                        ForEach(routeModel.directions, id: \.directionId) { direction in
+                            Text(direction.headsign).tag(direction.directionId)
                         }
                     }
-                    
+                    Picker("Stop", selection: $routeModel.stopId) {
+                        ForEach(routeModel.stops, id: \.stopId) { stop in
+                            Text(stop.name ?? stop.stopId).tag(Optional(stop.stopId))
+                        }
+                    }
                 }
-                TimetableView(routeId: routeModel.routeId, stopId: routeModel.stopId)
-            }   
-        }
-        .navigationTitle(shortName ?? id)
-        .onAppear{
-            routeModel.loadRoute()
-        }
-        .onChange(of: routeModel.stops) { oldValue, newValue in
-            print("Closest stop: \(routeModel.closestStop?.name ?? "-")")
-            if let closestStop = newValue.first(where: { $0.name == routeModel.closestStop?.name }) {
-                routeModel.stopId = closestStop.stopId
+                if let stopId = routeModel.stopId {
+                    TimetableView(routeId: routeModel.routeId, stopId: stopId)
+                }
             }
         }
-        
+        .navigationTitle(shortName ?? id)
+        .task { if routeModel.route == nil { await routeModel.load() } }
+        .onChange(of: routeModel.directionId) { routeModel.directionChanged() }
     }
 }
 
 #Preview {
-    RouteDetailsView(id: "3560", shortName: "56")
+    NavigationStack { RouteDetailsView(id: "3560", shortName: "56") }
 }

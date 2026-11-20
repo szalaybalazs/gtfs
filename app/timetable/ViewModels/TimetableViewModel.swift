@@ -1,49 +1,38 @@
 //
-//  RoutesViewModel.swift
+//  TimetableViewModel.swift
 //  timetable
-//
-//  Created by Balázs Szalay on 2025. 02. 09..
 //
 
 import Foundation
-import Combine
-import Apollo
+import Observation
 import TimetableAPI
 
-class TimetableViewModel: ObservableObject {
-    var routeId: TimetableAPI.ID
-    var stopId: TimetableAPI.ID
-    
-    @Published var isLoading: Bool = false
-    @Published var entries = [TimetableQuery.Data.Timetable]()
-    @Published var activeRequest: Apollo.Cancellable?
-    @Published var lastConnection: RoutesQuery.Data.Routes?
-    
-    init(routeId: TimetableAPI.ID, stopId: TimetableAPI.ID) {
-        self.routeId = routeId
-        self.stopId = stopId
+@MainActor
+@Observable
+final class TimetableViewModel {
+    private(set) var entries: [TimetableQuery.Data.Timetable] = []
+    private(set) var state: LoadState = .idle
+
+    private let client: GraphQLClient
+
+    init(client: GraphQLClient = Network.shared) {
+        self.client = client
     }
 
-
-    private var cancellables = Set<AnyCancellable>()
-
-
-
-    func fetchTimetable() {
-        self.activeRequest = Network.shared.apollo.fetch(query: TimetableQuery(stopId: stopId, routeId: routeId, range: .null)) { [weak self] result in
-            
-            switch result {
-                case .success(let graphQLResult):
-                    if let timetableConnection = graphQLResult.data?.timetable {
-//                        self?.lastConnection = routesConnection
-                        self?.entries = timetableConnection
-                    }
-
-                    if let errors = graphQLResult.errors {
-                    }
-                case .failure(let error):
-                    print("Failure! Error: \(error)")
-            }
+    func load(routeId: TimetableAPI.ID, stopId: TimetableAPI.ID) async {
+        state = .loading
+        do {
+            let data = try await client.fetch(TimetableQuery(stopId: stopId, routeId: routeId, range: .null))
+            // A newer request (stop changed) may have started meanwhile; drop stale results.
+            guard !Task.isCancelled else { return }
+            entries = data.timetable
+            state = .idle
+        } catch is CancellationError {
+            return
+        } catch {
+            guard !Task.isCancelled else { return }
+            entries = []
+            state = .failure(error)
         }
     }
 }

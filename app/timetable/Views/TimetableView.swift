@@ -10,25 +10,18 @@ import TimetableAPI
 import Foundation
 import Flow
 
-struct IdentifiableEvent: Identifiable {
-    let id = UUID()
-    let event: TimetableQuery.Data.Timetable
-}
-
 struct TimetableView: View {
     public let routeId: String
     public let stopId: String
-    
-    @StateObject var timetableModel: TimetableViewModel
-    
+
+    @State private var timetableModel = TimetableViewModel()
+    @State private var retryCount = 0
+
     init(routeId: String, stopId: String) {
         self.routeId = routeId
         self.stopId = stopId
-        
-        print("route id: \(routeId), stopid: \(stopId)")
-        _timetableModel = StateObject(wrappedValue: TimetableViewModel(routeId: routeId, stopId: stopId))
     }
-    
+
     private let isoFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"  // Note the added .SSS for milliseconds
@@ -60,6 +53,21 @@ struct TimetableView: View {
 
     var body: some View {
         Section(header: Text("Timetable")) {
+            if let message = timetableModel.state.errorMessage {
+                ErrorView(message: message) { retryCount += 1 }
+            } else {
+                hourRows
+            }
+        }
+        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
+        // Re-runs (and cancels the old request) whenever route, stop or retry changes.
+        .task(id: "\(routeId)|\(stopId)|\(retryCount)") {
+            await timetableModel.load(routeId: routeId, stopId: stopId)
+        }
+    }
+
+    @ViewBuilder
+    private var hourRows: some View {
             ForEach(0..<24, id: \.self) { offset in
                 let hourTime = Calendar.current.date(byAdding: .hour, value: offset, to: Date())!
                 let key = Calendar.current.date(from:
@@ -93,19 +101,6 @@ struct TimetableView: View {
                 .font(.callout)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-        }
-        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 0))
-        .onAppear {
-            timetableModel.fetchTimetable()
-        }
-        .onChange(of: stopId) {
-            timetableModel.stopId = $0
-            timetableModel.fetchTimetable()
-        }
-        .onChange(of: routeId) {
-            timetableModel.routeId = $0
-            timetableModel.fetchTimetable()
-        }
     }
 }
 
@@ -131,7 +126,6 @@ struct TimestampView: View {
     var body: some View {
         let minute = minuteFormatter.string(from: isoFormatter.date(from: event.arrival) ?? Date())
         Button(action: {
-            print("TIMESTAMP \(minute)")
             path.wrappedValue.append(event)
             
         }) {

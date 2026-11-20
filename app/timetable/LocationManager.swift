@@ -2,69 +2,60 @@
 //  LocationManager.swift
 //  timetable
 //
-//  Created by Balázs Szalay on 2025. 02. 09..
-//
 
-import Foundation
 import CoreLocation
 
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    @Published var lastKnownLocation: CLLocationCoordinate2D?
-    @Published var locationError: String?
-    
+/// One-shot location lookup. Returns nil when permission is denied or the lookup fails.
+@MainActor
+final class LocationManager: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
-    private var locationRequestCompletion: ((CLLocationCoordinate2D?) -> Void)?
-    
+    private var continuation: CheckedContinuation<CLLocationCoordinate2D?, Never>?
+
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
-    
-    func requestOneTimeLocation(completion: @escaping (CLLocationCoordinate2D?) -> Void) {
-        // Store the completion handler
-        locationRequestCompletion = completion
-        
-        // Check current authorization status
-        switch manager.authorizationStatus {
-        case .notDetermined:
-            // Request permission if not determined
-            manager.requestWhenInUseAuthorization()
-        case .authorizedWhenInUse, .authorizedAlways:
-            // Request a single location update
-            manager.requestLocation()
-        case .denied, .restricted:
-            // Handle denied or restricted access
-            locationError = "Location access is not allowed"
-            completion(nil)
-        @unknown default:
-            locationError = "Unknown location access status"
-            completion(nil)
+
+    func currentLocation() async -> CLLocationCoordinate2D? {
+        // Only one request at a time; a second caller gets nil instead of hanging.
+        guard continuation == nil else { return nil }
+        return await withCheckedContinuation { continuation in
+            self.continuation = continuation
+            switch manager.authorizationStatus {
+            case .notDetermined:
+                manager.requestWhenInUseAuthorization() // answer arrives in didChangeAuthorization
+            case .authorizedWhenInUse, .authorizedAlways:
+                manager.requestLocation()
+            default:
+                finish(nil)
+            }
         }
     }
-    
-    // CLLocationManagerDelegate methods
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        // If authorization just became authorized, request location
-        if manager.authorizationStatus == .authorizedWhenInUse ||
-           manager.authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
+
+    private func finish(_ location: CLLocationCoordinate2D?) {
+        continuation?.resume(returning: location)
+        continuation = nil
+    }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor in
+            guard continuation != nil else { return }
+            switch status {
+            case .authorizedWhenInUse, .authorizedAlways: self.manager.requestLocation()
+            case .notDetermined: break
+            default: finish(nil)
+            }
         }
     }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let location = locations.first {
-            lastKnownLocation = location.coordinate
-            locationRequestCompletion?(location.coordinate)
-            // Clear the completion handler after use
-            locationRequestCompletion = nil
-        }
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let coordinate = locations.first?.coordinate
+        Task { @MainActor in finish(coordinate) }
     }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        locationError = error.localizedDescription
-        locationRequestCompletion?(nil)
-        // Clear the completion handler after use
-        locationRequestCompletion = nil
+
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor in finish(nil) }
     }
 }

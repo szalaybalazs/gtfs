@@ -1,77 +1,80 @@
-
 //
-//  RoutesViewModel.swift
+//  RouteDetailsViewModel.swift
 //  timetable
-//
-//  Created by Balázs Szalay on 2025. 02. 09..
 //
 
 import Foundation
-import Combine
-import Apollo
+import CoreLocation
+import Observation
 import TimetableAPI
 
-class RouteDetailsViewModel: ObservableObject {
+@MainActor
+@Observable
+final class RouteDetailsViewModel {
+    typealias Route = RouteByIdQuery.Data.Route
+    typealias Direction = Route.Direction
+    typealias Stop = Direction.Stop
+
     let routeId: TimetableAPI.ID
-    @Published var isLoading: Bool = false
-    @Published var route: RouteByIdQuery.Data.Route?
-    @Published var activeRequest: Apollo.Cancellable?
-    @Published var lastConnection: RoutesQuery.Data.Routes?
-    @Published var closestStop: RouteByIdQuery.Data.Route.ClosestStop?
-    
-    @Published var stopId: String = "__TEST__"
-    @Published var directionId: Int = 0
-    @Published var directions: [RouteByIdQuery.Data.Route.Direction] = []
-    
-    private var cancellables = Set<AnyCancellable>()
-    
-    init(routeId: TimetableAPI.ID) {
+    private(set) var route: Route?
+    private(set) var state: LoadState = .idle
+
+    /// nil until the route has loaded.
+    var stopId: TimetableAPI.ID?
+    var directionId: Int = 0
+
+    var directions: [Direction] { route?.directions ?? [] }
+    var stops: [Stop] { directions.first { $0.directionId == directionId }?.stops ?? [] }
+
+    private let client: GraphQLClient
+    private let locate: () async -> CLLocationCoordinate2D?
+
+    init(
+        routeId: TimetableAPI.ID,
+        client: GraphQLClient = Network.shared,
+        locate: (() async -> CLLocationCoordinate2D?)? = nil
+    ) {
         self.routeId = routeId
+        self.client = client
+        self.locate = locate ?? { await LocationManager().currentLocation() }
     }
-    
-    public var stops: [RouteByIdQuery.Data.Route.Direction.Stop] {
-        return directions.first { $0.directionId == directionId }?.stops ?? []
-    }
-    
-    private var locationManager = LocationManager()
 
-    func loadRoute() {
-        print("Loading route: \(self.routeId)")
-        locationManager.requestOneTimeLocation { location in
-            self.activeRequest = Network.shared.apollo.fetch(query: RouteByIdQuery(
-                routeId: self.routeId,
-                lat: location?.latitude ?? .null,
-                lon: location?.longitude ?? .null)) { [weak self] result in
-                switch result {
-                    case .success(let graphQLResult):
-                        if let route = graphQLResult.data?.route {
-                            self?.route = route
-                            
-                            self?.directions = route.directions ?? []
-                            
-                            if let closestStop = route.closestStop {
-                                self!.stopId = closestStop.stopId
-                                
-                                self?.closestStop = closestStop
-                                
-                                // Find direction including the stop
-                                self!.directions.forEach { direction in
-                                    if direction.stops.contains(where: { $0.stopId == closestStop.stopId }) ?? false {
-                                        self!.directionId = direction.directionId
-                                    }
-                                }
-                            } else {
-                                self!.stopId = (route.directions ?? [])[0].stops[0].stopId ?? "__TEST__"
-                            }
-                        }
-
-                        if let errors = graphQLResult.errors {
-                        }
-                    case .failure(let error):
-                        print("Failure! Error: \(error)")
-                }
+    func load() async {
+        state = .loading
+        let location = await locate()
+        do {
+            let data = try await client.fetch(RouteByIdQuery(
+                routeId: routeId,
+                lat: location.map { .some($0.latitude) } ?? .null,
+                lon: location.map { .some($0.longitude) } ?? .null
+            ))
+            guard let route = data.route else {
+                state = .failed("Route not found.")
+                return
             }
+            self.route = route
+            selectInitialStop(for: route)
+            state = .idle
+        } catch {
+            state = .failure(error)
         }
-        
+    }
+
+    /// When the direction changes, keep the same stop if it exists there, else pick the first one.
+    func directionChanged() {
+        if let stopId, stops.contains(where: { $0.stopId == stopId }) { return }
+        stopId = stops.first?.stopId
+    }
+
+    private func selectInitialStop(for route: Route) {
+        let directions = route.directions ?? []
+        if let closest = route.closestStop,
+           let direction = directions.first(where: { $0.stops.contains { $0.stopId == closest.stopId } }) {
+            directionId = direction.directionId
+            stopId = closest.stopId
+        } else {
+            directionId = directions.first?.directionId ?? 0
+            stopId = directions.first?.stops.first?.stopId
+        }
     }
 }

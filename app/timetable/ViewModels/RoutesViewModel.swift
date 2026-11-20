@@ -6,52 +6,52 @@
 //
 
 import Foundation
-import Combine
-import Apollo
+import Observation
 import TimetableAPI
 
-class RoutesViewModel: ObservableObject {
-    @Published var searchText: String = ""
-    @Published var isLoading: Bool = false
-    @Published var routes = [RoutesQuery.Data.Routes.Datum]()
-    @Published var activeRequest: Apollo.Cancellable?
-    @Published var lastConnection: RoutesQuery.Data.Routes?
+@MainActor
+@Observable
+final class RoutesViewModel {
+    typealias Route = RoutesQuery.Data.Routes.Datum
 
+    private(set) var routes: [Route] = []
+    private(set) var state: LoadState = .idle
+    private var lastConnection: RoutesQuery.Data.Routes?
 
-    private var cancellables = Set<AnyCancellable>()
+    private let client: GraphQLClient
+    private let pageSize: Int
 
+    init(client: GraphQLClient = Network.shared, pageSize: Int = 50) {
+        self.client = client
+        self.pageSize = pageSize
+    }
 
+    var hasMore: Bool {
+        guard let connection = lastConnection else { return true }
+        return (connection.pages ?? 0) > (connection.page ?? 0)
+    }
 
-    func fetchRoutes(limit: Int = 50, page: Int = 0) {
-        self.activeRequest = Network.shared.apollo.fetch(query: RoutesQuery(limit: limit ?? .null, page: page ?? .null)) { [weak self] result in
-            
-            print("Loading routes: \(page)")
-            
-            switch result {
-                case .success(let graphQLResult):
-                    if let routesConnection = graphQLResult.data?.routes {
-                        self?.lastConnection = routesConnection
-                        self?.routes.append(contentsOf: routesConnection.data)
-                    }
+    /// Loads the first page, or the next one if a page is already loaded.
+    func loadNextPage() async {
+        guard !state.isLoading, hasMore else { return }
+        let page = lastConnection.map { ($0.page ?? 0) + 1 } ?? 0
 
-                    if let errors = graphQLResult.errors {
-                    }
-                case .failure(let error):
-                    print("Failure! Error: \(error)")
-            }
+        state = .loading
+        do {
+            let data = try await client.fetch(RoutesQuery(limit: .some(pageSize), page: .some(page)))
+            lastConnection = data.routes
+            routes.append(contentsOf: data.routes.data)
+            state = .idle
+        } catch {
+            state = .failure(error)
         }
     }
-    
-    func loadRoutes() {
-        guard let connection = self.lastConnection else {
-            self.fetchRoutes()
-            return
-        }
 
-        guard (connection.pages ?? 0) > (connection.page ?? 0) else {
-            return
-        }
-
-        self.fetchRoutes(page: (connection.page ?? 0) + 1)
+    /// Clears everything and loads from page 0. Used by retry and pull-to-refresh.
+    func reload() async {
+        routes = []
+        lastConnection = nil
+        state = .idle
+        await loadNextPage()
     }
 }
