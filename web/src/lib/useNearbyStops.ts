@@ -1,25 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { gql, NEARBY_STOPS_QUERY, type NearbyStops } from './api'
+import { gql, NEARBY_STATIONS_QUERY, type NearbyStations } from './api'
 import { distance } from './geo'
 import { useGeolocation } from './useGeolocation'
 
-/** Stops within `radius` metres of the user, closest first. */
-export function useNearbyStops(radius: number) {
+/** Stop groups within `radius` metres of the user that something stops at, closest first. */
+export function useNearbyStations(radius: number) {
   const location = useGeolocation(true)
   const query = useQuery({
-    queryKey: ['nearby', location.coords, radius],
-    queryFn: () => gql<NearbyStops>(NEARBY_STOPS_QUERY, { ...location.coords!, radius }),
+    queryKey: ['nearbyStations', location.coords, radius],
+    queryFn: () => gql<NearbyStations>(NEARBY_STATIONS_QUERY, { ...location.coords!, radius }),
     enabled: !!location.coords,
     staleTime: 5 * 60_000,
   })
-  const stops = useMemo(() => {
+  const stations = useMemo(() => {
     const here = location.coords
     if (!here) return []
-    return (query.data?.stopsByRadius ?? [])
-      .filter((s) => s != null && s.lat != null && s.lon != null)
-      .map((stop) => ({ stop: stop!, distance: distance(here, { lat: stop!.lat!, lon: stop!.lon! }) }))
+    return (query.data?.stationsByRadius ?? [])
+      .filter((s) => s.routes.length > 0)
+      .map((station) => ({ station, distance: distance(here, { lat: station.lat, lon: station.lon }) }))
       .sort((a, b) => a.distance - b.distance)
   }, [query.data, location.coords])
-  return { location, query, stops }
+  return { location, query, stations }
 }

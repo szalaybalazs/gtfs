@@ -57,7 +57,7 @@ export const ROUTES_QUERY = /* GraphQL */ `
   }
 `
 
-export type Stop = { stopId: string; name: string | null; code?: string | null }
+export type Stop = { stopId: string; name: string | null; code?: string | null; lat?: number | null; lon?: number | null }
 
 export type Direction = { directionId: number; headsign: string; stops: Stop[] }
 
@@ -85,21 +85,9 @@ export const ROUTE_QUERY = /* GraphQL */ `
         stops {
           stopId
           name
+          lat
+          lon
         }
-      }
-    }
-  }
-`
-
-export type ClosestStop = { route: { closestStop: Stop | null } | null }
-
-export const CLOSEST_STOP_QUERY = /* GraphQL */ `
-  query ClosestStop($routeId: ID!, $lat: Float, $lon: Float) {
-    route(id: $routeId) {
-      closestStop(lat: $lat, lon: $lon) {
-        stopId
-        code
-        name
       }
     }
   }
@@ -117,6 +105,8 @@ export type TimetableEntry = {
   scheduleRelationship: 'SCHEDULED' | 'NO_DATA' | null
   isNext: boolean
   isPast: boolean
+  serviceDate: string | null
+  headsign: string | null
 }
 
 export type Timetable = { timetable: TimetableEntry[] }
@@ -135,6 +125,8 @@ export const TIMETABLE_QUERY = /* GraphQL */ `
       scheduleRelationship
       isNext
       isPast
+      serviceDate
+      headsign
     }
   }
 `
@@ -218,6 +210,135 @@ export const VEHICLES_QUERY = /* GraphQL */ `
       bearing
       vehicleLabel
       trip { headsign route { routeId shortName color textColor } }
+    }
+  }
+`
+
+export type RouteRef = Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 'textColor'> & { type?: RouteType | null }
+const ROUTE_REF = 'routeId shortName color textColor type'
+
+export type Departure = {
+  tripId: string
+  serviceDate: string
+  stopId: string
+  route: RouteRef | null
+  headsign: string | null
+  via: string | null
+  arrival: string
+  departure: string
+  arrivalDelay: number | null
+  departureDelay: number | null
+  realtime: boolean
+  wheelchairAccessible: 'UNKNOWN' | 'AVAILABLE' | 'UNAVAILABLE'
+  bikesAllowed: 'UNKNOWN' | 'ALLOWED' | 'NOT_ALLOWED'
+}
+
+export type Departures = { departures: Departure[] }
+
+export const DEPARTURES_QUERY = /* GraphQL */ `
+  query Departures($stopIds: [ID!]!, $limit: Int, $hours: Int, $after: DateTime) {
+    departures(stopIds: $stopIds, limit: $limit, hours: $hours, after: $after) {
+      tripId serviceDate stopId headsign via arrival departure arrivalDelay departureDelay
+      realtime wheelchairAccessible bikesAllowed
+      route { ${ROUTE_REF} }
+    }
+  }
+`
+
+export type Station = {
+  stationId: string
+  name: string
+  lat: number
+  lon: number
+  routes: RouteRef[]
+  stops?: (StopSummary & { routes?: (RouteRef | null)[] | null; headsigns?: string[] })[]
+}
+
+export type StationsPage = { stations: { page: number; pages: number; total: number; data: Station[] } }
+
+export const STATIONS_QUERY = /* GraphQL */ `
+  query Stations($limit: Int, $page: Int, $search: String) {
+    stations(limit: $limit, page: $page, search: $search) {
+      page pages total
+      data { stationId name lat lon routes { ${ROUTE_REF} } stops { stopId name code headsigns routes { ${ROUTE_REF} } } }
+    }
+  }
+`
+
+export type NearbyStations = { stationsByRadius: Station[] }
+
+export const NEARBY_STATIONS_QUERY = /* GraphQL */ `
+  query NearbyStations($lat: Float!, $lon: Float!, $radius: Float!) {
+    stationsByRadius(lat: $lat, lon: $lon, radius: $radius) {
+      stationId name lat lon routes { ${ROUTE_REF} }
+      stops { stopId name code lat lon headsigns routes { ${ROUTE_REF} } }
+    }
+  }
+`
+
+export type StationDetails = { station: Station | null }
+
+export const STATION_QUERY = /* GraphQL */ `
+  query Station($id: ID!) {
+    station(id: $id) {
+      stationId name lat lon
+      routes { ${ROUTE_REF} }
+      stops { stopId name code lat lon headsigns routes { ${ROUTE_REF} } }
+    }
+  }
+`
+
+export type TripStop = {
+  stop: {
+    stopId: string
+    name: string | null
+    lat: number | null
+    lon: number | null
+    station: { stationId: string; routes: RouteRef[] } | null
+  }
+  stopSequence: number
+  arrival: string
+  departure: string
+  arrivalDelay: number | null
+  departureDelay: number | null
+  realtime: boolean
+}
+
+export type TripDetails = {
+  trip: {
+    tripId: string
+    serviceDate: string
+    headsign: string | null
+    route: RouteRef | null
+    stops: TripStop[]
+    vehicle: {
+      latitude: number | null
+      longitude: number | null
+      bearing: number | null
+      vehicleLabel: string | null
+      vehicleLicensePlate: string | null
+      vehicleWheelchairAccessible: boolean | null
+      currentStopSequence: number | null
+      timestamp: string | null
+    } | null
+    path: { coordinates: [number, number][] } | null
+  } | null
+}
+
+export const TRIP_QUERY = /* GraphQL */ `
+  query Trip($id: ID!, $serviceDate: String) {
+    trip(id: $id, serviceDate: $serviceDate) {
+      tripId serviceDate headsign
+      route { ${ROUTE_REF} }
+      stops {
+        stopSequence arrival departure arrivalDelay departureDelay realtime
+        stop { stopId name lat lon station { stationId routes { ${ROUTE_REF} } } }
+      }
+      vehicle {
+        latitude longitude bearing vehicleLabel vehicleLicensePlate
+        vehicleWheelchairAccessible currentStopSequence timestamp
+      }
+      path { coordinates }
     }
   }
 `

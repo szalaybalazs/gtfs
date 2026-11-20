@@ -10,6 +10,7 @@
   --color-accent: #16a34a;
   --color-live: #16a34a;
   --color-late: #dc2626;
+  --color-early: #9333ea;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -25,6 +26,8 @@
     --color-accent: #4ade80;
     --color-live: #4ade80;
     --color-late: #f87171;
+  --color-early: #c084fc;
+    --color-early: #c084fc;
   }
 }
 
@@ -38,6 +41,8 @@
     --color-accent: #4ade80;
     --color-live: #4ade80;
     --color-late: #f87171;
+  --color-early: #c084fc;
+    --color-early: #c084fc;
   }
 
 html {

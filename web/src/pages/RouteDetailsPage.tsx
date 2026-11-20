@@ -1,51 +1,63 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useParams, useSearchParams } from 'react-router'
+import AfterFilter, { useAfter } from '../components/AfterFilter'
 import Departures from '../components/Departures'
-import { LocationIcon, StarIcon, SwapIcon } from '../components/Icons'
+import { LocationIcon, StarIcon, SwapIcon, UpDownIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
-import StopLine from '../components/StopLine'
+import Segmented from '../components/Segmented'
 import Timetable from '../components/Timetable'
-import {
-  CLOSEST_STOP_QUERY,
-  gql,
-  ROUTE_QUERY,
-  type ClosestStop,
-  type Direction,
-  type RouteDetails,
-  type Stop,
-} from '../lib/api'
+import { gql, ROUTE_QUERY, type Direction, type RouteDetails, type Stop } from '../lib/api'
 import { useFavorites } from '../lib/favorites'
-import { useGeolocation } from '../lib/useGeolocation'
+import { distance, formatDistance } from '../lib/geo'
+import { useDepartures } from '../lib/useDepartures'
+import { useGeolocation, type Coords } from '../lib/useGeolocation'
+
+/** A stop further than this doesn't count as "near you". */
+const NEAR_M = 1000
+
+type Choice = { direction: Direction; stop: Stop; reason: 'chosen' | 'nearest' | 'terminus' | 'first'; metres?: number }
 
 /**
- * Picks the direction and stop to show. An explicit choice in the URL wins,
- * then the stop closest to the user, then the first stop of the first
- * direction — the same order the app uses.
+ * Which stop to show. An explicit choice in the URL wins. Otherwise the
+ * nearest stop on the route if it is within NEAR_M, else the end stop
+ * (first stop of a direction) closest to the user, else the first stop.
  */
-function resolveSelection(
-  directions: Direction[],
-  dirParam: number | null,
-  stopParam: string | null,
-  closest: Stop | null | undefined,
-) {
-  const contains = (id: string | undefined) => (d: Direction) => d.stops.some((s) => s.stopId === id)
-  const direction =
-    directions.find((d) => d.directionId === dirParam) ??
-    (stopParam ? directions.find(contains(stopParam)) : undefined) ??
-    (closest ? directions.find(contains(closest.stopId)) : undefined) ??
-    directions[0]
-  if (!direction) return { direction: undefined, stop: undefined }
+function choose(directions: Direction[], dirParam: number | null, stopParam: string | null, here: Coords | null): Choice | null {
+  if (directions.length === 0) return null
+  const has = (id: string | null) => (d: Direction) => d.stops.some((s) => s.stopId === id)
 
-  const stop =
-    direction.stops.find((s) => s.stopId === stopParam) ??
-    (closest
-      ? (direction.stops.find((s) => s.stopId === closest.stopId) ??
-        direction.stops.find((s) => s.name === closest.name))
-      : undefined) ??
-    direction.stops[0]
-  return { direction, stop }
+  if (stopParam || dirParam != null) {
+    const direction =
+      directions.find((d) => d.directionId === dirParam && (!stopParam || has(stopParam)(d))) ??
+      directions.find(has(stopParam)) ??
+      directions.find((d) => d.directionId === dirParam) ??
+      directions[0]
+    const stop = direction.stops.find((s) => s.stopId === stopParam) ?? direction.stops[0]
+    if (stop) return { direction, stop, reason: 'chosen' }
+  }
+
+  const located = (s: Stop) => here && s.lat != null && s.lon != null
+  const metres = (s: Stop) => distance(here!, { lat: s.lat!, lon: s.lon! })
+
+  if (here) {
+    // Nearest stop overall, skipping each direction's last stop (nothing departs there)
+    const candidates = directions.flatMap((direction) =>
+      direction.stops.slice(0, -1).filter(located).map((stop) => ({ direction, stop, m: metres(stop) })),
+    )
+    const nearest = candidates.sort((a, b) => a.m - b.m)[0]
+    if (nearest && nearest.m <= NEAR_M) return { direction: nearest.direction, stop: nearest.stop, reason: 'nearest', metres: nearest.m }
+
+    const termini = directions
+      .filter((d) => d.stops[0] && located(d.stops[0]))
+      .map((direction) => ({ direction, stop: direction.stops[0], m: metres(direction.stops[0]) }))
+      .sort((a, b) => a.m - b.m)
+    if (termini[0]) return { direction: termini[0].direction, stop: termini[0].stop, reason: 'terminus', metres: termini[0].m }
+  }
+
+  const direction = directions[0]
+  return direction.stops[0] ? { direction, stop: direction.stops[0], reason: 'first' } : null
 }
 
 export default function RouteDetailsPage() {
@@ -53,6 +65,7 @@ export default function RouteDetailsPage() {
   const [params, setParams] = useSearchParams()
   const dirParam = params.has('dir') ? Number(params.get('dir')) : null
   const stopParam = params.get('stop')
+  const view = params.get('view') === 'timetable' ? 'timetable' : 'departures'
   const location = useGeolocation(true)
   const { isFavorite, toggle } = useFavorites()
 
@@ -61,55 +74,49 @@ export default function RouteDetailsPage() {
     queryFn: () => gql<RouteDetails>(ROUTE_QUERY, { routeId }),
     staleTime: 60 * 60_000,
   })
-
-  const closestQuery = useQuery({
-    queryKey: ['closestStop', routeId, location.coords],
-    queryFn: () => gql<ClosestStop>(CLOSEST_STOP_QUERY, { routeId, ...location.coords }),
-    enabled: !!location.coords,
-    staleTime: 5 * 60_000,
-  })
-  const closest = closestQuery.data?.route?.closestStop
-
   const route = routeQuery.data?.route
   const directions = useMemo(() => route?.directions ?? [], [route])
-  const { direction, stop } = resolveSelection(directions, dirParam, stopParam, closest)
+  const choice = choose(directions, dirParam, stopParam, location.coords)
+  const direction = choice?.direction
+  const stop = choice?.stop
 
-  const select = (next: { dir: number; stop?: string }) =>
+  const [after] = useAfter()
+  const departuresQuery = useDepartures(stop ? [stop.stopId] : [], { limit: 40, after })
+  const departures = (departuresQuery.data?.departures ?? []).filter((d) => d.route?.routeId === routeId).slice(0, 8)
+
+  const setParam = (changes: Record<string, string | null>) =>
     setParams(
       (p) => {
-        p.set('dir', String(next.dir))
-        if (next.stop) p.set('stop', next.stop)
-        else p.delete('stop')
+        for (const [k, v] of Object.entries(changes)) v == null ? p.delete(k) : p.set(k, v)
         return p
       },
       { replace: true },
     )
 
   const changeDirection = (dir: number) => {
-    // Keep the same physical stop when switching direction, matched by name
-    // since each direction usually has its own platform id.
+    // Keep the same place when switching direction: each direction usually has its own platform, matched by name
     const target = directions.find((d) => d.directionId === dir)
-    const match = target?.stops.find((s) => s.name === stop?.name)
-    select({ dir, stop: match?.stopId })
+    if (!target) return
+    // Same place by name, unless that is where the new direction ends (e.g.
+    // swapping at a terminus): then start from the new direction's first stop
+    const departing = target.stops.slice(0, -1)
+    const match = departing.find((s) => s.name === stop?.name) ?? target.stops[0]
+    setParam({ dir: String(dir), stop: match?.stopId ?? null })
   }
-
-  const useClosest = () => {
-    setParams(
-      (p) => {
-        p.delete('dir')
-        p.delete('stop')
-        return p
-      },
-      { replace: true },
-    )
-    location.request()
-  }
-
-  const isClosest = !!closest && !!stop && (stop.stopId === closest.stopId || stop.name === closest.name)
 
   const otherDirection = directions.find((d) => d.directionId !== direction?.directionId)
-  const lineColor = route?.color ? (route.color.startsWith('#') ? route.color : `#${route.color}`) : 'var(--color-secondary)'
   const favorite = isFavorite(routeId)
+
+  const hint =
+    choice?.reason === 'nearest'
+      ? `Nearest stop to you · ${formatDistance(choice.metres!)}`
+      : choice?.reason === 'terminus'
+        ? `Nothing close by, so showing the end stop · ${formatDistance(choice.metres!)}`
+        : location.loading
+          ? 'Finding the nearest stop…'
+          : choice?.reason === 'first'
+            ? (location.error ?? '')
+            : ''
 
   return (
     <div className="min-h-dvh">
@@ -142,28 +149,40 @@ export default function RouteDetailsPage() {
         )}
         {routeQuery.isPending && <div className="h-32 animate-pulse rounded-2xl bg-surface" />}
 
-        {route && direction && (
+        {route && direction && stop && (
           <section className="space-y-2">
             <div className="rounded-2xl bg-surface p-4">
               <h1 className="text-2xl leading-tight font-bold">{route.desc ?? route.longName}</h1>
-              <p className="mt-1 text-[15px] text-secondary">
-                {location.loading
-                  ? 'Finding the closest stop…'
-                  : isClosest
-                    ? 'Showing the stop closest to you'
-                    : (location.error ?? '')}
-              </p>
+              {hint && <p className="mt-1 text-[15px] text-secondary">{hint}</p>}
             </div>
             <div className="flex gap-2">
-              <div className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3">
+              {/* Native select under a styled row: the system picker on phones */}
+              <label className="relative flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3 has-focus-visible:ring-2 has-focus-visible:ring-accent">
                 <span className="text-secondary">From</span>
-                <span className="truncate font-medium">{stop?.name}</span>
-              </div>
-              {!isClosest && !location.loading && (
+                <span className="min-w-0 flex-1 truncate font-medium">{stop.name}</span>
+                <UpDownIcon className="h-4 w-4 shrink-0 text-secondary" />
+                <select
+                  aria-label="Stop"
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                  value={stop.stopId}
+                  onChange={(e) => setParam({ dir: String(direction.directionId), stop: e.target.value })}
+                >
+                  {/* Not the last stop: nothing departs from there */}
+                  {direction.stops.slice(0, -1).map((s) => (
+                    <option key={s.stopId} value={s.stopId}>
+                      {s.name ?? s.stopId}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {choice.reason === 'chosen' && (
                 <button
                   type="button"
-                  onClick={useClosest}
-                  aria-label="Closest stop"
+                  onClick={() => {
+                    setParam({ dir: null, stop: null })
+                    location.request()
+                  }}
+                  aria-label="Nearest stop"
                   className="flex w-12 shrink-0 items-center justify-center rounded-2xl bg-surface text-accent active:opacity-50"
                 >
                   <LocationIcon className="h-5 w-5" />
@@ -183,25 +202,32 @@ export default function RouteDetailsPage() {
           </section>
         )}
 
-        {direction && stop && <Departures routeId={routeId} stopId={stop.stopId} />}
-
-        {direction && (
-          <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">Stops</h2>
-            <StopLine
-              stops={direction.stops}
-              selectedId={stop?.stopId}
-              closestId={closest?.stopId}
-              color={lineColor}
-              onSelect={(id) => {
-                select({ dir: direction.directionId, stop: id })
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              }}
+        {route && stop && (
+          <>
+            <Segmented
+              label="View"
+              value={view}
+              onChange={(v) => setParam({ view: v === 'timetable' ? v : null })}
+              options={[
+                { value: 'departures', label: 'Departures' },
+                { value: 'timetable', label: 'Timetable' },
+              ]}
             />
-          </section>
+            {view === 'departures' ? (
+              <Departures
+                toolbar={<AfterFilter />}
+                title={null}
+                departures={departures}
+                isPending={departuresQuery.isPending}
+                error={departuresQuery.isError}
+                onRetry={() => departuresQuery.refetch()}
+              />
+            ) : (
+              <Timetable lines={[{ route, stopId: stop.stopId }]} />
+            )}
+          </>
         )}
 
-        {direction && stop && <Timetable routeId={routeId} stopId={stop.stopId} />}
       </main>
     </div>
   )

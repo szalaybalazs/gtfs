@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
 import { snakeToCamel } from "./common/camel";
+import { distanceM, stationIndex, type Station } from "./stations";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -33,6 +34,28 @@ const gtfsTime = (date: string, time: string, delaySeconds?: number | null) => {
     .add(h * 3600 + m * 60 + s + (delaySeconds ?? 0), "second")
     .toDate();
 };
+
+
+// BKK publishes absolute predicted times rather than delays, so derive the
+// delay from whichever one the feed provides
+const realtime = (
+  date: string,
+  time: string,
+  delay: number | null,
+  timestamp: string | null
+) => {
+  const scheduled = gtfsTime(date, time);
+  if (timestamp) {
+    const predicted = new Date(Number(timestamp) * 1000);
+    return {
+      at: predicted,
+      delay: Math.round((predicted.getTime() - scheduled.getTime()) / 1000),
+    };
+  }
+  return { at: gtfsTime(date, time, delay), delay };
+};
+
+const today = () => dayjs().tz(TIMEZONE);
 
 const formatRoute = (r: any) => {
   return {
@@ -133,6 +156,51 @@ const formatVehiclePosition = (vp: any) => {
     expirationTimestamp: vp.expiration_timestamp,
   };
 };
+const stopsByIds = (ids: string[]) =>
+  ids.length === 0
+    ? []
+    : db
+        .query(`SELECT * FROM stops WHERE stop_id IN (${ids.map(() => "?").join(", ")})`)
+        .all(...ids)
+        .map(formatStop);
+
+/** Distinct routes serving any of the stops, in the feed's sort order */
+const routesAtStops = (ids: string[]) =>
+  ids.length === 0
+    ? []
+    : db
+        .query(
+          `
+            SELECT DISTINCT r.*
+            FROM stop_times st
+            JOIN trips t ON t.trip_id = st.trip_id
+            JOIN routes r ON r.route_id = t.route_id
+            WHERE st.stop_id IN (${ids.map(() => "?").join(", ")})
+            ORDER BY r.route_sort_order IS NULL, r.route_sort_order
+          `
+        )
+        .all(...ids)
+        .map(formatRoute);
+
+/**
+ * A stop about halfway between `fromSequence` and the end of the trip, so a
+ * departure reads "via ▶ destination". Null when the trip ends within 2 stops.
+ */
+const viaStop = (tripId: string, fromSequence: number): string | null => {
+  const rest = db
+    .query(
+      `
+        SELECT s.stop_name
+        FROM stop_times st JOIN stops s ON s.stop_id = st.stop_id
+        WHERE st.trip_id = ? AND st.stop_sequence > ?
+        ORDER BY st.stop_sequence
+      `
+    )
+    .all(tripId, fromSequence) as { stop_name: string | null }[];
+  if (rest.length < 3) return null;
+  return rest[Math.floor((rest.length - 1) / 2)].stop_name;
+};
+
 export const resolvers = {
   Agency: {
     routes: async (parent: any) => {
@@ -277,6 +345,26 @@ export const resolvers = {
     },
   },
   Stop: {
+    station: (parent: any) => stationIndex().byStop.get(parent.stop_id) ?? null,
+    headsigns: (parent: any) =>
+      db
+        .query(
+          `
+            SELECT t.trip_headsign AS headsign, COUNT(*) AS n
+            FROM stop_times st
+            JOIN trips t ON t.trip_id = st.trip_id
+            WHERE st.stop_id = ? AND t.trip_headsign IS NOT NULL
+              AND EXISTS (
+                SELECT 1 FROM stop_times n
+                WHERE n.trip_id = st.trip_id AND n.stop_sequence > st.stop_sequence
+              )
+            GROUP BY t.trip_headsign
+            ORDER BY n DESC
+            LIMIT 3
+          `
+        )
+        .all(parent.stop_id)
+        .map((r: any) => r.headsign),
     routes: async (parent: any) => {
       const res = db
         .query(
@@ -478,6 +566,170 @@ export const resolvers = {
       );
     },
 
+
+    stations: (
+      _: any,
+      { limit = 50, page = 0, search }: { limit: number; page: number; search?: string }
+    ) => {
+      const needle = search?.trim().toLocaleLowerCase("hu");
+      const all = stationIndex().stations.filter(
+        (s) => !needle || s.name.toLocaleLowerCase("hu").includes(needle)
+      );
+      return {
+        page,
+        total: all.length,
+        pages: Math.ceil(all.length / limit),
+        data: all.slice(page * limit, (page + 1) * limit),
+      };
+    },
+    station: (_: any, { id }: { id: string }) => {
+      const index = stationIndex();
+      // Accept any member stop id too, so a platform id leads to its station
+      return index.byId.get(id) ?? index.byStop.get(id) ?? null;
+    },
+    stationsByRadius: (
+      _: any,
+      { lat, lon, radius }: { lat: number; lon: number; radius: number }
+    ) =>
+      stationIndex()
+        .stations.map((s) => ({ s, d: distanceM(lat, lon, s.lat, s.lon) }))
+        .filter(({ d }) => d <= radius)
+        .sort((a, b) => a.d - b.d)
+        .map(({ s }) => s),
+
+    departures: async (
+      _: any,
+      {
+        stopIds,
+        limit = 30,
+        hours = 3,
+        after,
+      }: { stopIds: string[]; limit: number; hours: number; after?: Date }
+    ) => {
+      if (stopIds.length === 0) return [];
+      await ensureRealtime();
+      const start = after ? new Date(after).getTime() : Date.now();
+      const now = dayjs(start).tz(TIMEZONE);
+      // Yesterday too: trips past midnight belong to the previous service day
+      const dates = [now.subtract(1, "day"), now].map((d) => d.format("YYYY-MM-DD"));
+      const placeholders = stopIds.map(() => "?").join(", ");
+      const rows = db
+        .query(
+          `
+            WITH active AS (
+              SELECT d.date AS date, cd.service_id
+              FROM (SELECT ? AS date UNION ALL SELECT ?) d
+              JOIN calendar_dates cd
+                ON cd.date = REPLACE(d.date, '-', '') AND cd.exception_type = 1
+            )
+            SELECT st.*, t.trip_headsign, t.route_id, t.wheelchair_accessible,
+              t.bikes_allowed, active.date,
+              stu.arrival_delay, stu.departure_delay,
+              stu.arrival_timestamp, stu.departure_timestamp
+            FROM stop_times st
+            JOIN trips t ON t.trip_id = st.trip_id
+            JOIN active ON active.service_id = t.service_id
+            LEFT JOIN stop_time_updates stu
+              ON stu.trip_id = st.trip_id
+              AND stu.stop_id = st.stop_id
+              AND (stu.trip_start_date IS NULL OR stu.trip_start_date = REPLACE(active.date, '-', ''))
+            WHERE st.stop_id IN (${placeholders})
+              -- Not the last stop: nothing departs from a trip's terminus
+              AND EXISTS (
+                SELECT 1 FROM stop_times n
+                WHERE n.trip_id = st.trip_id AND n.stop_sequence > st.stop_sequence
+              )
+          `
+        )
+        .all(...dates, ...stopIds);
+
+      const from = start - 60_000;
+      const to = start + hours * 3_600_000;
+      const routes = new Map<string, any>();
+      const routeById = (id: string) => {
+        if (!routes.has(id))
+          routes.set(id, formatRoute(db.query("SELECT * FROM routes WHERE route_id = ?").get(id)));
+        return routes.get(id);
+      };
+
+      return rows
+        .map((r: any) => {
+          const arrival = realtime(r.date, r.arrival_time, r.arrival_delay, r.arrival_timestamp);
+          const departure = realtime(r.date, r.departure_time, r.departure_delay, r.departure_timestamp);
+          return { r, arrival, departure };
+        })
+        .filter(({ departure }) => {
+          const t = departure.at.getTime();
+          return t >= from && t <= to;
+        })
+        .sort((a, b) => a.departure.at.getTime() - b.departure.at.getTime())
+        .slice(0, limit)
+        .map(({ r, arrival, departure }) => ({
+          tripId: r.trip_id,
+          serviceDate: r.date,
+          stopId: r.stop_id,
+          route: routeById(r.route_id),
+          headsign: r.trip_headsign,
+          via: viaStop(r.trip_id, r.stop_sequence),
+          arrival: arrival.at,
+          departure: departure.at,
+          arrivalDelay: arrival.delay,
+          departureDelay: departure.delay,
+          realtime: r.arrival_timestamp != null || r.departure_timestamp != null || r.arrival_delay != null || r.departure_delay != null,
+          wheelchairAccessible: WHEELCHAIR_BOARDING[r.wheelchair_accessible] ?? WHEELCHAIR_BOARDING[0],
+          bikesAllowed: BIKES_ALLOWED[r.bikes_allowed] ?? BIKES_ALLOWED[0],
+        }));
+    },
+
+    trip: async (_: any, { id, serviceDate }: { id: string; serviceDate?: string }) => {
+      const trip: any = db.query("SELECT * FROM trips WHERE trip_id = ?").get(id);
+      if (!trip) return null;
+      await ensureRealtime();
+      const date = serviceDate ?? today().format("YYYY-MM-DD");
+      const rows = db
+        .query(
+          `
+            SELECT st.*, s.*,
+              stu.arrival_delay, stu.departure_delay,
+              stu.arrival_timestamp, stu.departure_timestamp
+            FROM stop_times st
+            JOIN stops s ON s.stop_id = st.stop_id
+            LEFT JOIN stop_time_updates stu
+              ON stu.trip_id = st.trip_id
+              AND stu.stop_id = st.stop_id
+              AND (stu.trip_start_date IS NULL OR stu.trip_start_date = REPLACE(?, '-', ''))
+            WHERE st.trip_id = ?
+            ORDER BY st.stop_sequence
+          `
+        )
+        .all(date, id);
+      const vehicle: any = db
+        .query("SELECT * FROM vehicle_positions WHERE trip_id = ? LIMIT 1")
+        .get(id);
+
+      return {
+        tripId: trip.trip_id,
+        serviceDate: date,
+        headsign: trip.trip_headsign,
+        directionId: trip.direction_id,
+        shapeId: trip.shape_id,
+        route: formatRoute(db.query("SELECT * FROM routes WHERE route_id = ?").get(trip.route_id)),
+        vehicle: vehicle ? formatVehiclePosition(vehicle) : null,
+        stops: rows.map((r: any) => {
+          const arrival = realtime(date, r.arrival_time, r.arrival_delay, r.arrival_timestamp);
+          const departure = realtime(date, r.departure_time, r.departure_delay, r.departure_timestamp);
+          return {
+            stop: formatStop(r),
+            stopSequence: r.stop_sequence,
+            arrival: arrival.at,
+            departure: departure.at,
+            arrivalDelay: arrival.delay,
+            departureDelay: departure.delay,
+            realtime: r.arrival_timestamp != null || r.departure_timestamp != null || r.arrival_delay != null || r.departure_delay != null,
+          };
+        }),
+      };
+    },
     vehiclePositions: async () => {
       await ensureRealtime();
       return db
@@ -566,25 +818,6 @@ export const resolvers = {
         )
         .all(start, end, routeId, stopId);
 
-      // BKK publishes absolute predicted times rather than delays, so derive
-      // the delay from whichever one the feed provides
-      const realtime = (
-        date: string,
-        time: string,
-        delay: number | null,
-        timestamp: string | null
-      ) => {
-        const scheduled = gtfsTime(date, time);
-        if (timestamp) {
-          const predicted = new Date(Number(timestamp) * 1000);
-          return {
-            at: predicted,
-            delay: Math.round((predicted.getTime() - scheduled.getTime()) / 1000),
-          };
-        }
-        return { at: gtfsTime(date, time, delay), delay };
-      };
-
       const stops = res.map((s: any) => {
         const arrival = realtime(s.date, s.arrival_time, s.arrival_delay, s.arrival_timestamp);
         const departure = realtime(s.date, s.departure_time, s.departure_delay, s.departure_timestamp);
@@ -607,6 +840,8 @@ export const resolvers = {
       return stops.map((s: any, index) => {
         return {
           ...snakeToCamel(s),
+          serviceDate: s.date,
+          headsign: s.trip_headsign,
           isNext: index === nextIndex,
           isPast: index < nextIndex,
           wheelchairAccessible:
@@ -616,6 +851,22 @@ export const resolvers = {
         };
       });
     },
+  },
+
+  Station: {
+    stops: (station: Station) => stopsByIds(station.stopIds),
+    routes: (station: Station) => routesAtStops(station.stopIds),
+  },
+  TripDetails: {
+    path: (trip: any) => ({
+      type: "LineString",
+      coordinates: db
+        .query(
+          "SELECT shape_pt_lon, shape_pt_lat FROM shapes WHERE shape_id = ? ORDER BY shape_pt_sequence"
+        )
+        .all(trip.shapeId)
+        .map((r: any) => [r.shape_pt_lon, r.shape_pt_lat]),
+    }),
   },
 
   Date: GraphQLDate,

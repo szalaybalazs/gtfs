@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { MenuIcon } from './Icons'
 import { useOpenMenu } from './Layout'
 
@@ -14,12 +14,14 @@ export default function NavBar({
   /** Show the side-menu button (top-level pages). */
   menu?: boolean
   title?: ReactNode
-  back?: { to: string; label: string }
+  /** Without `to`, goes back in history (falls back to home). */
+  back?: { to?: string; label: string }
   leading?: ReactNode
   trailing?: ReactNode
   children?: ReactNode
 }) {
   const openMenu = useOpenMenu()
+  const navigate = useNavigate()
   return (
     <header className="sticky top-0 z-10 border-b border-separator bg-canvas/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto max-w-2xl px-4">
@@ -32,7 +34,13 @@ export default function NavBar({
             )}
             {back && (
               <Link
-                to={back.to}
+                to={back.to ?? '/'}
+                onClick={(e) => {
+                  if (!back.to && window.history.length > 1) {
+                    e.preventDefault()
+                    navigate(-1)
+                  }
+                }}
                 className="-ml-2 flex items-center gap-0.5 rounded-md px-2 py-1 text-[17px] text-accent active:opacity-50"
               >
                 <svg viewBox="0 0 12 20" className="h-5 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -45,7 +53,7 @@ export default function NavBar({
           </div>
           <div className="flex flex-1 items-center justify-end gap-1">{trailing}</div>
         </div>
-        {title && <h1 className="truncate pb-2 text-[34px] leading-tight font-bold tracking-tight">{title}</h1>}
+        {title && <h1 className="line-clamp-2 pb-2 text-[30px] leading-tight font-bold tracking-tight">{title}</h1>}
         {children}
       </div>
     </header>

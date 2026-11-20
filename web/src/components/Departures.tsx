@@ -1,51 +1,63 @@
 import type { ReactNode } from 'react'
-import type { TimetableEntry } from '../lib/api'
-import { formatTime } from '../lib/time'
-import { useNow, useTimetable } from '../lib/useTimetable'
-import { LiveIcon, WheelchairIcon } from './Icons'
+import { Link } from 'react-router'
+import type { Departure } from '../lib/api'
+import { countdown } from '../lib/countdown'
+import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
+import { useNow } from '../lib/useTimetable'
+import { BikeIcon, ChevronIcon, LiveIcon, WheelchairIcon } from './Icons'
+import RouteBadge from './RouteBadge'
 
-
-/** The next few departures from the selected stop, with a live countdown. */
+/**
+ * Departures as tappable rows: line badge, destination, countdown with the
+ * exact time under it. Tapping opens that trip.
+ */
 export default function Departures({
-  routeId,
-  stopId,
+  departures,
+  isPending,
+  error,
+  onRetry,
   title = 'Departures',
-  count = 4,
+  empty = 'No more departures in the next few hours.',
+  toolbar,
 }: {
-  routeId: string
-  stopId: string
+  /** Shown at the top of the card, e.g. the time filter. */
+  toolbar?: ReactNode
+  departures: Departure[]
+  isPending?: boolean
+  error?: boolean
+  onRetry?: () => void
   title?: ReactNode
-  count?: number
+  empty?: string
 }) {
   const now = useNow(1_000)
-  const query = useTimetable(routeId, stopId)
-  const upcoming = (query.data?.timetable ?? [])
-    .filter((e) => new Date(e.departure).getTime() >= now.getTime() - 30_000)
-    .slice(0, count)
+  const upcoming = departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 30_000)
 
   return (
     <section>
-      <h2 className="flex items-center gap-2 px-1 pb-2 text-xl font-bold">{title}</h2>
+      {title && <h2 className="flex items-center gap-2 px-1 pb-2 text-xl font-bold">{title}</h2>}
       <div className="overflow-hidden rounded-2xl bg-surface">
-        {query.isPending ? (
+        {toolbar}
+        {isPending ? (
           <div className="space-y-3 p-4">
             {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="h-10 animate-pulse rounded-lg bg-fill" />
+              <div key={i} className="h-12 animate-pulse rounded-lg bg-fill" />
             ))}
           </div>
-        ) : query.isError && !query.data ? (
+        ) : error && upcoming.length === 0 ? (
           <p className="p-6 text-center text-secondary">
             Couldn't load departures.{' '}
-            <button type="button" className="font-medium text-accent" onClick={() => query.refetch()}>
-              Retry
-            </button>
+            {onRetry && (
+              <button type="button" className="font-medium text-accent" onClick={onRetry}>
+                Retry
+              </button>
+            )}
           </p>
         ) : upcoming.length === 0 ? (
-          <p className="p-6 text-center text-secondary">No more departures today from this stop.</p>
+          <p className="p-6 text-center text-secondary">{empty}</p>
         ) : (
           <ul className="divide-y divide-separator">
-            {upcoming.map((entry) => (
-              <Row key={`${entry.tripId}-${entry.departure}`} entry={entry} now={now} />
+            {upcoming.map((d) => (
+              <DepartureRow key={`${d.tripId}-${d.serviceDate}-${d.stopId}`} departure={d} now={now} />
             ))}
           </ul>
         )}
@@ -54,51 +66,38 @@ export default function Departures({
   )
 }
 
-function Row({ entry, now }: { entry: TimetableEntry; now: Date }) {
-  const time = new Date(entry.departure)
-  const delay = entry.departureDelay ?? entry.arrivalDelay
-  const live = entry.scheduleRelationship != null
-  const shifted = delay != null && Math.abs(delay) >= 60
-  const scheduled = shifted ? new Date(time.getTime() - delay * 1000) : null
-  const seconds = Math.round((time.getTime() - now.getTime()) / 1000)
+export function DepartureRow({ departure: d, now }: { departure: Departure; now: Date }) {
+  const time = new Date(d.departure)
+  const status = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay)
+  const { value, unit } = countdown((time.getTime() - now.getTime()) / 1000)
 
   return (
-    <li className="flex items-center gap-3 px-4 py-3">
-      <div className="flex min-w-0 flex-1 items-center gap-2 text-[17px]">
-        {entry.wheelchairAccessible === 'AVAILABLE' && (
-          <WheelchairIcon className="h-4 w-4 shrink-0 text-secondary" aria-label="Wheelchair accessible" />
-        )}
-        {scheduled && <span className="text-secondary line-through">{formatTime(scheduled)}</span>}
-        <span
-          className={`flex items-center gap-0.5 font-medium tabular-nums ${
-            shifted && delay > 0 ? 'text-late' : live ? 'text-live' : ''
-          }`}
-        >
-          {formatTime(time)}
-          {live && <LiveIcon className="h-4 w-4" aria-label="Realtime" />}
-        </span>
-      </div>
-      <Countdown seconds={seconds} />
+    <li>
+      <Link
+        to={`/trips/${encodeURIComponent(d.tripId)}?date=${d.serviceDate}&from=${encodeURIComponent(d.stopId)}`}
+        className="flex items-center gap-3 px-4 py-3 active:bg-fill"
+      >
+        {d.route && <RouteBadge route={d.route} />}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-[17px] leading-snug font-medium">{d.headsign ?? '—'}</p>
+          {/* Secondary details: quieter, after the main info */}
+          {(d.wheelchairAccessible === 'AVAILABLE' || d.bikesAllowed === 'ALLOWED') && (
+            <p className="mt-0.5 flex items-center gap-1.5 text-secondary">
+              {d.wheelchairAccessible === 'AVAILABLE' && <WheelchairIcon className="h-3.5 w-3.5 opacity-70" aria-label="Wheelchair accessible" />}
+              {d.bikesAllowed === 'ALLOWED' && <BikeIcon className="h-3.5 w-3.5 opacity-70" aria-label="Bikes allowed" />}
+            </p>
+          )}
+        </div>
+        {/* Countdown only: colour says live/on time (green), early (purple), late (red) */}
+        <div className={`min-w-14 text-right ${statusColor[status]}`} title={statusLabel[status]}>
+          <p className="flex items-start justify-end gap-0.5 text-2xl leading-none font-bold tabular-nums">
+            {value}
+            {status !== 'scheduled' && <LiveIcon className="h-3 w-3" aria-label={statusLabel[status]} />}
+          </p>
+          <p className={`text-[11px] font-medium ${status === 'scheduled' ? 'text-secondary' : ''}`}>{unit}</p>
+        </div>
+        <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
+      </Link>
     </li>
-  )
-}
-
-/**
- * Under a minute: seconds. Under 10 minutes: m:ss, so the countdown visibly moves.
- * Further out, whole minutes are enough.
- */
-function Countdown({ seconds }: { seconds: number }) {
-  const s = Math.max(0, seconds)
-  const [value, unit] =
-    s < 60
-      ? [String(s), 'sec']
-      : s < 600
-        ? [`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`, 'min']
-        : [String(Math.floor(s / 60)), 'min']
-  return (
-    <span className="min-w-14 text-right">
-      <span className="block text-2xl leading-none font-bold tabular-nums">{value}</span>
-      <span className="text-xs font-medium text-secondary">{unit}</span>
-    </span>
   )
 }

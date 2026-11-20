@@ -1,24 +1,37 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
+import { SearchIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
-import StopRow from '../components/StopRow'
-import { gql, STOPS_QUERY, type StopsPage as StopsData } from '../lib/api'
+import StationRow from '../components/StationRow'
+import { gql, STATIONS_QUERY, type StationsPage } from '../lib/api'
 
-const PAGE_SIZE = 100
+const PAGE_SIZE = 20
 
-/**
- * Every stop, loaded page by page as you scroll. There is no server-side
- * search yet, and there are tens of thousands of stops, so no search box.
- */
+/** Every stop group, searchable by name, loaded page by page. */
 export default function StopsPage() {
+  const [params, setParams] = useSearchParams()
+  const search = params.get('q') ?? ''
+  // Debounce typing so each keystroke doesn't hit the API
+  const [debounced, setDebounced] = useState(search)
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(search.trim()), 250)
+    return () => clearTimeout(id)
+  }, [search])
+
   const query = useInfiniteQuery({
-    queryKey: ['stops'],
-    queryFn: ({ pageParam }) => gql<StopsData>(STOPS_QUERY, { limit: PAGE_SIZE, page: pageParam }),
+    queryKey: ['stations', debounced],
+    queryFn: ({ pageParam }) =>
+      gql<StationsPage>(STATIONS_QUERY, { limit: PAGE_SIZE, page: pageParam, search: debounced || null }),
     initialPageParam: 0,
-    getNextPageParam: ({ stops }) => (stops.page + 1 < stops.pages ? stops.page + 1 : undefined),
+    getNextPageParam: ({ stations }) => (stations.page + 1 < stations.pages ? stations.page + 1 : undefined),
     staleTime: 60 * 60_000,
+    placeholderData: (prev) => prev,
   })
-  const stops = useMemo(() => query.data?.pages.flatMap((p) => p.stops.data) ?? [], [query.data])
+  const stations = useMemo(
+    () => (query.data?.pages.flatMap((p) => p.stations.data) ?? []).filter((s) => s.routes.length > 0),
+    [query.data],
+  )
 
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
   const sentinel = useRef<HTMLDivElement>(null)
@@ -35,7 +48,29 @@ export default function StopsPage() {
 
   return (
     <div className="min-h-dvh">
-      <NavBar title="All stops" menu />
+      <NavBar title="All stops" menu>
+        <div className="pb-2">
+          <div className="flex h-9 items-center gap-1.5 rounded-[10px] bg-fill px-2 text-secondary">
+            <SearchIcon className="h-4 w-4 shrink-0" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) =>
+                setParams(
+                  (p) => {
+                    if (e.target.value) p.set('q', e.target.value)
+                    else p.delete('q')
+                    return p
+                  },
+                  { replace: true },
+                )
+              }
+              placeholder="Search stops"
+              className="w-full bg-transparent text-[17px] text-label outline-none placeholder:text-secondary"
+            />
+          </div>
+        </div>
+      </NavBar>
       <main className="mx-auto max-w-2xl px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isError && (
           <p className="p-6 text-center text-secondary">
@@ -45,12 +80,15 @@ export default function StopsPage() {
             </button>
           </p>
         )}
-        {stops.length > 0 && (
+        {stations.length > 0 && (
           <ul className="overflow-hidden rounded-2xl bg-surface">
-            {stops.map((stop) => (
-              <StopRow key={stop.stopId} stop={stop} />
+            {stations.map((station) => (
+              <StationRow key={station.stationId} station={station} />
             ))}
           </ul>
+        )}
+        {!query.isPending && !query.isError && stations.length === 0 && !hasNextPage && (
+          <p className="p-6 text-center text-secondary">No stops match “{debounced}”.</p>
         )}
         {(query.isPending || isFetchingNextPage) && <p className="p-6 text-center text-sm text-secondary">Loading…</p>}
         <div ref={sentinel} />

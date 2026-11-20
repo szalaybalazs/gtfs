@@ -94,6 +94,63 @@ export const typeDefs = `#graphql
     # Custom fields
     isNext: Boolean!
     isPast: Boolean!
+    serviceDate: String
+    headsign: String
+  }
+
+  "Stops grouped by name and proximity (the feed has no parent stations)"
+  type Station {
+    stationId: ID!
+    name: String!
+    lat: Float!
+    lon: Float!
+    stops: [Stop!]!
+    routes: [Route!]!
+  }
+  type StationPaginated {
+    page: Int!
+    pages: Int!
+    total: Int!
+    data: [Station!]!
+  }
+
+  "One vehicle leaving one stop"
+  type Departure {
+    tripId: ID!
+    serviceDate: String!
+    stopId: ID!
+    route: Route
+    headsign: String
+    "A stop roughly halfway to the destination, for 'via ▶ destination'"
+    via: String
+    arrival: DateTime!
+    departure: DateTime!
+    arrivalDelay: Int
+    departureDelay: Int
+    realtime: Boolean!
+    wheelchairAccessible: WheelchairBoarding!
+    bikesAllowed: BikesAllowed!
+  }
+
+  type TripStop {
+    stop: Stop!
+    stopSequence: Int!
+    arrival: DateTime!
+    departure: DateTime!
+    arrivalDelay: Int
+    departureDelay: Int
+    realtime: Boolean!
+  }
+  "A trip on one service day, with realtime where available"
+  type TripDetails {
+    tripId: ID!
+    serviceDate: String!
+    headsign: String
+    directionId: Int
+    route: Route
+    stops: [TripStop!]!
+    vehicle: VehiclePosition
+    path: LineStringGeometry
   }
 
 
@@ -146,6 +203,9 @@ export const typeDefs = `#graphql
     # Custom fields
     routes: [Route]
     trips: [Trip]
+    station: Station
+    "Where vehicles leaving this stop go, most frequent first"
+    headsigns: [String!]!
   }
 
   type StopPaginated {
@@ -255,5 +315,12 @@ export const typeDefs = `#graphql
     shapes: FeatureCollection!
 
     timetable(stopId: ID!, routeId: ID!, range: RangeInput): [TimetableEntry!]!
+
+    stations(limit: Int, page: Int, search: String): StationPaginated!
+    station(id: ID!): Station
+    stationsByRadius(lat: Float!, lon: Float!, radius: Float!): [Station!]!
+    "Next departures from any of the stops, across all routes"
+    departures(stopIds: [ID!]!, limit: Int, hours: Int, after: DateTime): [Departure!]!
+    trip(id: ID!, serviceDate: String): TripDetails
   }
 `;

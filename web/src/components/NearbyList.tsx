@@ -1,10 +1,10 @@
-import { useNearbyStops } from '../lib/useNearbyStops'
-import StopRow from './StopRow'
+import { useNearbyStations } from '../lib/useNearbyStops'
+import StationRow from './StationRow'
 
 /** Nearby stops, or a clear message about why there are none. */
 export default function NearbyList({ radius, limit }: { radius: number; limit?: number }) {
-  const { location, query, stops } = useNearbyStops(radius)
-  const shown = limit ? stops.slice(0, limit) : stops
+  const { location, query, stations } = useNearbyStations(radius)
+  const shown = limit ? stations.slice(0, limit) : stations
 
   let message: React.ReactNode = null
   if (location.error)
@@ -35,8 +35,8 @@ export default function NearbyList({ radius, limit }: { radius: number; limit?: 
         <p className="p-6 text-center text-secondary">{message}</p>
       ) : (
         <ul>
-          {shown.map(({ stop, distance }) => (
-            <StopRow key={stop.stopId} stop={stop} distance={distance} />
+          {shown.map(({ station, distance }) => (
+            <StationRow key={station.stationId} station={station} distance={distance} />
           ))}
         </ul>
       )}
