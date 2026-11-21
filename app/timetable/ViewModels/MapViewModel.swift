@@ -11,6 +11,15 @@ import MapKit
 import Observation
 import TimetableAPI
 
+/// One line + direction of the Lines layer.
+struct LineFeature: Identifiable {
+    let id: Int
+    let routeId: String
+    let category: LineCategory
+    let colorHex: String
+    let coordinates: [CLLocationCoordinate2D]
+}
+
 struct Vehicle: Identifiable, Hashable {
     let id: String
     var coordinate: CLLocationCoordinate2D
@@ -47,7 +56,8 @@ final class MapViewModel {
     private(set) var vehicles: [Vehicle] = []
     private(set) var tracks: [String: VehicleTrack] = [:]
     private(set) var stations: [Station] = []
-    private(set) var vehiclesLoaded = false
+    private(set) var lines: [LineFeature] = []
+    private var linesRequested = false
 
     /// Vehicles are re-fetched this often; they glide to the new spot over the same time.
     static let refreshSeconds: Double = 10
@@ -75,7 +85,6 @@ final class MapViewModel {
         }
         vehicles = next
         tracks = newTracks
-        vehiclesLoaded = true
     }
 
     func loadStations(_ region: MKCoordinateRegion) async {
@@ -84,5 +93,40 @@ final class MapViewModel {
         guard let data = try? await client.fetch(NearbyStationsQuery(lat: region.center.latitude, lon: region.center.longitude, radius: radius)),
               !Task.isCancelled else { return }
         stations = data.stationsByRadius.map(Station.init).filter { !$0.routes.isEmpty }
+    }
+
+    /// Every line's simplified path, fetched once (cached on disk for a day).
+    func loadLines() async {
+        guard !linesRequested else { return }
+        linesRequested = true
+        let file = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("route-lines.geojson")
+        var json: String?
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: file.path), let modified = attrs[.modificationDate] as? Foundation.Date,
+           Foundation.Date().timeIntervalSince(modified) < 24 * 3600 {
+            json = try? String(contentsOf: file, encoding: .utf8)
+        }
+        if json == nil {
+            let types: [GraphQLEnum<RouteType>] = [.case(.subway), .case(.tram), .case(.trolleybus), .case(.bus), .case(.ferry)]
+            guard let data = try? await client.fetch(RouteLinesQuery(types: .some(types))), !Task.isCancelled else { linesRequested = false; return }
+            json = data.routeLines
+            try? json?.write(to: file, atomically: true, encoding: .utf8)
+        }
+        guard let bytes = json?.data(using: .utf8), let objects = try? MKGeoJSONDecoder().decode(bytes) else { return }
+        var out: [LineFeature] = []
+        for case let feature as MKGeoJSONFeature in objects {
+            let props = feature.properties.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
+            let color = (props["color"] as? String) ?? "#6b7280"
+            let line = LineRef(routeId: props["routeId"] as? String ?? "", shortName: nil, color: color, textColor: nil, type: props["type"] as? String)
+            let category = replacesCategory(line) ?? LineCategory.of(line)
+            for shape in feature.geometry {
+                let polylines: [MKPolyline] = (shape as? MKPolyline).map { [$0] } ?? (shape as? MKMultiPolyline)?.polylines ?? []
+                for pl in polylines {
+                    var coords = [CLLocationCoordinate2D](repeating: CLLocationCoordinate2D(), count: pl.pointCount)
+                    pl.getCoordinates(&coords, range: NSRange(location: 0, length: pl.pointCount))
+                    out.append(LineFeature(id: out.count, routeId: line.routeId, category: category, colorHex: color, coordinates: coords))
+                }
+            }
+        }
+        lines = out
     }
 }

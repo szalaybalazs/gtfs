@@ -1337,28 +1337,6 @@
         }
       }
     },
-    "Loading vehicles…": {
-      "extractionState": "manual",
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Járművek betöltése…"
-          }
-        }
-      }
-    },
-    "%lld vehicles in view": {
-      "extractionState": "manual",
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld jármű látható"
-          }
-        }
-      }
-    },
     "Unknown destination": {
       "extractionState": "manual",
       "localizations": {

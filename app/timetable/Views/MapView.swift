@@ -17,6 +17,7 @@ private enum MapSelection: Equatable {
 /// Layers, like the web's layers card: vehicles, stops, and which kinds of line to show.
 private struct MapLayers {
     var vehicles = true
+    var lines = true
     var stops = true
     var kinds = Set(LineCategory.allCases)
 }
@@ -49,6 +50,7 @@ struct MapView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             Map(position: $position) {
+                linesContent
                 userContent
                 stopsContent
                 vehiclesContent
@@ -74,6 +76,7 @@ struct MapView: View {
         .navigationTitle("Map")
         .navigationBarTitleDisplayMode(.inline)
         .transitDestinations()
+        .task(id: layers.lines) { if layers.lines { await model.loadLines() } }
         // Vehicles every 10 s while the layer is on; stops when the view moves
         .task(id: showVehicles) {
             guard showVehicles else { return }
@@ -88,6 +91,17 @@ struct MapView: View {
     }
 
     // MARK: Map content
+
+    /// Every line in its own colour, under everything else; thinner when zoomed out, metro a bit bolder.
+    @MapContentBuilder private var linesContent: some MapContent {
+        if layers.lines && span < 0.5 {
+            let base: Double = span > 0.1 ? 1.2 : span > 0.03 ? 2 : 3
+            ForEach(model.lines.filter { layers.kinds.contains($0.category) }) { l in
+                MapPolyline(coordinates: l.coordinates)
+                    .stroke(Color(hex: l.colorHex).opacity(0.85), lineWidth: l.category == .metro ? base + 1 : base)
+            }
+        }
+    }
 
     @MapContentBuilder private var userContent: some MapContent {
         if let here {
@@ -168,6 +182,7 @@ struct MapView: View {
         Menu {
             Toggle("Vehicles", isOn: $layers.vehicles)
             Toggle("Stops", isOn: $layers.stops)
+            Toggle("Routes", isOn: $layers.lines)
             Divider()
             Section("Lines") {
                 ForEach(LineCategory.allCases, id: \.self) { c in
