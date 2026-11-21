@@ -25,6 +25,7 @@ public enum SchemaMetadata: ApolloAPI.SchemaMetadata {
     case "Direction": return TimetableAPI.Objects.Direction
     case "Query": return TimetableAPI.Objects.Query
     case "Route": return TimetableAPI.Objects.Route
+    case "RouteFlags": return TimetableAPI.Objects.RouteFlags
     case "RoutePaginated": return TimetableAPI.Objects.RoutePaginated
     case "Station": return TimetableAPI.Objects.Station
     case "StationPaginated": return TimetableAPI.Objects.StationPaginated

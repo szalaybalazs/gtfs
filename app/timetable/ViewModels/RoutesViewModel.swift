@@ -2,56 +2,50 @@
 //  RoutesViewModel.swift
 //  timetable
 //
-//  Created by Balázs Szalay on 2025. 02. 09..
+//  Every line in one request (a few hundred small rows), like the web Routes page.
 //
 
 import Foundation
 import Observation
 import TimetableAPI
 
+/// A line with its description, for the Routes list.
+struct RouteInfo: Identifiable, Hashable {
+    let line: LineRef
+    let desc: String?
+    let longName: String?
+    var id: String { line.routeId }
+}
+
 @MainActor
 @Observable
 final class RoutesViewModel {
-    typealias Route = RoutesQuery.Data.Routes.Datum
-
-    private(set) var routes: [Route] = []
+    private(set) var routes: [RouteInfo] = []
     private(set) var state: LoadState = .idle
-    private var lastConnection: RoutesQuery.Data.Routes?
+    private(set) var loaded = false
 
     private let client: GraphQLClient
-    private let pageSize: Int
 
-    init(client: GraphQLClient = Network.shared, pageSize: Int = 50) {
+    init(client: GraphQLClient = Network.shared) {
         self.client = client
-        self.pageSize = pageSize
     }
 
-    var hasMore: Bool {
-        guard let connection = lastConnection else { return true }
-        return (connection.pages ?? 0) > (connection.page ?? 0)
-    }
-
-    /// Loads the first page, or the next one if a page is already loaded.
-    func loadNextPage() async {
-        guard !state.isLoading, hasMore else { return }
-        let page = lastConnection.map { ($0.page ?? 0) + 1 } ?? 0
-
+    func load() async {
         state = .loading
         do {
-            let data = try await client.fetch(RoutesQuery(limit: .some(pageSize), page: .some(page)))
-            lastConnection = data.routes
-            routes.append(contentsOf: data.routes.data)
+            let data = try await client.fetch(RoutesQuery(limit: .some(1000), page: .some(0)))
+            guard !Task.isCancelled else { return }
+            routes = data.routes.data.map {
+                RouteInfo(line: LineRef(routeId: $0.routeId, shortName: $0.shortName, color: $0.color, textColor: $0.textColor, type: $0.type?.rawValue),
+                          desc: $0.desc, longName: $0.longName)
+            }
+            loaded = true
             state = .idle
+        } catch is CancellationError {
+            return
         } catch {
+            guard !Task.isCancelled else { return }
             state = .failure(error)
         }
-    }
-
-    /// Clears everything and loads from page 0. Used by retry and pull-to-refresh.
-    func reload() async {
-        routes = []
-        lastConnection = nil
-        state = .idle
-        await loadNextPage()
     }
 }

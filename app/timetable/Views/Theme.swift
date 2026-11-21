@@ -144,6 +144,18 @@ extension LineCategory {
         }
     }
 
+    /// The pictogram colour as hex (chip fallback).
+    var tintHex: String {
+        switch self {
+        case .metro, .night: return "#000000"
+        case .tram: return "#e8b800"
+        case .trolleybus: return "#e41f18"
+        case .bus: return "#009EE3"
+        case .boat: return "#2b5ba8"
+        case .other: return "#7a6a58"
+        }
+    }
+
     var tint: Color {
         switch self {
         case .metro, .night: return .primary

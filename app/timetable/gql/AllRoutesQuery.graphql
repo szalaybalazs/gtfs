@@ -10,11 +10,7 @@ query Routes($limit: Int, $page: Int) {
       textColor
       shortName
       routeId
-
-      stops {
-        stopId
-        name
-      }
+      type
     }
   }
 }

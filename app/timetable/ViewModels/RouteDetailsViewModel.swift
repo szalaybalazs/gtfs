@@ -4,77 +4,63 @@
 //
 
 import Foundation
-import CoreLocation
 import Observation
 import TimetableAPI
+
+struct RouteDirection: Identifiable, Hashable {
+    struct StopRef: Identifiable, Hashable { let stopId: String; let name: String; var id: String { stopId } }
+    let directionId: Int
+    let headsign: String
+    let stops: [StopRef]
+    var id: Int { directionId }
+}
+
+struct RouteDetail {
+    let line: LineRef
+    let title: String
+    let flags: [Marker]
+    let directions: [RouteDirection]
+}
 
 @MainActor
 @Observable
 final class RouteDetailsViewModel {
-    typealias Route = RouteByIdQuery.Data.Route
-    typealias Direction = Route.Direction
-    typealias Stop = Direction.Stop
-
-    let routeId: TimetableAPI.ID
-    private(set) var route: Route?
+    let routeId: String
+    private(set) var route: RouteDetail?
     private(set) var state: LoadState = .idle
-
-    /// nil until the route has loaded.
-    var stopId: TimetableAPI.ID?
-    var directionId: Int = 0
-
-    var directions: [Direction] { route?.directions ?? [] }
-    var stops: [Stop] { directions.first { $0.directionId == directionId }?.stops ?? [] }
+    var directionId = 0
 
     private let client: GraphQLClient
-    private let locate: () async -> CLLocationCoordinate2D?
 
-    init(
-        routeId: TimetableAPI.ID,
-        client: GraphQLClient = Network.shared,
-        locate: (() async -> CLLocationCoordinate2D?)? = nil
-    ) {
+    init(routeId: String, client: GraphQLClient = Network.shared) {
         self.routeId = routeId
         self.client = client
-        self.locate = locate ?? { await LocationManager().currentLocation() }
     }
+
+    var direction: RouteDirection? { route?.directions.first { $0.directionId == directionId } ?? route?.directions.first }
+    var otherDirection: RouteDirection? { route?.directions.first { $0.directionId != direction?.directionId } }
 
     func load() async {
         state = .loading
-        let location = await locate()
         do {
-            let data = try await client.fetch(RouteByIdQuery(
-                routeId: routeId,
-                lat: location.map { .some($0.latitude) } ?? .null,
-                lon: location.map { .some($0.longitude) } ?? .null
-            ))
-            guard let route = data.route else {
-                state = .failed(tr("Route not found."))
-                return
+            let data = try await client.fetch(RouteByIdQuery(routeId: routeId))
+            guard let r = data.route else { state = .failed(tr("Route not found.")); return }
+            var marks: [Marker] = []
+            if r.flags.frontDoor { marks.append(.frontDoor) }
+            if r.flags.replacement { marks.append(.replacement) }
+            if r.flags.lowFloor { marks.append(.lowFloor) }
+            if r.flags.demandResponsive { marks.append(.demand) }
+            if r.flags.circular { marks.append(.circular) }
+            let line = LineRef(routeId: r.routeId, shortName: r.shortName, color: r.color, textColor: r.textColor, type: r.type?.rawValue)
+            let directions = (r.directions ?? []).map { d in
+                RouteDirection(directionId: d.directionId, headsign: d.headsign,
+                               stops: d.stops.map { RouteDirection.StopRef(stopId: $0.stopId, name: $0.name ?? $0.stopId) })
             }
-            self.route = route
-            selectInitialStop(for: route)
+            route = RouteDetail(line: line, title: r.desc ?? r.longName ?? r.shortName ?? r.routeId, flags: marks, directions: directions)
+            directionId = directions.first?.directionId ?? 0
             state = .idle
         } catch {
             state = .failure(error)
-        }
-    }
-
-    /// When the direction changes, keep the same stop if it exists there, else pick the first one.
-    func directionChanged() {
-        if let stopId, stops.contains(where: { $0.stopId == stopId }) { return }
-        stopId = stops.first?.stopId
-    }
-
-    private func selectInitialStop(for route: Route) {
-        let directions = route.directions ?? []
-        if let closest = route.closestStop,
-           let direction = directions.first(where: { $0.stops.contains { $0.stopId == closest.stopId } }) {
-            directionId = direction.directionId
-            stopId = closest.stopId
-        } else {
-            directionId = directions.first?.directionId ?? 0
-            stopId = directions.first?.stops.first?.stopId
         }
     }
 }

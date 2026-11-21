@@ -1,10 +1,18 @@
-query RouteById($routeId: ID!, $lat: Float, $lon: Float) {
+query RouteById($routeId: ID!) {
   route(id: $routeId) {
     routeId
-    closestStop(lat: $lat, lon: $lon) {
-      code
-      name
-      stopId
+    shortName
+    longName
+    desc
+    color
+    textColor
+    type
+    flags {
+      lowFloor
+      circular
+      demandResponsive
+      frontDoor
+      replacement
     }
     directions {
       headsign

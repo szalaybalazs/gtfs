@@ -1226,6 +1226,83 @@
           }
         }
       }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mind"
+          }
+        }
+      }
+    },
+    "Best matches": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legjobb találatok"
+          }
+        }
+      }
+    },
+    "Replacement buses": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pótlóbuszok"
+          }
+        }
+      }
+    },
+    "No such line": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs ilyen járat"
+          }
+        }
+      }
+    },
+    "Search lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat keresése"
+          }
+        }
+      }
+    },
+    "Towards": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irány"
+          }
+        }
+      }
+    },
+    "Swap direction": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irányváltás"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

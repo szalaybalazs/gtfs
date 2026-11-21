@@ -7,27 +7,19 @@ public class RouteByIdQuery: GraphQLQuery {
   public static let operationName: String = "RouteById"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query RouteById($routeId: ID!, $lat: Float, $lon: Float) { route(id: $routeId) { __typename routeId closestStop(lat: $lat, lon: $lon) { __typename code name stopId } directions { __typename headsign directionId stops { __typename stopId name } } } }"#
+      #"query RouteById($routeId: ID!) { route(id: $routeId) { __typename routeId shortName longName desc color textColor type flags { __typename lowFloor circular demandResponsive frontDoor replacement } directions { __typename headsign directionId stops { __typename stopId name } } } }"#
     ))
 
   public var routeId: ID
-  public var lat: GraphQLNullable<Double>
-  public var lon: GraphQLNullable<Double>
 
   public init(
-    routeId: ID,
-    lat: GraphQLNullable<Double>,
-    lon: GraphQLNullable<Double>
+    routeId: ID
   ) {
     self.routeId = routeId
-    self.lat = lat
-    self.lon = lon
   }
 
   public var __variables: Variables? { [
-    "routeId": routeId,
-    "lat": lat,
-    "lon": lon
+    "routeId": routeId
   ] }
 
   public struct Data: TimetableAPI.SelectionSet {
@@ -52,35 +44,48 @@ public class RouteByIdQuery: GraphQLQuery {
       public static var __selections: [ApolloAPI.Selection] { [
         .field("__typename", String.self),
         .field("routeId", TimetableAPI.ID.self),
-        .field("closestStop", ClosestStop?.self, arguments: [
-          "lat": .variable("lat"),
-          "lon": .variable("lon")
-        ]),
+        .field("shortName", String?.self),
+        .field("longName", String?.self),
+        .field("desc", String?.self),
+        .field("color", String?.self),
+        .field("textColor", String?.self),
+        .field("type", GraphQLEnum<TimetableAPI.RouteType>?.self),
+        .field("flags", Flags.self),
         .field("directions", [Direction]?.self),
       ] }
 
       public var routeId: TimetableAPI.ID { __data["routeId"] }
-      public var closestStop: ClosestStop? { __data["closestStop"] }
+      public var shortName: String? { __data["shortName"] }
+      public var longName: String? { __data["longName"] }
+      public var desc: String? { __data["desc"] }
+      public var color: String? { __data["color"] }
+      public var textColor: String? { __data["textColor"] }
+      public var type: GraphQLEnum<TimetableAPI.RouteType>? { __data["type"] }
+      public var flags: Flags { __data["flags"] }
       public var directions: [Direction]? { __data["directions"] }
 
-      /// Route.ClosestStop
+      /// Route.Flags
       ///
-      /// Parent Type: `Stop`
-      public struct ClosestStop: TimetableAPI.SelectionSet {
+      /// Parent Type: `RouteFlags`
+      public struct Flags: TimetableAPI.SelectionSet {
         public let __data: DataDict
         public init(_dataDict: DataDict) { __data = _dataDict }
 
-        public static var __parentType: any ApolloAPI.ParentType { TimetableAPI.Objects.Stop }
+        public static var __parentType: any ApolloAPI.ParentType { TimetableAPI.Objects.RouteFlags }
         public static var __selections: [ApolloAPI.Selection] { [
           .field("__typename", String.self),
-          .field("code", String?.self),
-          .field("name", String?.self),
-          .field("stopId", TimetableAPI.ID.self),
+          .field("lowFloor", Bool.self),
+          .field("circular", Bool.self),
+          .field("demandResponsive", Bool.self),
+          .field("frontDoor", Bool.self),
+          .field("replacement", Bool.self),
         ] }
 
-        public var code: String? { __data["code"] }
-        public var name: String? { __data["name"] }
-        public var stopId: TimetableAPI.ID { __data["stopId"] }
+        public var lowFloor: Bool { __data["lowFloor"] }
+        public var circular: Bool { __data["circular"] }
+        public var demandResponsive: Bool { __data["demandResponsive"] }
+        public var frontDoor: Bool { __data["frontDoor"] }
+        public var replacement: Bool { __data["replacement"] }
       }
 
       /// Route.Direction

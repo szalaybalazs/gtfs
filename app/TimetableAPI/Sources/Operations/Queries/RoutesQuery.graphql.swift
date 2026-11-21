@@ -7,7 +7,7 @@ public class RoutesQuery: GraphQLQuery {
   public static let operationName: String = "Routes"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query Routes($limit: Int, $page: Int) { routes(limit: $limit, page: $page) { __typename limit pages page data { __typename longName desc color textColor shortName routeId stops { __typename stopId name } } } }"#
+      #"query Routes($limit: Int, $page: Int) { routes(limit: $limit, page: $page) { __typename limit pages page data { __typename longName desc color textColor shortName routeId type } } }"#
     ))
 
   public var limit: GraphQLNullable<Int>
@@ -77,7 +77,7 @@ public class RoutesQuery: GraphQLQuery {
           .field("textColor", String?.self),
           .field("shortName", String?.self),
           .field("routeId", TimetableAPI.ID.self),
-          .field("stops", [Stop?].self),
+            .field("type", GraphQLEnum<TimetableAPI.RouteType>?.self),
         ] }
 
         public var longName: String? { __data["longName"] }
@@ -86,25 +86,8 @@ public class RoutesQuery: GraphQLQuery {
         public var textColor: String? { __data["textColor"] }
         public var shortName: String? { __data["shortName"] }
         public var routeId: TimetableAPI.ID { __data["routeId"] }
-        public var stops: [Stop?] { __data["stops"] }
+        public var type: GraphQLEnum<TimetableAPI.RouteType>? { __data["type"] }
 
-        /// Routes.Datum.Stop
-        ///
-        /// Parent Type: `Stop`
-        public struct Stop: TimetableAPI.SelectionSet {
-          public let __data: DataDict
-          public init(_dataDict: DataDict) { __data = _dataDict }
-
-          public static var __parentType: any ApolloAPI.ParentType { TimetableAPI.Objects.Stop }
-          public static var __selections: [ApolloAPI.Selection] { [
-            .field("__typename", String.self),
-            .field("stopId", TimetableAPI.ID.self),
-            .field("name", String?.self),
-          ] }
-
-          public var stopId: TimetableAPI.ID { __data["stopId"] }
-          public var name: String? { __data["name"] }
-        }
       }
     }
   }
