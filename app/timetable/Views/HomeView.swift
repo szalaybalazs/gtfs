@@ -30,7 +30,7 @@ struct HomeView: View {
                         HFlow(itemSpacing: 8, rowSpacing: 8) {
                             ForEach(lines) { f in
                                 if let r = f.route {
-                                    NavigationLink { RouteDetailsView(id: r.routeId, shortName: r.shortName, line: r.line) } label: {
+                                    NavigationLink(value: RouteTarget(line: r.line)) {
                                         LineBadge(line: r.line)
                                     }
                                     .buttonStyle(.plain)

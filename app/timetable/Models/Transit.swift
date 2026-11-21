@@ -147,6 +147,11 @@ struct StationTarget: Hashable {
     var trip: String? = nil
 }
 
+/// A line's page.
+struct RouteTarget: Hashable {
+    let line: LineRef
+}
+
 /// A departure's trip. `from` is the stop you came from; the route and headsign are what the
 /// tapped row already knew, shown while the trip loads.
 struct TripTarget: Hashable {

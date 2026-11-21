@@ -113,6 +113,7 @@ extension View {
     func transitDestinations() -> some View {
         navigationDestination(for: StationTarget.self) { StationDetailView(target: $0) }
             .navigationDestination(for: TripTarget.self) { TripView(target: $0) }
+            .navigationDestination(for: RouteTarget.self) { RouteDetailsView(id: $0.line.routeId, shortName: $0.line.shortName, line: $0.line) }
     }
 }
 

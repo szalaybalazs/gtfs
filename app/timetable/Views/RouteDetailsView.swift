@@ -86,7 +86,6 @@ struct RouteDetailsView: View {
             await model.chooseNearest()
         }
         .task(id: request) { if let r = request { await departures.run(r) } }
-        .transitDestinations()
     }
 
     /// What the page looks like before its data: same shapes, made-up text.

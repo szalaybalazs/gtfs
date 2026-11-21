@@ -39,7 +39,7 @@ struct RouteTile: View {
             .fill(Color(hex: line.color ?? "#000000"))
             .aspectRatio(2, contentMode: .fit)
             .frame(width: compact ? 80 : nil)
-            .frame(maxWidth: compact ? nil : .infinity)
+            .frame(maxWidth: compact ? nil : .infinity, maxHeight: compact ? nil : .infinity)
             .overlay {
                 Text(line.shortName ?? line.routeId)
                     .font(.system(size: 18, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
@@ -55,7 +55,6 @@ struct RoutesView: View {
     @State private var searchText = ""
     @State private var category: LineCategory?
 
-    private let columns = [GridItem(.adaptive(minimum: 72), spacing: 8)]
 
     private var searching: Bool { !searchText.trimmingCharacters(in: .whitespaces).isEmpty }
 
@@ -84,7 +83,7 @@ struct RoutesView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 24) {
                 Text("Routes").font(.system(size: 34, weight: .bold)).padding(.horizontal, 4).padding(.bottom, -8)
                     .accessibilityAddTraits(.isHeader)
                 // Own search field: the system search bar over this scroll view broke scrolling and pull to refresh on device
@@ -141,9 +140,9 @@ struct RoutesView: View {
                     }
                 }
                 if !model.loaded && model.state.errorMessage == nil {
-                    LazyVGrid(columns: columns, spacing: 8) {
+                    TileGrid {
                         ForEach(0..<24, id: \.self) { _ in
-                            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.fill).aspectRatio(2, contentMode: .fit)
+                            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.fill)
                         }
                     }
                     .skeleton()
@@ -154,7 +153,6 @@ struct RoutesView: View {
             .padding(.horizontal, 16).padding(.bottom, 16).padding(.top, 8)
         }
         .background(Theme.canvas)
-        .scrollsToTopOnReselect(tab: 2)
         // The big title is drawn in the content: on iOS 18 a large nav-bar title over this scroll view kept collapsing
         // and re-expanding by itself; an inline bar has a fixed height
         .navigationTitle("Routes")
@@ -170,14 +168,14 @@ struct RoutesView: View {
     }
 
     private func link<L: View>(_ line: LineRef, @ViewBuilder _ label: () -> L) -> some View {
-        NavigationLink { RouteDetailsView(id: line.routeId, shortName: line.shortName, line: line) } label: { label() }
+        NavigationLink(value: RouteTarget(line: line)) { label() }
             .buttonStyle(.plain)
             // Finger down: start loading the line's page, so it is (nearly) ready when the tap lands
             .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in RouteCache.prefetch(line.routeId) })
     }
 
     private func grid(_ items: [RouteInfo]) -> some View {
-        LazyVGrid(columns: columns, spacing: 8) {
+        TileGrid {
             ForEach(items) { r in link(r.line) { RouteTile(line: r.line) } }
         }
     }
@@ -234,4 +232,37 @@ struct RoutesView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 2)
     }
+}
+
+/// Equal 2:1 cells, as many per row as fit at least 72 pt wide. Not lazy: every cell's size follows from the width alone,
+/// so the scroll view's content height is exact and nothing shifts while scrolling.
+private struct TileGridLayout: Layout {
+    let minimum: CGFloat = 72
+    let spacing: CGFloat = 8
+
+    private func metrics(_ width: CGFloat) -> (columns: Int, cell: CGFloat) {
+        let w = width.isFinite && width > 0 ? width : 320
+        let n = max(1, Int(((w + spacing) / (minimum + spacing)).rounded(.down)))
+        return (n, (w - spacing * CGFloat(n - 1)) / CGFloat(n))
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let (n, cell) = metrics(proposal.width ?? 320)
+        let rows = (subviews.count + n - 1) / n
+        let w = proposal.width ?? 320
+        return CGSize(width: w, height: rows == 0 ? 0 : CGFloat(rows) * (cell / 2) + CGFloat(rows - 1) * spacing)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let (n, cell) = metrics(bounds.width)
+        for (i, v) in subviews.enumerated() {
+            let x = bounds.minX + CGFloat(i % n) * (cell + spacing), y = bounds.minY + CGFloat(i / n) * (cell / 2 + spacing)
+            v.place(at: CGPoint(x: x, y: y), anchor: .topLeading, proposal: ProposedViewSize(width: cell, height: cell / 2))
+        }
+    }
+}
+
+struct TileGrid<Content: View>: View {
+    @ViewBuilder var content: Content
+    var body: some View { TileGridLayout { content } }
 }
