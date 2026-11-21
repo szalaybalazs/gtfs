@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import SwiftUI
 
 /// A marker that can be shown or hidden on departures and lines.
 enum Marker: String, CaseIterable, Identifiable {
@@ -43,6 +44,13 @@ enum DeparturesView: String, CaseIterable, Identifiable {
     var symbol: String { self == .lines ? "square.grid.2x2" : "list.bullet" }
 }
 
+enum AppAppearance: String, CaseIterable, Identifiable {
+    case auto, light, dark
+    var id: String { rawValue }
+    var title: String { self == .auto ? tr("System") : self == .light ? tr("Light") : tr("Dark") }
+    var scheme: ColorScheme? { self == .light ? .light : self == .dark ? .dark : nil }
+}
+
 @MainActor
 @Observable
 final class AppSettings {
@@ -64,6 +72,10 @@ final class AppSettings {
         didSet { defaults.set(language.rawValue, forKey: L10n.key) }
     }
 
+    var appearance: AppAppearance {
+        didSet { defaults.set(appearance.rawValue, forKey: "appearance") }
+    }
+
     var nearbyRadius: Int {
         didSet { defaults.set(nearbyRadius, forKey: "nearby-radius") }
     }
@@ -73,6 +85,7 @@ final class AppSettings {
         hiddenMarkers = Set((defaults.stringArray(forKey: "hidden-marks") ?? []).compactMap(Marker.init(rawValue:)))
         departuresView = defaults.string(forKey: "departures-view").flatMap(DeparturesView.init(rawValue:)) ?? .lines
         language = defaults.string(forKey: L10n.key).flatMap(AppLanguage.init(rawValue:)) ?? .auto
+        appearance = defaults.string(forKey: "appearance").flatMap(AppAppearance.init(rawValue:)) ?? .auto
         let radius = defaults.integer(forKey: "nearby-radius")
         nearbyRadius = Self.radii.contains(radius) ? radius : 1000
     }

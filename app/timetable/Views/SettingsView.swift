@@ -25,6 +25,12 @@ struct SettingsView: View {
             } footer: {
                 Text("Choose which markers show on departures and lines.")
             }
+            Section("Appearance") {
+                Picker("Appearance", selection: $settings.appearance) {
+                    ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
             Section("Language") {
                 Picker("Language", selection: $settings.language) {
                     ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }

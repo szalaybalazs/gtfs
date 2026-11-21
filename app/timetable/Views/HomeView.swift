@@ -74,7 +74,7 @@ struct HomeView: View {
                 } else if let message = model.nearbyState.errorMessage {
                     ErrorView(message: message) { await model.loadNearby(radius: settings.nearbyRadius) }
                 } else if model.nearby.isEmpty {
-                    if model.nearbyState.isLoading { ProgressView() }
+                    if model.nearbyState.isLoading { Card { SkeletonDepartureRows(count: 3) } }
                     else { Text(tr("No stops within \(settings.nearbyRadius) m.")).foregroundStyle(Theme.secondary) }
                 } else {
                     Card { RowList(data: Array(model.nearby.prefix(5)), id: \.station.stationId) { StationRow(station: $0.station, distance: $0.distance) } }

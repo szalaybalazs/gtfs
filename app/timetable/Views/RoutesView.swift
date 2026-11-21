@@ -34,14 +34,18 @@ struct RouteTile: View {
     var compact = false
 
     var body: some View {
-        Text(line.shortName ?? line.routeId)
-            .font(.system(size: 18, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
-            .foregroundStyle(Color(hex: line.textColor ?? "#ffffff"))
-            .padding(.horizontal, 4)
-            .frame(maxWidth: compact ? nil : .infinity)
-            .frame(width: compact ? 80 : nil, height: compact ? 40 : nil)
+        // The shape decides the size (full cell width, 2:1, or 80x40 compact); the label only sits on it
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(Color(hex: line.color ?? "#000000"))
             .aspectRatio(2, contentMode: .fit)
-            .background(Color(hex: line.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .frame(width: compact ? 80 : nil)
+            .frame(maxWidth: compact ? nil : .infinity)
+            .overlay {
+                Text(line.shortName ?? line.routeId)
+                    .font(.system(size: 18, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
+                    .foregroundStyle(Color(hex: line.textColor ?? "#ffffff"))
+                    .padding(.horizontal, 4)
+            }
     }
 }
 
@@ -81,6 +85,7 @@ struct RoutesView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
+                chips
                 if let message = model.state.errorMessage {
                     ErrorView(message: message) { await model.load() }
                 }
@@ -124,7 +129,12 @@ struct RoutesView: View {
                     }
                 }
                 if !model.loaded && model.state.errorMessage == nil {
-                    ProgressView().frame(maxWidth: .infinity).padding(.top, 24)
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(0..<24, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.fill).aspectRatio(2, contentMode: .fit)
+                        }
+                    }
+                    .skeleton()
                 } else if model.loaded && routes.isEmpty {
                     Text("No such line").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
                 }
@@ -134,7 +144,6 @@ struct RoutesView: View {
         .background(Theme.canvas)
         .navigationTitle("Routes")
         .searchable(text: $searchText, prompt: "Search lines")
-        .safeAreaInset(edge: .top, spacing: 0) { chips }
         .task { if !model.loaded { await model.load() } }
         .refreshable { await model.load() }
         .transitDestinations()
@@ -143,6 +152,8 @@ struct RoutesView: View {
     private func link<L: View>(_ line: LineRef, @ViewBuilder _ label: () -> L) -> some View {
         NavigationLink { RouteDetailsView(id: line.routeId, shortName: line.shortName, line: line) } label: { label() }
             .buttonStyle(.plain)
+            // Finger down: start loading the line's page, so it is (nearly) ready when the tap lands
+            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in RouteCache.prefetch(line.routeId) })
     }
 
     private func grid(_ items: [RouteInfo]) -> some View {
@@ -186,7 +197,6 @@ struct RoutesView: View {
         }
         .buttonStyle(.plain)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 10)
-        .background(.bar)
+        .padding(.bottom, 2)
     }
 }

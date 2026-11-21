@@ -36,9 +36,11 @@ enum L10n {
 
     static var locale: Locale { Locale(identifier: code) }
 
-    static var bundle: Bundle {
-        Bundle.main.path(forResource: code, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
-    }
+    /// Loaded once: `tr` runs per row, every second, so the lookup must not touch the file system each time.
+    private static let huBundle = Bundle.main.path(forResource: "hu", ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
+    private static let enBundle = Bundle.main.path(forResource: "en", ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
+
+    static var bundle: Bundle { code == "hu" ? huBundle : enBundle }
 }
 
 /// A localised string for non-literal uses (view models, computed text), in the chosen language.

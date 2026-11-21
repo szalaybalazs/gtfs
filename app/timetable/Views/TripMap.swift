@@ -18,8 +18,6 @@ func vehicleName(_ model: String?) -> String? {
 
 struct TripVehicleCard: View {
     let vehicle: TripVehicle
-    /// Delay in minutes at the last stop with realtime data; nil when unknown.
-    let delayMinutes: Int?
     let live: Bool
     let now: Foundation.Date
 
@@ -30,9 +28,7 @@ struct TripVehicleCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         if live { LiveIcon() }
-                        if let delayMinutes { status(delayMinutes) }
                         if let age = age, age >= 30 {
-                            if delayMinutes != nil { Text("·").foregroundStyle(Theme.secondary) }
                             Text(age < 60 ? tr("updated \(Int(age)) s ago") : tr("updated \(Int(age / 60)) min ago"))
                                 .foregroundStyle(Theme.secondary)
                         }
@@ -51,11 +47,18 @@ struct TripVehicleCard: View {
     }
 
     private var age: TimeInterval? { vehicle.updated.map { now.timeIntervalSince($0) } }
+}
 
-    @ViewBuilder private func status(_ m: Int) -> some View {
-        if m == 0 { Text("On time").foregroundStyle(Theme.live) }
-        else if m > 0 { Text(tr("\(m) min late")).foregroundStyle(Theme.late) }
-        else { Text(tr("\(-m) min early")).foregroundStyle(Theme.early) }
+/// "On time" / "3 min late" / "1 min early", for the trip's top card.
+struct TripDelayText: View {
+    let minutes: Int
+    var body: some View {
+        Group {
+            if minutes == 0 { Text("On time").foregroundStyle(Theme.live) }
+            else if minutes > 0 { Text(tr("\(minutes) min late")).foregroundStyle(Theme.late) }
+            else { Text(tr("\(-minutes) min early")).foregroundStyle(Theme.early) }
+        }
+        .font(.system(size: 13, weight: .medium))
     }
 }
 
@@ -66,21 +69,32 @@ struct TripMapContent: MapContent {
     let path: [CLLocationCoordinate2D]
     let color: Color
     let big: Bool
+    /// Mini map: stop dots are map circles (always under annotations, so the vehicle stays on top); this is their radius in metres.
+    var dotRadius: Double = 0
 
     var body: some MapContent {
         if path.count > 1 {
             MapPolyline(coordinates: path).stroke(color, lineWidth: big ? 5 : 4)
         }
-        ForEach(trip.stops.filter { $0.lat != nil && $0.lon != nil }) { s in
-            Annotation("", coordinate: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), anchor: .center) {
+        do {
+            ForEach(trip.stops.filter { $0.lat != nil && $0.lon != nil }) { s in
+                MapCircle(center: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), radius: dotRadius)
+                    .foregroundStyle(Color.white).stroke(color, lineWidth: 2)
+            }
+        }
+        ForEach(trip.stops.filter { big && $0.lat != nil && $0.lon != nil }) { s in
+            Annotation("", coordinate: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), anchor: .top) {
                 VStack(spacing: 2) {
-                    Circle().fill(Color.white).frame(width: big ? 10 : 7, height: big ? 10 : 7)
-                        .overlay(Circle().stroke(color, lineWidth: 2))
+                    Color.clear.frame(width: 1, height: 8)
                     if big {
-                        Text("\(s.name) \(TimeFormat.clock(s.departure))").font(.system(size: 10, weight: .medium))
-                            .padding(.horizontal, 4).padding(.vertical, 1)
-                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 4))
-                            .fixedSize()
+                        let last = s.stopSequence == trip.stops.last?.stopSequence
+                        HStack(spacing: 3) {
+                            Text(TimeFormat.clock(last ? s.arrival : s.departure)).font(.system(size: 11, weight: .semibold)).monospacedDigit()
+                            if s.realtime { LiveIcon() }
+                        }
+                        .fixedSize()
+                        .padding(.horizontal, 5).padding(.vertical, 2)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 6))
                     }
                 }
             }
@@ -118,7 +132,8 @@ struct TripMiniMap: View {
     var body: some View {
         if let region = tripRegion(trip, vehicle: vehicle, path: path) {
             Map(initialPosition: .region(region), interactionModes: []) {
-                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false)
+                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false,
+                                   dotRadius: region.span.latitudeDelta * 111_000 / 180 * 3.5)
             }
             .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .frame(height: 180)
@@ -143,7 +158,8 @@ private struct TripFullMap: View {
 
     var body: some View {
         Map(initialPosition: .region(region)) {
-            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true)
+            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true,
+                           dotRadius: region.span.latitudeDelta * 111_000 / 800 * 5)
         }
         .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
         .overlay(alignment: .topTrailing) {

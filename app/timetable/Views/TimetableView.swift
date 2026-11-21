@@ -68,13 +68,15 @@ struct TimetableView: View {
 
     @ViewBuilder
     private var hourRows: some View {
+            // Grouped once per render, not once per hour row
+            let grouped = groupedEntries
             ForEach(0..<24, id: \.self) { offset in
                 let hourTime = Calendar.current.date(byAdding: .hour, value: offset, to: Date())!
                 let key = Calendar.current.date(from:
                                                     Calendar.current.dateComponents([.year, .month, .day, .hour], from: hourTime)
                 ) ?? hourTime
                 
-                let events = self.groupedEntries[key] ?? []
+                let events = grouped[key] ?? []
                 
                 
                 HStack(alignment: .center, spacing: 8) {

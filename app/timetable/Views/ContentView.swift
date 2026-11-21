@@ -32,6 +32,7 @@ struct ContentView: View {
                 .tabItem { Label { Text("Settings") } icon: { Image(tab == 4 ? "tab_settings_solid" : "tab_settings") } }.tag(4)
         }
         .environment(settings)
+        .preferredColorScheme(settings.appearance.scheme)
         .environment(\.locale, settings.language == .auto ? Locale.current : L10n.locale)
         .id(settings.language)
     }

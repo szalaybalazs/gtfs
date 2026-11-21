@@ -14,12 +14,26 @@ struct RouteDetailsView: View {
     let line: LineRef?
     @Environment(AppSettings.self) private var settings
     @State private var model: RouteDetailsViewModel
+    @State private var departures = DeparturesViewModel()
 
     init(id: String, shortName: String? = nil, line: LineRef? = nil) {
         self.id = id
         self.shortName = shortName
         self.line = line
-        _model = State(initialValue: RouteDetailsViewModel(routeId: id))
+        _model = State(initialValue: RouteCache.model(for: id))
+    }
+
+    private var request: DeparturesRequest? {
+        model.stop.map { DeparturesRequest(stopIds: [$0.stopId], routeIds: [id], limit: 60) }
+    }
+
+    private var favoriteOptions: [Favorite] {
+        guard let l = model.route?.line ?? line else { return [] }
+        var out: [Favorite] = []
+        if let stop = model.stop, let d = model.direction {
+            out.append(Favorite.lineStop(route: l, stopId: stop.stopId, stationId: stop.stopId, stopName: stop.name, headsign: d.headsign))
+        }
+        return out + [Favorite.line(l)]
     }
 
     private var color: Color { Color(hex: (model.route?.line.color ?? line?.color) ?? "#6b7280") }
@@ -31,14 +45,27 @@ struct RouteDetailsView: View {
                     ErrorView(message: message) { await model.load() }
                 } else if let route = model.route {
                     header(route)
-                    if let direction = model.direction {
+                    if let direction = model.direction, let stop = model.stop {
                         VStack(spacing: 8) {
+                            stopPicker(direction, stop: stop)
                             directionRow(direction)
-                            stops(direction)
                         }
+                        departuresSection(stop: stop)
+                        stops(direction)
                     }
                 } else {
-                    ProgressView().padding(.top, 40)
+                    // Same layout as the loaded page, greyed out and shimmering until the data arrives
+                    let placeholder = Self.placeholder
+                    header(placeholder).skeleton()
+                    VStack(spacing: 8) {
+                        stopPicker(placeholder.directions[0], stop: placeholder.directions[0].stops[0]).skeleton()
+                        directionRow(placeholder.directions[0]).skeleton()
+                    }
+                    VStack(spacing: 0) {
+                        SectionTitle("Departures")
+                        Card { SkeletonDepartureRows(count: 5) }
+                    }
+                    stops(placeholder.directions[0]).skeleton()
                 }
             }
             .padding(16)
@@ -50,16 +77,28 @@ struct RouteDetailsView: View {
                 if let l = model.route?.line ?? line { LineBadge(line: l, large: true) } else { Text(shortName ?? id).font(.headline) }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                FavoriteButton(options: (model.route?.line ?? line).map { [Favorite.line($0)] } ?? [])
+                FavoriteButton(options: favoriteOptions)
             }
         }
-        .task { if model.route == nil { await model.load() } }
+        .task {
+            if model.route == nil, !model.state.isLoading { await model.load() }
+            await model.chooseNearest()
+        }
+        .task(id: request) { if let r = request { await departures.run(r) } }
     }
+
+    /// What the page looks like before its data: same shapes, made-up text.
+    private static let placeholder = RouteDetail(
+        line: LineRef(routeId: "", shortName: nil, color: nil, textColor: nil, type: nil),
+        title: "Line title goes here for now", flags: [],
+        directions: [RouteDirection(directionId: 0, headsign: "Destination stop name",
+                                    stops: (0..<12).map { RouteDirection.StopRef(stopId: "ph\($0)", name: "Stop name placeholder \($0)") })])
 
     private func header(_ route: RouteDetail) -> some View {
         Card {
             VStack(alignment: .leading, spacing: 6) {
                 Text(route.title).font(.system(size: 24, weight: .bold))
+                if !model.hint.isEmpty { Text(model.hint).font(.system(size: 15)).foregroundStyle(Theme.secondary) }
                 let shown = route.flags.filter { settings.shows($0) }
                 if !shown.isEmpty {
                     HStack(spacing: 8) {
@@ -74,10 +113,66 @@ struct RouteDetailsView: View {
         }
     }
 
+    /// Which stop to show: a menu of this direction's stops (not the last one), and a button back to the nearest.
+    private func stopPicker(_ d: RouteDirection, stop: RouteDirection.StopRef) -> some View {
+        HStack(spacing: 8) {
+            Menu {
+                ForEach(d.stops.dropLast()) { s in
+                    Button { withAnimation { model.pick(s.stopId) } } label: {
+                        if s.stopId == stop.stopId { Label(s.name, systemImage: "checkmark") } else { Text(s.name) }
+                    }
+                }
+            } label: {
+                HStack(spacing: 12) {
+                    Text("Stop").foregroundStyle(Theme.secondary).frame(width: 72, alignment: .leading)
+                    Text(stop.name).fontWeight(.medium).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                }
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 16).padding(.vertical, 12)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            Button { Task { await model.useNearest() } } label: {
+                Image(systemName: model.locating ? "location.circle" : "location").font(.system(size: 18)).foregroundStyle(Theme.accent)
+                    .frame(width: 48, height: 48).background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .accessibilityLabel("Nearest stop")
+        }
+    }
+
+    /// This line's departures at the chosen stop, the next 90 minutes.
+    private func departuresSection(stop: RouteDirection.StopRef) -> some View {
+        VStack(spacing: 0) {
+            SectionTitle("Departures")
+            Card {
+                if !departures.loaded, departures.state.errorMessage == nil {
+                    SkeletonDepartureRows(count: 5)
+                } else if let message = departures.state.errorMessage, departures.departures.isEmpty {
+                    ErrorView(message: message) { if let r = request { await departures.load(r) } }
+                } else {
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        let end = context.date.addingTimeInterval(90 * 60)
+                        let list = departures.departures.filter { $0.route?.routeId == id && $0.time <= end && $0.stopId == stop.stopId }
+                        if list.isEmpty {
+                            Text("No departures").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
+                        } else {
+                            RowList(data: list, id: \.id) { d in
+                                NavigationLink(value: TripTarget(tripId: d.tripId, serviceDate: d.serviceDate, from: d.stopId, route: d.route, headsign: d.headsign)) {
+                                    DepartureRow(departure: d, now: context.date)
+                                }
+                                .buttonStyle(RowButtonStyle())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /// "Towards X" with a swap button, like the web.
     private func directionRow(_ d: RouteDirection) -> some View {
         Button {
-            if let other = model.otherDirection { withAnimation { model.directionId = other.directionId } }
+            withAnimation { model.swapDirection() }
         } label: {
             HStack(spacing: 12) {
                 Text("Towards").foregroundStyle(Theme.secondary).frame(width: 72, alignment: .leading)
@@ -97,7 +192,7 @@ struct RouteDetailsView: View {
             Card {
                 VStack(spacing: 0) {
                     ForEach(Array(d.stops.enumerated()), id: \.element.id) { i, stop in
-                        NavigationLink(value: StationTarget(stationId: stop.stopId, from: stop.stopId, lines: [id])) {
+                        Button { withAnimation { model.pick(stop.stopId) } } label: {
                             HStack(spacing: 0) {
                                 ZStack {
                                     Rectangle().fill(color).frame(width: 8)
@@ -107,7 +202,7 @@ struct RouteDetailsView: View {
                                 .frame(width: 28, height: 48)
                                 .padding(.leading, 12).padding(.trailing, 6)
                                 Text(stop.name).font(.system(size: 17)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                                Chevron().padding(.trailing, 16)
+                                if stop.stopId == model.stop?.stopId { Image(systemName: "checkmark").foregroundStyle(color).padding(.trailing, 16) } else { Color.clear.frame(width: 16).padding(.trailing, 16) }
                             }
                         }
                         .buttonStyle(RowButtonStyle())

@@ -204,4 +204,16 @@ enum TimeFormat {
     }()
 
     static func clock(_ date: Date) -> String { formatter.string(from: date) }
+
+    private static let secondsFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "ss"
+        f.timeZone = budapest
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
+    /// Seconds part, "05".
+    static func seconds(_ date: Date) -> String { secondsFormatter.string(from: date) }
+    static func hasSeconds(_ date: Date) -> Bool { seconds(date) != "00" }
 }

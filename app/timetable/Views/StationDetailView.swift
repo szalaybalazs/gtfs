@@ -85,7 +85,9 @@ struct StationDetailView: View {
                     departuresSection
                     platformsSection
                 } else {
-                    ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
+                    Card { VStack(alignment: .leading, spacing: 8) { SkeletonBar(width: 220, height: 24); SkeletonBar(width: 140) }
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(16) }.skeleton()
+                    Card { SkeletonDepartureRows(count: 6) }
                 }
             }
             .padding(16)
@@ -162,7 +164,7 @@ struct StationDetailView: View {
                 timeControls
                 Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
                 if !departuresModel.loaded, departuresModel.state.errorMessage == nil {
-                    ProgressView().frame(maxWidth: .infinity).padding(24)
+                    SkeletonDepartureRows(count: 5)
                 } else if let message = departuresModel.state.errorMessage, departuresModel.departures.isEmpty {
                     ErrorView(message: message) { await departuresModel.load(request) }
                 } else {

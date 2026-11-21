@@ -18,6 +18,14 @@ struct LineFeature: Identifiable {
     let category: LineCategory
     let colorHex: String
     let coordinates: [CLLocationCoordinate2D]
+    /// Bounding box, so a view can skip lines far away without walking their points.
+    let minLat: Double, maxLat: Double, minLon: Double, maxLon: Double
+
+    init(id: Int, routeId: String, category: LineCategory, colorHex: String, coordinates: [CLLocationCoordinate2D]) {
+        self.id = id; self.routeId = routeId; self.category = category; self.colorHex = colorHex; self.coordinates = coordinates
+        minLat = coordinates.map(\.latitude).min() ?? 0; maxLat = coordinates.map(\.latitude).max() ?? 0
+        minLon = coordinates.map(\.longitude).min() ?? 0; maxLon = coordinates.map(\.longitude).max() ?? 0
+    }
 }
 
 struct Vehicle: Identifiable, Hashable {
@@ -66,9 +74,11 @@ final class MapViewModel {
     init(client: GraphQLClient = Network.shared) { self.client = client }
 
     func loadVehicles(_ region: MKCoordinateRegion) async {
+        // A margin around the view, so a small pan already finds its vehicles
+        let m = 1.4
         let bbox = BboxInput(
-            minLat: region.center.latitude - region.span.latitudeDelta / 2, minLon: region.center.longitude - region.span.longitudeDelta / 2,
-            maxLat: region.center.latitude + region.span.latitudeDelta / 2, maxLon: region.center.longitude + region.span.longitudeDelta / 2)
+            minLat: region.center.latitude - region.span.latitudeDelta / 2 * m, minLon: region.center.longitude - region.span.longitudeDelta / 2 * m,
+            maxLat: region.center.latitude + region.span.latitudeDelta / 2 * m, maxLon: region.center.longitude + region.span.longitudeDelta / 2 * m)
         guard let data = try? await client.fetch(VehiclesQuery(bbox: .some(bbox))), !Task.isCancelled else { return }
         let now = Foundation.Date()
         var next: [Vehicle] = []
@@ -87,12 +97,26 @@ final class MapViewModel {
         tracks = newTracks
     }
 
+    private var stationCache: [String: Station] = [:]
+    /// Circles already fetched: (centre, radius in metres).
+    private var fetchedAreas: [(CLLocationCoordinate2D, Double)] = []
+
+    /// Stations accumulate: a view inside an area already fetched costs nothing, and panning back is instant.
     func loadStations(_ region: MKCoordinateRegion) async {
-        let metres = region.span.latitudeDelta * 111_000 / 2 * 1.3
-        let radius = min(1500, max(300, metres))
-        guard let data = try? await client.fetch(NearbyStationsQuery(lat: region.center.latitude, lon: region.center.longitude, radius: radius)),
+        let c = region.center
+        let viewMetres = region.span.latitudeDelta * 111_000 / 2 * 1.3
+        let covered = fetchedAreas.contains { area in
+            let dLat = (area.0.latitude - c.latitude) * 111_000, dLon = (area.0.longitude - c.longitude) * 111_000 * cos(c.latitude * .pi / 180)
+            return (dLat * dLat + dLon * dLon).squareRoot() + viewMetres <= area.1
+        }
+        if covered { return }
+        let radius = min(1500, max(800, viewMetres * 2))
+        guard let data = try? await client.fetch(NearbyStationsQuery(lat: c.latitude, lon: c.longitude, radius: radius)),
               !Task.isCancelled else { return }
-        stations = data.stationsByRadius.map(Station.init).filter { !$0.routes.isEmpty }
+        for s in data.stationsByRadius.map(Station.init) where !s.routes.isEmpty { stationCache[s.stationId] = s }
+        fetchedAreas.append((c, radius))
+        if fetchedAreas.count > 40 { fetchedAreas.removeFirst() }
+        stations = Array(stationCache.values)
     }
 
     /// Every line's simplified path, fetched once (cached on disk for a day).
@@ -111,7 +135,14 @@ final class MapViewModel {
             json = data.routeLines
             try? json?.write(to: file, atomically: true, encoding: .utf8)
         }
-        guard let bytes = json?.data(using: .utf8), let objects = try? MKGeoJSONDecoder().decode(bytes) else { return }
+        guard let bytes = json?.data(using: .utf8) else { return }
+        // Decoding the whole GeoJSON takes a while: off the main thread
+        let out = await Task.detached { Self.parseLines(bytes) }.value
+        lines = out
+    }
+
+    private nonisolated static func parseLines(_ bytes: Data) -> [LineFeature] {
+        guard let objects = try? MKGeoJSONDecoder().decode(bytes) else { return [] }
         var out: [LineFeature] = []
         for case let feature as MKGeoJSONFeature in objects {
             let props = feature.properties.flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
@@ -127,6 +158,6 @@ final class MapViewModel {
                 }
             }
         }
-        lines = out
+        return out
     }
 }

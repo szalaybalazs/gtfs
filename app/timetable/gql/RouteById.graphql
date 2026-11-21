@@ -20,6 +20,8 @@ query RouteById($routeId: ID!) {
       stops {
         stopId
         name
+        lat
+        lon
       }
     }
   }

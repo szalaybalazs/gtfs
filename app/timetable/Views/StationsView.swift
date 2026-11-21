@@ -78,7 +78,7 @@ struct StationsView: View {
         if let message = model.searchState.errorMessage {
             ErrorView(message: message) { await model.search(searchText) }
         } else if model.results.isEmpty {
-            if model.searchState.isLoading { ProgressView().frame(maxWidth: .infinity).padding(.top, 24) }
+            if model.searchState.isLoading { Card { SkeletonDepartureRows(count: 4) } }
             else if searching { ContentUnavailableView.search(text: searchText) }
         } else {
             Card {
@@ -96,7 +96,7 @@ struct StationsView: View {
         if let message = model.nearbyState.errorMessage {
             ErrorView(message: message) { await model.loadNearby(radius: settings.nearbyRadius) }
         } else if model.nearby.isEmpty {
-            if model.nearbyState.isLoading { ProgressView().frame(maxWidth: .infinity) }
+            if model.nearbyState.isLoading { Card { SkeletonDepartureRows(count: 4) } }
             else { Text(tr("No stops within \(settings.nearbyRadius) m.")).foregroundStyle(Theme.secondary) }
         } else {
             // The group (opens its departures) with its platforms under it

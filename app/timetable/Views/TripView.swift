@@ -45,15 +45,11 @@ struct TripView: View {
         let finished = nextIndex == -1 && !stops.isEmpty
         let reference = stops.first { $0.stopId == target.from }
         let color = Color(hex: trip.route?.color ?? "#6b7280")
+        // Seconds only when the data has them (like the web)
+        let hasSeconds = stops.contains { TimeFormat.hasSeconds($0.arrival) || TimeFormat.hasSeconds($0.departure) }
         return VStack(spacing: 24) {
-            header(trip, stops: stops, started: started, finished: finished)
-            if let v = model.vehicle, v.model != nil || v.plate != nil {
-                TripVehicleCard(vehicle: v, delayMinutes: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil,
-                                live: stops.contains { $0.realtime }, now: now)
-            }
-            if !model.path.isEmpty || stops.contains(where: { $0.lat != nil }) {
-                TripMiniMap(trip: trip, vehicle: model.vehicle, path: model.path, color: color)
-            }
+            header(trip, stops: stops, started: started, finished: finished,
+                   delay: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil)
             VStack(spacing: 0) {
                 SectionTitle("Stops")
                 Card {
@@ -63,17 +59,27 @@ struct TripView: View {
                                 stop: stop, trip: trip, first: i == 0, last: i == stops.count - 1,
                                 passed: nextIndex == -1 || i < nextIndex,
                                 highlighted: stop.stopId == target.from,
-                                color: color, referenceTime: reference?.departure
+                                color: color, referenceTime: reference?.departure, showSeconds: hasSeconds
                             )
                         }
                     }
                     .padding(.vertical, 8)
                 }
             }
+            if let v = model.vehicle, v.model != nil || v.plate != nil {
+                TripVehicleCard(vehicle: v,
+                                live: stops.contains { $0.realtime }, now: now)
+            }
+            if !model.path.isEmpty || stops.contains(where: { $0.lat != nil }) {
+                VStack(spacing: 0) {
+                    SectionTitle("Map")
+                    TripMiniMap(trip: trip, vehicle: model.vehicle, path: model.path, color: color)
+                }
+            }
         }
     }
 
-    private func header(_ trip: Trip, stops: [TripStop], started: Bool, finished: Bool) -> some View {
+    private func header(_ trip: Trip, stops: [TripStop], started: Bool, finished: Bool, delay: Int?) -> some View {
         let live = stops.contains { $0.realtime }
         let via = Self.viaStops(stops)
         return Card {
@@ -81,6 +87,7 @@ struct TripView: View {
                 HStack(spacing: 8) {
                     if let route = trip.route ?? target.route { LineBadge(line: route) }
                     Spacer()
+                    if let delay { TripDelayText(minutes: delay) }
                     if started && !finished {
                         if live {
                             Text("LIVE").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.live)
@@ -140,11 +147,12 @@ struct TripView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if let route = target.route { LineBadge(line: route) } else { RoundedRectangle(cornerRadius: 6).fill(Theme.fill).frame(width: 48, height: 24) }
                     if let h = target.headsign { Text(h).font(.system(size: 24, weight: .bold)) }
-                    ProgressView()
+                    SkeletonBar(width: 200).padding(.top, 2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
             }
+            SkeletonStopList(count: 8)
         }
     }
 }
@@ -158,6 +166,7 @@ private struct TripStopRow: View {
     let highlighted: Bool
     let color: Color
     let referenceTime: Date?
+    var showSeconds = false
 
     var body: some View {
         let s = stop
@@ -196,6 +205,7 @@ private struct TripStopRow: View {
                     }
                     if waits { Text(TimeFormat.clock(s.arrival)).font(.system(size: 12)).opacity(0.75) }
                     Text(TimeFormat.clock(main)).font(.system(size: 16, weight: status == .scheduled ? .regular : .semibold))
+                    if showSeconds { Text(":" + TimeFormat.seconds(main)).font(.system(size: 11)).opacity(0.7).padding(.leading, -4) }
                     if status != .scheduled { LiveIcon(size: 14).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 2 } }
                 }
                 .monospacedDigit()

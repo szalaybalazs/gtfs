@@ -7,7 +7,7 @@ public class RouteByIdQuery: GraphQLQuery {
   public static let operationName: String = "RouteById"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query RouteById($routeId: ID!) { route(id: $routeId) { __typename routeId shortName longName desc color textColor type flags { __typename lowFloor circular demandResponsive frontDoor replacement } directions { __typename headsign directionId stops { __typename stopId name } } } }"#
+      #"query RouteById($routeId: ID!) { route(id: $routeId) { __typename routeId shortName longName desc color textColor type flags { __typename lowFloor circular demandResponsive frontDoor replacement } directions { __typename headsign directionId stops { __typename stopId name lat lon } } } }"#
     ))
 
   public var routeId: ID
@@ -119,10 +119,14 @@ public class RouteByIdQuery: GraphQLQuery {
             .field("__typename", String.self),
             .field("stopId", TimetableAPI.ID.self),
             .field("name", String?.self),
+            .field("lat", Double?.self),
+            .field("lon", Double?.self),
           ] }
 
           public var stopId: TimetableAPI.ID { __data["stopId"] }
           public var name: String? { __data["name"] }
+          public var lat: Double? { __data["lat"] }
+          public var lon: Double? { __data["lon"] }
         }
       }
     }

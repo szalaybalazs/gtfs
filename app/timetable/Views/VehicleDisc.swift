@@ -35,12 +35,15 @@ struct VehicleDisc: View {
         if compact || line == nil {
             Circle().fill(bg).frame(width: 14, height: 14)
                 .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                .shadow(color: .black.opacity(0.35), radius: 1.5, y: 1)
+                // Selected: a halo in the line's colour and a bigger dot, like the badge
+                .background { if selected { Circle().fill(bg.opacity(0.3)).padding(-7) } }
+                .scaleEffect(selected ? 1.3 : 1)
+                .animation(.spring(response: 0.2, dampingFraction: 0.8), value: selected)
                 .padding(8)
         } else {
             ZStack {
                 if let bearing {
-                    ArrowTriangle().fill(scheme == .dark ? Color.white : bg).shadow(color: .black.opacity(scheme == .dark ? 0.55 : 0), radius: 1).frame(width: 10, height: 7)
+                    ArrowTriangle().fill(scheme == .dark ? Color.white : bg).frame(width: 10, height: 7)
                         .offset(y: -(size / 2 + 3.5))
                         .rotationEffect(.degrees(bearing))
                 }
@@ -49,7 +52,6 @@ struct VehicleDisc: View {
                     .overlay(Text(label).font(.system(size: long ? 10 : 12, weight: .bold)).foregroundStyle(fg)
                         .lineLimit(1).minimumScaleFactor(0.6).padding(.horizontal, 2))
                     .background { if selected { Circle().fill(bg.opacity(0.25)).padding(-7) } }
-                    .shadow(color: .black.opacity(selected ? 0.35 : 0.4), radius: selected ? 3 : 2, y: selected ? 2 : 1)
                     .frame(width: size, height: size)
             }
             .frame(width: size + 28, height: size + 28)
