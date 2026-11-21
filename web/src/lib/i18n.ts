@@ -552,7 +552,7 @@ const hu: Record<MessageKey, Message> = {
   'trip.loadError': 'Nem sikerült betölteni a járatot.',
   'trip.gone': 'Ez a járat már nem létezik.',
   'trip.towards': '',
-  'trip.headsign': '{to} felé',
+  'trip.headsign': '{to}',
   'trip.live': 'ÉLŐ',
   'trip.scheduled': 'Menetrend szerint',
   'trip.via': '{stops}',
