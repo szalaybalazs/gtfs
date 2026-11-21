@@ -42,28 +42,23 @@ function badgesHtml(routes: RouteRef[], max = 4, justify = 'center') {
 
 export type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>
 
-/** Stop group: a pictogram dot zoomed out; a card with name and lines closer in or when selected. */
-export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false, towards?: string[]): Icon {
+/**
+ * Stop group or platform, like the iOS map: zoomed out a pictogram dot; closer in a small dot with its first few
+ * line badges under it (the name and direction are on the card once tapped). A single platform's dot is grey.
+ */
+export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false, platform = false): Icon {
   const c = mainCategory(station.routes)
-  const mask = maskCss(c.icon)
   if (!withBadges)
     return {
-      html: `<div style="width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;background:${c.color};${mask}"></span></div>`,
+      html: `<div style="width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;background:${c.color};${maskCss(c.icon)}"></span></div>`,
       size: [22, 22],
       anchor: [11, 11],
     }
+  const d = selected ? 14 : 10
   return {
     html:
-      `<div style="position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 6px));display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 7px;background:#fff;border-radius:10px;border:${selected ? 3 : 2}px solid ${c.color};box-shadow:0 ${selected ? 4 : 2}px ${selected ? 12 : 6}px rgb(0 0 0/${selected ? '.4' : '.25'});white-space:nowrap">` +
-      `<div style="display:flex;align-items:center;gap:5px;font:600 12px/14px system-ui;color:#111">` +
-      `<span style="width:16px;height:16px;flex:none;background:${c.color};${mask}"></span>${esc(station.name)}</div>` +
-      // A single platform: which way it goes, like the BKK app ("▸ Széll Kálmán tér")
-      (towards?.length
-        ? `<div style="font:500 11px/13px system-ui;color:#555;max-width:180px;overflow:hidden;text-overflow:ellipsis">▸ ${esc(towards.slice(0, 2).join(' / '))}</div>`
-        : '') +
-      badgesHtml(station.routes, 4, 'flex-start') +
-      `</div>` +
-      `<div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:${c.color};border:2px solid #fff;box-sizing:border-box"></div>`,
+      `<div style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${platform ? '#6b7280' : c.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>` +
+      `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%)">${badgesHtml(station.routes, 4)}</div>`,
   }
 }
 

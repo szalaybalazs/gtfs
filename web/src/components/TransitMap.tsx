@@ -212,11 +212,7 @@ export default function TransitMap({
           markers.push({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
-            ...groupIcon({ name: s.name ?? station.name, routes }, true, sel, s.headsigns ?? []),
-            // Branch out from the group's spot when zooming in
-            from: [station.lon, station.lat],
-            animate: true,
-            glideMs: 450,
+            ...groupIcon({ name: s.name ?? station.name, routes }, true, sel, true),
             z: sel ? 1000 : 0,
             // The card only selects; the popup at the bottom is what opens the stop
             onClick: () => (setSelectedStop(s.stopId), setSelected(null)),
@@ -286,24 +282,12 @@ export default function TransitMap({
     },
   ])
 
-  // Line paths per route, both directions (from the Lines layer, when loaded), for vehicles to glide along
-  const pathsByRoute = useMemo(() => {
-    const m = new Map<string, [number, number][][]>()
-    for (const f of lines?.features ?? []) {
-      const id = f.properties?.routeId as string
-      m.set(id, [...(m.get(id) ?? []), (f.geometry as GeoJSON.LineString).coordinates as [number, number][]])
-    }
-    return m
-  }, [lines])
   const vehicleMarkers = useMemo<HtmlMarker[]>(
     () =>
       vehicles.map((v) => ({
         key: `veh:${v.id}`,
         at: [v.longitude, v.latitude],
         ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
-        // Glide to each new position, along the line's path when we have it
-        animate: true,
-        paths: trip && v.trip?.tripId === trip.tripId && trip.path.length ? [trip.path] : (pathsByRoute.get(v.trip?.route?.routeId ?? '') ?? null),
         z: selected === v.id ? 2000 : 500,
         // First tap: details card. Tap the same vehicle again: open its trip.
         onClick: () => {
@@ -314,7 +298,7 @@ export default function TransitMap({
           }
         },
       })),
-    [vehicles, zoom, selected, navigate, pathsByRoute, trip],
+    [vehicles, zoom, selected, navigate],
   )
 
   // The trip: its path as a line in the line's colour, its stops as dots with the time it gets there
@@ -369,6 +353,20 @@ export default function TransitMap({
     if (fresh) setLastSelected(fresh)
   }, [fresh])
   const selectedVehicle = selected ? (fresh ?? (lastSelected?.id === selected ? lastSelected : null)) : null
+
+  // A highlighted vehicle that's in view and moves: the map moves with it
+  const followed = selectedVehicle?.latitude != null && selectedVehicle.longitude != null ? ([selectedVehicle.longitude, selectedVehicle.latitude] as [number, number]) : null
+  const followKey = followed ? `${followed[0]},${followed[1]}` : ''
+  const lastFollow = useRef<{ id: string; key: string } | null>(null)
+  useEffect(() => {
+    if (!map || !followed || !selectedVehicle) return
+    const prev = lastFollow.current
+    lastFollow.current = { id: selectedVehicle.id, key: followKey }
+    // Only on a move of the same vehicle, and only while it's on screen
+    if (!prev || prev.id !== selectedVehicle.id || prev.key === followKey) return
+    if (map.getBounds().contains(followed)) map.easeTo({ center: followed, duration: 600 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, followKey, selectedVehicle?.id])
 
   // The tapped stop (a whole group when zoomed out, a single platform when zoomed in), for its bottom card
   const selectedStopInfo = useMemo(() => {
