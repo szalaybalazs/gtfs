@@ -114,7 +114,11 @@ export default function StationPage() {
   // A ?view= link wins; otherwise the view last picked (remembered across pages and visits)
   const urlView = params.get('view')
   const view = urlView === 'time' || urlView === 'timeline' ? 'timeline' : urlView === 'lines' ? 'lines' : savedView
-  const board = !from && !multi && view === 'lines'
+  // A stop group served by a single line gains nothing from the per-line board (it would cap that line
+  // at 4 times), so it always shows the full time order and no view switch
+  const singleLine = (station?.routes ?? []).filter(Boolean).length <= 1
+  const canBoard = !from && !multi && !singleLine
+  const board = canBoard && view === 'lines'
   // A single platform always asks for arrivals (we don't know yet if it's a terminus when the request
   // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
   const departures = useDepartures(ids, { perLine: board ? 4 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
@@ -249,7 +253,7 @@ export default function StationPage() {
                 highlightTrip={arrivedOn}
                 // The view switch (board / time order) sits by the heading, so the toolbar only holds time controls
                 title={
-                  !from && !multi ? (
+                  canBoard ? (
                     <>
                       {t('departures.title')}
                       {/* Two plain icons; the chosen view is accent-coloured with a dot under it that slides across */}
