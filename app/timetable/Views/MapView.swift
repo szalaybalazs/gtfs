@@ -22,6 +22,17 @@ private struct MapLayers {
     var kinds = Set(LineCategory.allCases)
 }
 
+/// One stop marker on screen: a group (zoomed out) or a single platform (zoomed in).
+private struct StopMarker: Identifiable, Hashable, Sendable {
+    let id: String
+    let stationId: String
+    let stopId: String?
+    let latitude: Double
+    let longitude: Double
+    let category: LineCategory
+    var coordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: latitude, longitude: longitude) }
+}
+
 struct MapView: View {
     private static let center = CLLocationCoordinate2D(latitude: 47.5073, longitude: 19.0236) // Széll Kálmán tér
 
@@ -32,10 +43,12 @@ struct MapView: View {
     @State private var selection: MapSelection?
     @State private var here: CLLocationCoordinate2D?
     @State private var now = Foundation.Date()
+    /// Stops inside the visible area (plus a margin), capped; computed off the main thread when the view settles.
+    @State private var visibleStops: [StopMarker] = []
+    private static let maxStops = 300
 
     private var span: Double { region.span.latitudeDelta }
     /// Group markers from here, single platforms when closer still (web: GROUPS_ZOOM / STOPS_ZOOM).
-    private var showStops: Bool { layers.stops && span < 0.06 }
     private var platformsZoom: Bool { span < 0.007 }
     private var showVehicles: Bool { layers.vehicles && span < 0.25 }
     private let tick = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
@@ -85,8 +98,18 @@ struct MapView: View {
                 try? await Task.sleep(nanoseconds: UInt64(MapViewModel.refreshSeconds * 1_000_000_000))
             }
         }
+        // Stops are fetched whenever the view is close enough (whatever the layer switch says), so switching it on is instant
         .task(id: "\(Int(region.center.latitude * 2000))|\(Int(region.center.longitude * 2000))|\(span < 0.007)") {
-            if showStops { await model.loadStations(region) }
+            if span < 0.06 { await model.loadStations(region) }
+        }
+        // Debounced: the visible subset is worked out off the main thread once the view has settled
+        .task(id: "\(region.center.latitude)|\(region.center.longitude)|\(span)|\(model.stations.count)") {
+            try? await Task.sleep(nanoseconds: 150_000_000)
+            guard !Task.isCancelled else { return }
+            guard span < 0.06 else { visibleStops = []; return }
+            let stations = model.stations, region = region, platforms = platformsZoom
+            let markers = await Task.detached { MapView.stopMarkers(stations, region: region, platforms: platforms) }.value
+            if !Task.isCancelled { visibleStops = markers }
         }
     }
 
@@ -111,21 +134,12 @@ struct MapView: View {
         }
     }
 
+    /// Only hides or shows the precomputed markers, so toggling the layer costs nothing.
     @MapContentBuilder private var stopsContent: some MapContent {
-        if showStops {
-            ForEach(model.stations) { station in
-                if platformsZoom {
-                    ForEach(station.sortedPlatforms.filter { $0.lat != nil && $0.lon != nil }) { p in
-                        Annotation("", coordinate: CLLocationCoordinate2D(latitude: p.lat ?? 0, longitude: p.lon ?? 0)) {
-                            stopDot(selected: selection == .station(station.stationId, stopId: p.stopId))
-                                .onTapGesture { selection = .station(station.stationId, stopId: p.stopId) }
-                        }
-                    }
-                } else {
-                    Annotation("", coordinate: CLLocationCoordinate2D(latitude: station.lat, longitude: station.lon)) {
-                        groupMarker(station, selected: selection == .station(station.stationId, stopId: nil))
-                            .onTapGesture { selection = .station(station.stationId, stopId: nil) }
-                    }
+        if layers.stops {
+            ForEach(visibleStops) { m in
+                Annotation("", coordinate: m.coordinate) {
+                    marker(m).onTapGesture { selection = .station(m.stationId, stopId: m.stopId) }
                 }
             }
         }
@@ -144,14 +158,41 @@ struct MapView: View {
 
     // MARK: Markers
 
+    @ViewBuilder private func marker(_ m: StopMarker) -> some View {
+        let selected = selection == .station(m.stationId, stopId: m.stopId)
+        if m.stopId != nil { stopDot(selected: selected) } else { groupMarker(m.category, selected: selected) }
+    }
+
+    /// The stops to draw for this view: inside the region with a margin, nearest the centre first, capped.
+    private nonisolated static func stopMarkers(_ stations: [Station], region: MKCoordinateRegion, platforms: Bool) -> [StopMarker] {
+        let margin = 1.2
+        let latHalf = region.span.latitudeDelta / 2 * margin, lonHalf = region.span.longitudeDelta / 2 * margin
+        let c = region.center
+        func inside(_ lat: Double, _ lon: Double) -> Bool { abs(lat - c.latitude) <= latHalf && abs(lon - c.longitude) <= lonHalf }
+        var out: [(StopMarker, Double)] = []
+        for s in stations {
+            if platforms {
+                for p in s.sortedPlatforms {
+                    guard let lat = p.lat, let lon = p.lon, inside(lat, lon) else { continue }
+                    out.append((StopMarker(id: p.stopId, stationId: s.stationId, stopId: p.stopId, latitude: lat, longitude: lon, category: .other),
+                                (lat - c.latitude) * (lat - c.latitude) + (lon - c.longitude) * (lon - c.longitude)))
+                }
+            } else if inside(s.lat, s.lon) {
+                let cat = LineCategory.allCases.first { k in s.routes.contains { LineCategory.of($0) == k } } ?? .other
+                out.append((StopMarker(id: s.stationId, stationId: s.stationId, stopId: nil, latitude: s.lat, longitude: s.lon, category: cat),
+                            (s.lat - c.latitude) * (s.lat - c.latitude) + (s.lon - c.longitude) * (s.lon - c.longitude)))
+            }
+        }
+        return out.sorted { $0.1 < $1.1 }.prefix(maxStops).map(\.0)
+    }
+
     private func stopDot(selected: Bool) -> some View {
         Circle().fill(Theme.surface).frame(width: selected ? 16 : 11, height: selected ? 16 : 11)
             .overlay(Circle().stroke(selected ? Color.primary : Theme.secondary, lineWidth: 2)).padding(8)
     }
 
-    private func groupMarker(_ s: Station, selected: Bool) -> some View {
-        let c = LineCategory.allCases.first { c in s.routes.contains { LineCategory.of($0) == c } } ?? .other
-        return Image(c.asset).renderingMode(.template).resizable().scaledToFit()
+    private func groupMarker(_ c: LineCategory, selected: Bool) -> some View {
+        Image(c.asset).renderingMode(.template).resizable().scaledToFit()
             .frame(width: selected ? 20 : 15, height: selected ? 20 : 15).foregroundStyle(c.tint)
             .padding(5).background(Theme.surface, in: Circle()).overlay(Circle().stroke(selected ? Color.primary : Theme.separator, lineWidth: selected ? 2 : 1))
             .padding(4)
