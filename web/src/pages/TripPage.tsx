@@ -264,9 +264,10 @@ function TripStopRow({
   return (
     <li className="relative">
       <Link
-        // Opening a stop from a trip starts its departures at this trip, marked "Your trip"
+        // Opening a stop from a trip counts its departures from when you get there (this trip's arrival), marked "Your trip"
+        // (the list itself already starts a minute before, so this trip is in it)
         // The stop group's id (not the stop's), so the page reuses what lists already cached under ['station', groupId]
-        to={`/stations/${encodeURIComponent(s.stop.station?.stationId ?? s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(new Date(s.departure).getTime() - 60_000).toISOString())}`}
+        to={`/stations/${encodeURIComponent(s.stop.station?.stationId ?? s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(s.arrival ?? s.departure).toISOString())}`}
         className={`flex items-center pr-3 active:bg-fill ${passed ? 'opacity-45' : ''} ${referenceTime != null ? 'pl-2' : ''}`}
       >
         {referenceTime != null && (
