@@ -77,10 +77,13 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
         </div>
         {/* The next departure big (as on a departure row), then the following ones smaller to its right:
             one more on narrow screens, up to three when there's room */}
-        <Countdown d={d} now={now} />
-        {list.slice(1, 4).map((n, i) => (
-          <Countdown key={n.tripId} d={n} now={now} small className={i === 1 ? 'hidden min-[400px]:block' : i === 2 ? 'hidden sm:block' : ''} />
-        ))}
+        {/* Kept tight so the next one plus two more fit on a phone */}
+        <div className="-mr-1 flex shrink-0 items-center gap-1">
+          <Countdown d={d} now={now} />
+          {list.slice(1, 4).map((n, i) => (
+            <Countdown key={n.tripId} d={n} now={now} small className={i === 2 ? 'hidden sm:block' : ''} />
+          ))}
+        </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
     </li>
@@ -101,9 +104,9 @@ function Countdown({ d, now, small = false, className = '' }: { d: Departure; no
       ? { value: formatTime(new Date(Date.now() + seconds * 1000)), unit: null }
       : countdown(seconds)
   return (
-    <div className={`relative text-right ${className} ${small ? 'min-w-9 pr-2.5 text-secondary' : 'min-w-14 pr-3.5 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`relative text-right ${className} ${small ? 'min-w-8 pr-2 text-secondary' : 'min-w-12 pr-3 text-label'} ${left ? 'opacity-45' : ''}`}>
       {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
-      <p className={`leading-none font-bold tabular-nums ${small ? 'text-[17px]' : 'text-2xl'}`}>{value}</p>
+      <p className={`leading-none font-bold tabular-nums ${small ? 'text-[16px]' : 'text-2xl'}`}>{value}</p>
       <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{unit ? t(unit) : '\u00a0'}</p>
     </div>
   )
