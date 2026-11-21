@@ -37,6 +37,8 @@ private struct TimeText: View {
             Text(timeText(departure, now: now)).font(.system(size: size, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
             if isLive(departure) { LiveIcon(size: size * 0.6).foregroundStyle(.secondary).padding(.top, 1) }
         }
+        // A bare clock time (an hour or more away) gets more room than minutes, which already carry the live mark
+        .padding(.horizontal, departure.departure.timeIntervalSince(now) >= 3600 ? 4 : 0)
     }
 }
 
