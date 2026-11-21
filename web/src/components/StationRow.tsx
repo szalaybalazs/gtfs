@@ -6,6 +6,8 @@ import { formatDistance } from '../lib/geo'
 import { useT } from '../lib/i18n'
 import { ChevronIcon } from './Icons'
 import RouteBadge from './RouteBadge'
+import CategoryIcon from './CategoryIcon'
+import { CATEGORIES, categoryOf } from '../lib/categories'
 
 /**
  * A stop group in a list: the group itself (all its lines; opens the whole
@@ -28,8 +30,13 @@ export default function StationRow({ station, distance }: { station: Station; di
             {distance != null && <span className="ml-2 font-normal text-secondary">{formatDistance(distance)}</span>}
           </p>
           {platforms ? (
-            // The lines are listed once, per direction below; the group just says how much is here
-            <p className="text-[13px] text-secondary">{t('stations.summary', { dirs: stops.length, lines: station.routes.filter(Boolean).length })}</p>
+            // The lines are listed once, per platform below; the group shows which kinds run here, like the menu
+            <div className="mt-1 flex items-center gap-1.5">
+              {CATEGORIES.filter((c) => station.routes.some((r) => r && categoryOf(r).key === c.key)).map((c) => (
+                <CategoryIcon key={c.key} category={c} className="h-5 w-5" />
+              ))}
+              <span className="ml-0.5 text-[13px] text-secondary">{t('stations.summary', { dirs: stops.length, lines: station.routes.filter(Boolean).length })}</span>
+            </div>
           ) : (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {station.routes.filter(Boolean).map((route) => (
@@ -40,18 +47,15 @@ export default function StationRow({ station, distance }: { station: Station; di
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
-      {/* Platforms as branches off the group: a trunk line, a short branch to each, a divider between them */}
+      {/* Platforms in an inset, tinted block under the group: indentation + grouping, no tree lines */}
       {platforms && (
-        <ul className="pb-2 pl-7">
-          {stops.map((stop, i) => (
-            <li key={stop.stopId} className="relative">
-              {/* trunk (stops halfway down the last one) + branch */}
-              <span aria-hidden className={`absolute left-0 w-0.5 bg-separator ${i === stops.length - 1 ? 'top-0 h-1/2' : 'inset-y-0'}`} />
-              <span aria-hidden className="absolute top-1/2 left-0 h-0.5 w-3 bg-separator" />
+        <ul className="mx-3 mb-3 ml-6 divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
+          {stops.map((stop) => (
+            <li key={stop.stopId}>
               <Link
                 to={`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(stop.stopId)}`}
                 onPointerDown={prefetch}
-                className={`ml-5 flex items-center gap-3 py-2.5 pr-4 active:bg-fill ${i > 0 ? 'border-t border-separator' : ''}`}
+                className="flex items-center gap-3 px-3 py-2.5 active:bg-fill"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-medium">
