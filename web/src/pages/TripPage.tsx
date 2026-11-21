@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
 import Alerts from '../components/Alerts'
@@ -27,6 +27,8 @@ export default function TripPage() {
   const date = params.get('date') || undefined
   const from = params.get('from')
   const now = useNow(1_000)
+  // Many stops already behind it fold into one row; one tap opens them for good
+  const [showAllPassed, setShowAllPassed] = useState(false)
 
   const query = useQuery({
     queryKey: tripKey(tripId, date),
@@ -52,6 +54,9 @@ export default function TripPage() {
   const started = nextIndex !== 0 && stops.length > 0
   const finished = nextIndex === -1 && stops.length > 0
   const delay = latestDelay(stops, nextIndex)
+  // More than 10 greyed-out stops: fold the oldest, keep the last 3 behind the vehicle (and the stop you came from)
+  const fromIndex = stops.findIndex((x) => x.stop.stopId === from)
+  const hiddenPassed = !showAllPassed && started && !finished && nextIndex > 10 && !(fromIndex >= 0 && fromIndex < nextIndex - 3) ? nextIndex - 3 : 0
   const vehicle = trip?.vehicle
   // Reference for the relative-minutes column: the stop you came from
   const reference = stops.find((x) => x.stop.stopId === from)
@@ -155,7 +160,14 @@ export default function TripPage() {
             <section>
               <h2 className="px-1 pb-heading text-xl font-bold">{t('common.stops')}</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
-                {stops.map((s, i) => (
+                {hiddenPassed > 0 && (
+                  <li>
+                    <button type="button" onClick={() => setShowAllPassed(true)} className="w-full px-gutter py-2 text-left text-[15px] font-medium text-accent active:bg-fill">
+                      {t('trip.earlierStops', { n: hiddenPassed })}
+                    </button>
+                  </li>
+                )}
+                {stops.map((s, i) => (i < hiddenPassed ? null : (
                   <TripStopRow
                     key={`${s.stopSequence}`}
                     stop={s}
@@ -171,7 +183,7 @@ export default function TripPage() {
                     tripId={tripId}
                     showSeconds={hasSeconds}
                   />
-                ))}
+                )))}
               </ol>
             </section>
 
