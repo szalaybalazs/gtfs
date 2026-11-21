@@ -53,6 +53,14 @@ struct HomeView: View {
         .background(Theme.canvas)
         .scrollsToTopOnReselect(tab: 0)
         .navigationTitle("Home")
+        .toolbar {
+            if store.favorites.count > 1 {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { FavoritesEditView() } label: { Image(systemName: "arrow.up.arrow.down") }
+                        .accessibilityLabel("Edit favourites")
+                }
+            }
+        }
         .transitDestinations()
         .task(id: settings.nearbyRadius) { await model.loadNearby(radius: settings.nearbyRadius) }
         .refreshable { await model.loadNearby(radius: settings.nearbyRadius) }

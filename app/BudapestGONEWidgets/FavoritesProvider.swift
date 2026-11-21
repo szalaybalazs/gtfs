@@ -24,11 +24,6 @@ struct FavoritesEntry: TimelineEntry {
     let favorites: [FavoriteData]
     /// The user has nothing to show (no favourites with stops).
     let noFavorites: Bool
-    /// More than one favourite was asked for (nothing picked in the widget's settings).
-    let showsAll: Bool
-    /// How the widget is set up to show them.
-    var grouping: DepartureGrouping = .byLine
-    var timeStyle: DepartureTimeStyle = .countdown
 }
 
 struct FavoritesProvider: AppIntentTimelineProvider {
@@ -49,8 +44,7 @@ struct FavoritesProvider: AppIntentTimelineProvider {
         // Now, then every full minute
         let nextMinute = Date(timeIntervalSinceReferenceDate: (now.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60 + 60)
         let entries = [base] + (0..<Self.entryCount).map { i in
-            FavoritesEntry(date: nextMinute.addingTimeInterval(Double(i) * 60), favorites: base.favorites, noFavorites: base.noFavorites, showsAll: base.showsAll,
-                           grouping: base.grouping, timeStyle: base.timeStyle)
+            FavoritesEntry(date: nextMinute.addingTimeInterval(Double(i) * 60), favorites: base.favorites, noFavorites: base.noFavorites)
         }
         let failed = !base.noFavorites && base.favorites.allSatisfy { $0.departures.isEmpty }
         // Nothing loaded: try again sooner
@@ -58,29 +52,23 @@ struct FavoritesProvider: AppIntentTimelineProvider {
         return Timeline(entries: entries, policy: .after(refresh))
     }
 
-    /// How many favourites the family has room for.
-    static func capacity(_ family: WidgetFamily, all: Bool) -> Int {
-        switch family {
-        case .systemMedium: return all ? 2 : 1
-        case .systemLarge: return all ? 3 : 1
-        default: return 1
-        }
-    }
-
     private func load(_ configuration: SelectFavoriteIntent, family: WidgetFamily, at date: Date) async -> FavoritesEntry {
         let saved = FavoritesStore.widgetFavorites()
-        let picked = configuration.favorite.flatMap { c in saved.first { $0.id == c.id } }
-        let all = picked == nil
-        let chosen = picked.map { [$0] } ?? Array(saved.prefix(Self.capacity(family, all: true)))
-        guard !chosen.isEmpty else { return FavoritesEntry(date: date, favorites: [], noFavorites: true, showsAll: all, grouping: configuration.grouping, timeStyle: configuration.timeStyle) }
-
+        // The picked favourite (else the first saved one); a second only where there is room for it
+        let first = configuration.favorite.flatMap { c in saved.first { $0.id == c.id } } ?? saved.first
+        var chosen = first.map { [$0] } ?? []
+        if family == .systemMedium || family == .systemLarge,
+           let second = configuration.secondFavorite.flatMap({ c in saved.first { $0.id == c.id } }), second.id != first?.id {
+            chosen.append(second)
+        }
+        guard !chosen.isEmpty else { return FavoritesEntry(date: date, favorites: [], noFavorites: true) }
         let data = await withTaskGroup(of: (Int, FavoriteData).self) { group in
-            for (i, f) in chosen.enumerated() { group.addTask { (i, await Self.fetch(f, longer: picked != nil)) } }
+            for (i, f) in chosen.enumerated() { group.addTask { (i, await Self.fetch(f, longer: true)) } }
             var out: [(Int, FavoriteData)] = []
             for await r in group { out.append(r) }
             return out.sorted { $0.0 < $1.0 }.map(\.1)
         }
-        return FavoritesEntry(date: date, favorites: data, noFavorites: false, showsAll: all, grouping: configuration.grouping, timeStyle: configuration.timeStyle)
+        return FavoritesEntry(date: date, favorites: data, noFavorites: false)
     }
 
     private static func fetch(_ f: Favorite, longer: Bool) async -> FavoriteData {
@@ -109,7 +97,6 @@ struct FavoritesProvider: AppIntentTimelineProvider {
                     dep(m2, "Örs vezér tere", 14, live: true), dep(t4, "Móricz Zsigmond körtér", 18, live: false), dep(b9, "Bosnyák tér", 26, live: false)]
         let one = FavoriteData(id: "a", title: "Deák Ferenc tér", subtitle: nil, lines: [m2, t4, b9], departures: list, url: URL(string: "\(SharedDefaults.urlScheme)://")!)
         let two = FavoriteData(id: "b", title: "Blaha Lujza tér", subtitle: nil, lines: [t4, b9], departures: list.reversed(), url: one.url)
-        let three = FavoriteData(id: "c", title: "Széll Kálmán tér", subtitle: nil, lines: [m2], departures: list, url: one.url)
-        return FavoritesEntry(date: now, favorites: [one, two, three], noFavorites: false, showsAll: true)
+        return FavoritesEntry(date: now, favorites: [one, two], noFavorites: false)
     }
 }

@@ -119,6 +119,17 @@ final class FavoritesStore {
         save()
     }
 
+    /// Drag-to-reorder: the order here is the order on Home and in a widget's favourite picker.
+    func move(from source: IndexSet, to destination: Int) {
+        favorites.move(fromOffsets: source, toOffset: destination)
+        save()
+    }
+
+    func remove(at offsets: IndexSet) {
+        favorites.remove(atOffsets: offsets)
+        save()
+    }
+
     func ofKind(_ kind: Favorite.Kind) -> [Favorite] { favorites.filter { $0.kind == kind } }
 
     /// All favourites as JSON, to move to another device or the web app.

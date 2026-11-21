@@ -2889,6 +2889,40 @@
           }
         }
       }
+    },
+    "Edit favourites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kedvencek szerkesztése"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar favoritos"
+          }
+        }
+      }
+    },
+    "Second favourite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Második kedvenc"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segundo favorito"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

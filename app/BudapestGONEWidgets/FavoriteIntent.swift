@@ -50,35 +50,20 @@ enum DepartureGrouping: String, AppEnum {
     ]
 }
 
-/// How a departure's time is written.
-enum DepartureTimeStyle: String, AppEnum {
-    case countdown, clock, both
-
-    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Times as")
-    static let caseDisplayRepresentations: [DepartureTimeStyle: DisplayRepresentation] = [
-        .countdown: DisplayRepresentation(title: "Minutes", subtitle: "5'"),
-        .clock: DisplayRepresentation(title: "Clock time", subtitle: "17:23"),
-        .both: DisplayRepresentation(title: "Both", subtitle: "5' 17:23"),
-    ]
-}
-
+/// Which favourite a widget shows (a medium or large one can show a second beside / under it).
 struct SelectFavoriteIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Favourite"
-    static let description = IntentDescription("Pick a favourite, or leave it empty to show all of them.")
+    static let description = IntentDescription("Pick the favourite to show; medium and large widgets can show a second one.")
 
     @Parameter(title: "Favourite")
     var favorite: FavoriteEntity?
 
-    @Parameter(title: "Group by", default: .byLine)
-    var grouping: DepartureGrouping
-
-    @Parameter(title: "Times as", default: .countdown)
-    var timeStyle: DepartureTimeStyle
+    @Parameter(title: "Second favourite")
+    var secondFavorite: FavoriteEntity?
 
     static var parameterSummary: some ParameterSummary {
         Summary("Show \(\.$favorite)") {
-            \.$grouping
-            \.$timeStyle
+            \.$secondFavorite
         }
     }
 }
