@@ -179,9 +179,9 @@ export default function TransitMap({
           !!view &&
           // The trip's own vehicle always; others only with "show everything" + the Vehicles layer.
           // (Guard on trip: without one, undefined === undefined would keep trip-less vehicles.)
-          ((!!trip && v.trip?.tripId === trip.tripId) || (showAll && layers.vehicles && view.bounds.contains([v.longitude, v.latitude]))),
+          ((!!trip && v.trip?.tripId === trip.tripId) || v.id === selected || (showAll && layers.vehicles && view.bounds.contains([v.longitude, v.latitude]))),
       ),
-    [vehicleQuery.data, view, showAll, trip?.tripId, layers.vehicles],
+    [vehicleQuery.data, view, showAll, trip?.tripId, layers.vehicles, selected],
   )
 
   const groups = useMemo(() => (stations.data?.stationsByRadius ?? []).filter((s) => s.routes.length > 0), [stations.data])

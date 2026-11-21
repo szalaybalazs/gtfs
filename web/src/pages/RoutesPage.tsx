@@ -10,7 +10,6 @@ import RouteBadge from '../components/RouteBadge'
 import { linesUrl } from './LinesPage'
 import { CATEGORIES, categoryOf, replacesCategory } from '../lib/categories'
 import RouteTile from '../components/RouteTile'
-import { useFavorites } from '../lib/favorites'
 import { useT } from '../lib/i18n'
 import { score } from '../lib/search'
 import { rank } from '../lib/usage'
@@ -21,7 +20,6 @@ export default function RoutesPage() {
   const [params, setParams] = useSearchParams()
   const search = params.get('q') ?? ''
   const category = CATEGORIES.find((c) => c.key === params.get('type')) ?? null
-  const { lines: favorites } = useFavorites()
   const navigate = useNavigate()
   // Long-press a line to start picking several, then see their shared stops
   const [selected, setSelected] = useState<RouteSummary[]>([])
@@ -72,7 +70,6 @@ export default function RoutesPage() {
     [routes],
   )
 
-  const narrowing = search.trim() !== '' || category !== null
 
 
   return (
@@ -95,17 +92,6 @@ export default function RoutesPage() {
               {t('common.retry')}
             </button>
           </p>
-        )}
-
-        {favorites.length > 0 && !narrowing && (
-          <section className="px-gutter pt-4">
-            <h2 className="pb-2 text-xl font-bold">{t('common.favourites')}</h2>
-            <div className="flex flex-wrap gap-2">
-              {favorites.map((route) => (
-                <RouteTile key={route.id} route={route.route} compact />
-              ))}
-            </div>
-          </section>
         )}
 
         {search.trim() && (

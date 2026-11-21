@@ -149,14 +149,10 @@ extension LineCategory {
 struct ModeIcon: View {
     let category: LineCategory
     var size: CGFloat = 20
-    /// Flat single colour instead of the metro's four-corner gradient (for icons sitting on a coloured fill).
+    /// A flat colour instead of the category's own (for icons sitting on a coloured fill).
     var flat: Color?
     var body: some View {
-        if category == .metro && flat == nil {
-            Image("mode_metro_color").resizable().scaledToFit().frame(width: size, height: size)
-        } else {
-            Image(category.asset).renderingMode(.template).resizable().scaledToFit()
-                .frame(width: size, height: size).foregroundStyle(flat ?? category.tint)
-        }
+        Image(category.asset).renderingMode(.template).resizable().scaledToFit()
+            .frame(width: size, height: size).foregroundStyle(flat ?? category.tint)
     }
 }

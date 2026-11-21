@@ -119,8 +119,11 @@ struct MapView: View {
             if let selection { card(for: selection).transition(.move(edge: .bottom).combined(with: .opacity)) }
         }
         .animation(.easeOut(duration: 0.2), value: selection)
-        .navigationTitle("Map")
-        .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: selection) { _, new in
+            if case .vehicle(let id) = new { model.pinnedVehicleId = id } else { model.pinnedVehicleId = nil }
+        }
+        // The map fills the screen; no title bar
+        .toolbar(.hidden, for: .navigationBar)
         .transitDestinations()
         .task(id: layers.lines) { if layers.lines { await model.loadLines() } }
         // Vehicles: right away when the view settles (after a pan or zoom), then every 10 s while the layer is on
@@ -297,7 +300,7 @@ struct MapView: View {
 
     private func groupMarker(_ c: LineCategory, selected: Bool) -> some View {
         ModeIcon(category: c, size: selected ? 20 : 15)
-            .padding(5).background(Theme.surface, in: Circle()).overlay(Circle().stroke(selected ? Color.primary : Theme.separator, lineWidth: selected ? 2 : 1))
+            .padding(5).background(Theme.surface, in: Circle()).overlay(Circle().stroke(Theme.separator, lineWidth: 1))
             .padding(4)
     }
 

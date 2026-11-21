@@ -83,8 +83,13 @@ final class MapViewModel {
             }
             next.append(vehicle)
         }
+        // The highlighted vehicle stays (and so does its card) even when this response doesn't have it, e.g. it left the fetched area
+        if let p = pinnedVehicleId, !next.contains(where: { $0.id == p }), let old = vehicles.first(where: { $0.id == p }) { next.append(old) }
         vehicles = next
     }
+
+    /// The vehicle the user highlighted; kept across refreshes.
+    var pinnedVehicleId: String?
 
     private var stationCache: [String: Station] = [:]
     /// Circles already fetched: (centre, radius in metres).

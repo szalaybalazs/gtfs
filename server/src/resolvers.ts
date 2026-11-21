@@ -441,62 +441,52 @@ export const resolvers = {
     },
     directions: async (parent: any) => {
       const variant = activeVariant(parent.route_id);
-      const res = db
+      // One entry per direction (at most two), headed by its most common headsign
+      const dirs = db
         .query(
           `
-          SELECT 
-            route_id,
-            direction_id,
-            trip_headsign,
-            COUNT(DISTINCT trip_id) AS num_trips,
-            COUNT(DISTINCT stop_id) AS unique_stops
-        FROM (
-            SELECT 
-                r.route_id,
-                t.direction_id,
-                t.trip_headsign,
-                t.trip_id,
-                st.stop_id
-            FROM routes r
-            JOIN trips t ON r.route_id = t.route_id
-            JOIN stop_times st ON t.trip_id = st.trip_id
-            WHERE r.route_id = ?
-        )
-        GROUP BY 
-            route_id, 
-            direction_id, 
-            trip_headsign
-        ORDER BY 
-            num_trips DESC
-            LIMIT 2;
+          SELECT direction_id, trip_headsign, COUNT(*) AS n
+          FROM trips
+          WHERE route_id = ?
+          GROUP BY direction_id, trip_headsign
+          ORDER BY n DESC;
         `
         )
-        .all(variant);
+        .all(variant) as any[];
+      const seen = new Set<number>();
+      const picked = dirs.filter((d) => (seen.has(d.direction_id) ? false : (seen.add(d.direction_id), true))).slice(0, 2);
 
-      return res.map((r: any) => {
+      return picked.map((r: any) => {
+        // The stops of one real trip (the one with the most stops of that headsign), in running order.
+        // (Merging every trip's stops and ordering by an arbitrary stop_sequence scrambled the order, so "the last stop" was wrong.)
+        const trip = db
+          .query(
+            `
+            SELECT t.trip_id
+            FROM trips t JOIN stop_times st ON st.trip_id = t.trip_id
+            WHERE t.route_id = ? AND t.direction_id = ? AND t.trip_headsign IS ?
+            GROUP BY t.trip_id
+            ORDER BY COUNT(*) DESC
+            LIMIT 1;
+          `
+          )
+          .get(variant, r.direction_id, r.trip_headsign) as any;
         return {
           directionId: r.direction_id,
           headsign: cleanHeadsign(r.trip_headsign) ?? "",
-          stops: db
-            .query(
-              `
-              SELECT
-                  s.*
-              FROM routes r
-              JOIN trips t ON r.route_id = t.route_id
-              JOIN stop_times st ON t.trip_id = st.trip_id
-              JOIN stops s ON st.stop_id = s.stop_id
-              WHERE
-                  r.route_id = ? AND t.direction_id = ?
-              GROUP BY
-                  s.stop_id,
-                  s.stop_name
-              ORDER BY
-                  st.stop_sequence;
-              `
-            )
-            .all(variant, r.direction_id)
-            .map(formatStop),
+          stops: trip
+            ? db
+                .query(
+                  `
+                  SELECT s.*
+                  FROM stop_times st JOIN stops s ON s.stop_id = st.stop_id
+                  WHERE st.trip_id = ?
+                  ORDER BY st.stop_sequence;
+                `
+                )
+                .all(trip.trip_id)
+                .map(formatStop)
+            : [],
         };
       });
     },

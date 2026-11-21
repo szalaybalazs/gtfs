@@ -45,15 +45,15 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
       {pending || groups.length === 0
         ? fallback.map((r) => (
             <span key={r.routeId} className="flex shrink-0 items-center gap-1">
-              <RouteBadge route={r} fit />
-              <span className="text-[15px] text-secondary">{pending ? '…' : '–'}</span>
+              <RouteBadge route={r} size="lg" fit />
+              <span className="text-[18px] text-secondary">{pending ? '…' : '–'}</span>
             </span>
           ))
         : groups.map(({ route, times }) => (
             <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-1">
-              <RouteBadge route={route} fit />
+              <RouteBadge route={route} size="lg" fit />
               {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
-              <span className="flex items-baseline gap-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
+              <span className="flex items-baseline gap-2.5 text-[21px] font-semibold whitespace-nowrap tabular-nums">
                 {times.map((d) => (
                   <ShortTime key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} />
                 ))}
@@ -102,18 +102,18 @@ function Card({
   alertsFor?: { routeIds: string[]; stopIds: string[] }
 }) {
   const body = (
-    <div className="px-gutter py-row">
+    <div className="px-gutter py-4">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-[17px] font-semibold">
+          <p className="flex items-center gap-2 text-[20px] font-semibold">
             <span className="truncate">{title}</span>
             {alertsFor && <DisruptionTag {...alertsFor} />}
           </p>
-          {subtitle && <p className="truncate text-[13px] text-secondary">{subtitle}</p>}
+          {subtitle && <p className="truncate text-[15px] text-secondary">{subtitle}</p>}
         </div>
         {link && <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />}
       </div>
-      <div className="mt-2">{children}</div>
+      <div className="mt-3">{children}</div>
     </div>
   )
   return link ? (

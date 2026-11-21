@@ -38,7 +38,7 @@ private struct ShortTime: View {
             : s < 60 ? tr("\(Int(s.rounded()))s")
             : "\(Countdown.upcoming(s).value)'"
         HStack(alignment: .top, spacing: 2) {
-            Text(text).font(.system(size: 17, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
+            Text(text).font(.system(size: 21, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
             if live && s >= 0 { LiveIcon(size: 10).foregroundStyle(Theme.secondary).padding(.top, 2) }
         }
         .opacity(s < 0 ? 0.45 : 1)
@@ -56,18 +56,18 @@ private struct LineTimesRow: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let groups = runs(departures, now: context.date, only: only)
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
+                HStack(spacing: 12) {
                     if pending || groups.isEmpty {
                         ForEach(fallback, id: \.routeId) { r in
                             HStack(spacing: 6) {
-                                LineBadge(line: r, fit: true)
-                                Text(pending ? "…" : "–").font(.system(size: 15)).foregroundStyle(Theme.secondary)
+                                LineBadge(line: r, large: true, fit: true)
+                                Text(pending ? "…" : "–").font(.system(size: 18)).foregroundStyle(Theme.secondary)
                             }
                         }
                     } else {
                         ForEach(Array(groups.enumerated()), id: \.offset) { _, g in
                             HStack(spacing: 4) {
-                                LineBadge(line: g.route, fit: true)
+                                LineBadge(line: g.route, large: true, fit: true)
                                 // One-line times with the live mark after them; full colour
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                                     ForEach(Array(g.times.enumerated()), id: \.element.id) { _, d in
@@ -130,14 +130,14 @@ private struct FavoriteCardBody<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 8) {
-                        Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1)
+                        Text(title).font(.system(size: 20, weight: .semibold)).lineLimit(1)
                         if let alertsFor { DisruptionTag(routeIds: alertsFor.routeIds, stopIds: alertsFor.stopIds) }
                     }
-                    if let subtitle { Text(subtitle).font(.system(size: 13)).foregroundStyle(Theme.secondary).lineLimit(1) }
+                    if let subtitle { Text(subtitle).font(.system(size: 15)).foregroundStyle(Theme.secondary).lineLimit(1) }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if link { Chevron() }
@@ -145,7 +145,7 @@ private struct FavoriteCardBody<Content: View>: View {
             content
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 16)
         .contentShape(Rectangle())
     }
 }

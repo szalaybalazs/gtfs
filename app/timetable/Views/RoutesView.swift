@@ -100,18 +100,6 @@ struct RoutesView: View {
                 if let message = model.state.errorMessage {
                     ErrorView(message: message) { await model.load() }
                 }
-                let favorites = store.ofKind(.line)
-                if !favorites.isEmpty && !searching && category == nil {
-                    VStack(spacing: 0) {
-                        SectionTitle("Favourites")
-                        HFlow(itemSpacing: 8, rowSpacing: 8) {
-                            ForEach(favorites) { f in
-                                if let r = f.route { link(r.line) { RouteTile(line: r.line, compact: true) } }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
                 if searching {
                     VStack(spacing: 0) {
                         SectionTitle("Best matches")
