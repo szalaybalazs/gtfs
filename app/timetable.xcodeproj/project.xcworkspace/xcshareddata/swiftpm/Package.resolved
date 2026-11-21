@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tevelee/SwiftUI-Flow",
       "state" : {
-        "revision" : "5b2f4b3373ff5ba6a8a1666d52ebfd9dc6c0e10b",
-        "version" : "3.0.1"
+        "revision" : "196e7256758333914eb2313e349032fcd057ba6e",
+        "version" : "3.5.5"
       }
     }
   ],
