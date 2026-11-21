@@ -68,7 +68,7 @@ struct MapView: View {
                 stopsContent
                 vehiclesContent
             }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .onMapCameraChange(frequency: .onEnd) { region = $0.region }
             .onReceive(tick) { if showVehicles { now = $0 } }
             .mapControls { MapScaleView() }

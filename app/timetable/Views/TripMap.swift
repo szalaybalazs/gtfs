@@ -120,7 +120,7 @@ struct TripMiniMap: View {
             Map(initialPosition: .region(region), interactionModes: []) {
                 TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false)
             }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .frame(height: 180)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(Color.clear.contentShape(Rectangle()).onTapGesture { full = true })
@@ -145,7 +145,7 @@ private struct TripFullMap: View {
         Map(initialPosition: .region(region)) {
             TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true)
         }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
+        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
         .overlay(alignment: .topTrailing) {
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.accent)

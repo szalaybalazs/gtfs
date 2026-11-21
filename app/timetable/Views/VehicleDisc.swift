@@ -24,6 +24,7 @@ struct VehicleDisc: View {
     var selected = false
     /// Zoomed out: just a small route-coloured dot.
     var compact = false
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let bg = Color(hex: line?.color ?? "#6b7280")
@@ -39,7 +40,7 @@ struct VehicleDisc: View {
         } else {
             ZStack {
                 if let bearing {
-                    ArrowTriangle().fill(Color.white).shadow(color: .black.opacity(0.55), radius: 1).frame(width: 10, height: 7)
+                    ArrowTriangle().fill(scheme == .dark ? Color.white : bg).shadow(color: .black.opacity(scheme == .dark ? 0.55 : 0), radius: 1).frame(width: 10, height: 7)
                         .offset(y: -(size / 2 + 3.5))
                         .rotationEffect(.degrees(bearing))
                 }
