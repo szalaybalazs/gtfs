@@ -156,9 +156,9 @@ export function Countdown({
       : left
         ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
         : countdown(seconds)
-  const size = clock ? (small ? 'text-[12px]' : 'text-[15px]') : small ? 'text-[16px]' : 'text-2xl'
+  const size = clock && !inline ? (small ? 'text-[12px]' : 'text-[15px]') : small ? 'text-[16px]' : 'text-2xl'
   return (
-    <div className={`text-right whitespace-nowrap ${small ? `${inline ? '' : 'w-9'} text-secondary` : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`text-right whitespace-nowrap ${inline ? 'text-label' : small ? 'w-9 text-secondary' : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
       {/* Same line height for clock times and countdowns, so the unit lines stay level */}
       <p className={`relative flex items-end justify-end font-bold tabular-nums ${small ? 'h-4' : 'h-6'} leading-none ${size}`}>
         <span data-value>{value}</span>
