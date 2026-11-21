@@ -92,7 +92,20 @@ export default function StationPage() {
           headsign: towardsOf(favStop.headsigns),
         })),
       ]
-    : []
+    : // A whole stop group: save it with all its lines and platforms
+      station && station.routes.some(Boolean)
+      ? [
+          {
+            kind: 'lines' as const,
+            routes: station.routes.filter((r): r is NonNullable<typeof r> => !!r),
+            stationId: station.stationId,
+            stopIds: platforms.map((p) => p.stopId),
+            from: null,
+            name: station.name,
+            headsigns: [],
+          },
+        ]
+      : []
   const favorite = favoriteOptions.some((o) => has(favoriteId(o)))
 
   // The selected stop (from ?from=) narrows the departures; none selected = every stop in the group
