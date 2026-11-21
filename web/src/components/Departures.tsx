@@ -23,6 +23,7 @@ export default function Departures({
   title,
   empty,
   toolbar,
+  footer,
   includePast = false,
   highlightTrip,
 }: {
@@ -33,6 +34,8 @@ export default function Departures({
   highlightTrip?: string | null
   /** Shown at the top of the card, e.g. the time filter. */
   toolbar?: ReactNode
+  /** Under the list, inside the card (e.g. "Show more") */
+  footer?: ReactNode
   departures: Departure[]
   isPending?: boolean
   error?: boolean
@@ -75,6 +78,7 @@ export default function Departures({
             ))}
           </ul>
         )}
+        {!isPending && upcoming.length > 0 && footer}
       </div>
     </section>
   )
@@ -135,5 +139,15 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
       </Link>
       </div>
     </li>
+  )
+}
+
+/** "Show more" row for the bottom of a departures card */
+export function MoreButton({ onClick }: { onClick: () => void }) {
+  const t = useT()
+  return (
+    <button type="button" onClick={onClick} className="w-full border-t border-separator py-3 text-[15px] font-medium text-accent active:bg-fill">
+      {t('departures.more')}
+    </button>
   )
 }

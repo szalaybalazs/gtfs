@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import CategoryChips from '../components/CategoryChips'
 import CategoryIcon from '../components/CategoryIcon'
 import NavBar from '../components/NavBar'
 import RouteTile from '../components/RouteTile'
@@ -62,28 +63,7 @@ export default function StationLinesPage() {
           )
         }
       >
-        {types.length > 1 && (
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none]">
-            <button
-              type="button"
-              onClick={() => setType(null)}
-              className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium outline-none ${!type ? 'bg-accent text-white' : 'bg-fill text-label'}`}
-            >
-              {t('routes.all')}
-            </button>
-            {types.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => setType(c.key)}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-sm font-medium outline-none ${type === c.key ? 'bg-fill text-accent ring-1 ring-accent' : 'bg-fill text-label'}`}
-              >
-                <CategoryIcon category={c} className="h-5 w-5" />
-                {t(`category.${c.key}`)}
-              </button>
-            ))}
-          </div>
-        )}
+        {types.length > 1 && <CategoryChips routes={routes} value={type as never} onChange={(k) => setType(k)} />}
       </NavBar>
 
       <main className="mx-auto max-w-2xl px-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { LocationIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import CategoryIcon from '../components/CategoryIcon'
+import CategoryChips from '../components/CategoryChips'
 import SearchInput from '../components/SearchInput'
 import { gql, ROUTES_QUERY, type RouteSummary, type RoutesPage as RoutesData } from '../lib/api'
 import RouteBadge from '../components/RouteBadge'
@@ -76,26 +77,6 @@ export default function RoutesPage() {
 
   const narrowing = search.trim() !== '' || category !== null
 
-  // A type's highlight uses its lines' own badge colour (the bright BKK yellow for trams), the most common one
-  const chipColors = useMemo(() => {
-    const counts = new Map<string, Map<string, number>>()
-    for (const r of allRoutes) {
-      if (!r.color || replacesCategory(r)) continue
-      const key = categoryOf(r).key
-      const m = counts.get(key) ?? new Map<string, number>()
-      m.set(r.color, (m.get(r.color) ?? 0) + 1)
-      counts.set(key, m)
-    }
-    // Only when most of the type's lines share it (not metro, where every line has its own colour)
-    const out = new Map<string, string>()
-    for (const [k, m] of counts) {
-      const [color, n] = [...m].sort((a, b) => b[1] - a[1])[0]
-      const total = [...m.values()].reduce((a, b) => a + b, 0)
-      if (n / total > 0.6) out.set(k, `#${color}`)
-    }
-    return out
-  }, [allRoutes])
-  const chipColor = (key: string) => chipColors.get(key) ?? CATEGORIES.find((c) => c.key === key)!.color
 
   return (
     <div className="min-h-dvh">
@@ -119,31 +100,7 @@ export default function RoutesPage() {
         <div className="pb-2">
           <SearchInput value={search} onChange={(v) => setParam('q', v || null)} />
         </div>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none]">
-          <button
-            type="button"
-            onClick={() => setParam('type', null)}
-            className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium outline-none focus:outline-none ${!category ? 'bg-accent text-white' : 'bg-fill text-label'}`}
-          >
-            {t('routes.all')}
-          </button>
-          {/* Only types that actually have lines (e.g. 'Other' is usually empty) */}
-          {CATEGORIES.filter((c) => category?.key === c.key || allRoutes.some((r) => categoryOf(r).key === c.key)).map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => setParam('type', c.key)}
-              // Selected: the vehicle type's own colour (tram yellow with dark text, like its badges)
-              className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-sm font-medium outline-none focus:outline-none ${
-                category?.key === c.key ? '' : 'bg-fill text-label'
-              }`}
-              style={category?.key === c.key ? { backgroundColor: chipColor(c.key), color: onColor(chipColor(c.key)) } : undefined}
-            >
-              <CategoryIcon category={c} className="h-5 w-5" color={category?.key === c.key ? onColor(chipColor(c.key)) : undefined} />
-              {t(`category.${c.key}`)}
-            </button>
-          ))}
-        </div>
+        <CategoryChips routes={allRoutes} value={category?.key ?? null} keep={category?.key ?? null} onChange={(k) => setParam('type', k)} />
       </NavBar>
 
       <main className="mx-auto max-w-2xl pb-[env(safe-area-inset-bottom)]">
@@ -254,9 +211,3 @@ export default function RoutesPage() {
 }
 
 
-/** Black or white text, whichever reads better on this background colour. */
-function onColor(bg: string) {
-  const h = bg.replace('#', '')
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
-  return 0.299 * r + 0.587 * g + 0.114 * b > 0.6 ? '#000000' : '#ffffff'
-}

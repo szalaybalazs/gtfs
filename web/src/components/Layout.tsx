@@ -1,3 +1,4 @@
+import { historyIdx, setPageTitle } from '../lib/pageTitles'
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router'
 import { CATEGORIES } from '../lib/categories'
@@ -39,6 +40,25 @@ export default function Layout() {
   // back. Replace-navigations (search typing, filters, time picker) keep the
   // page as is, so inputs keep focus.
   const navType = useNavigationType()
+  // Remember this page's heading under its history position, for the Back button's hint
+  useEffect(() => {
+    const idx = historyIdx()
+    let frame = 0
+    const read = () => {
+      const text = document.querySelector('header h1')?.textContent?.trim() || document.querySelector('main h1')?.textContent?.trim()
+      if (text) setPageTitle(idx, text)
+    }
+    read()
+    const obs = new MutationObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(read)
+    })
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true })
+    return () => {
+      cancelAnimationFrame(frame)
+      obs.disconnect()
+    }
+  }, [location.key])
 
   const [page, setPage] = useState({ key: location.key, dir: 'none' as 'none' | 'forward' | 'back' })
   if (navType !== 'REPLACE' && page.key !== location.key) setPage({ key: location.key, dir: navType === 'POP' ? 'back' : 'forward' })

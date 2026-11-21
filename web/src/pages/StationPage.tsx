@@ -6,7 +6,7 @@ import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
 import { useParams, useSearchParams } from 'react-router'
 import AfterFilter, { useAfter } from '../components/AfterFilter'
 import Alerts from '../components/Alerts'
-import Departures from '../components/Departures'
+import Departures, { MoreButton } from '../components/Departures'
 import NavBar from '../components/NavBar'
 import StationStops from '../components/StationStops'
 import StopInfoCard from '../components/StopInfoCard'
@@ -95,7 +95,10 @@ export default function StationPage() {
   const { after } = useAfter()
   const arrivedOn = useSearchParams()[0].get('trip')
   // With ?from= the stop is already known, so departures load in parallel with the stop group (no waterfall)
-  const departures = useDepartures(ids, { limit: multi ? 20 : 8, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
+  // A whole stop group shows more than one platform; each "Show more" adds 20
+  const [more, setMore] = useState(0)
+  const limit = (from ? 12 : 25) + more * 20
+  const departures = useDepartures(ids, { limit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
 
   return (
     <div className="min-h-dvh">
@@ -180,6 +183,7 @@ export default function StationPage() {
             <section className="space-y-2">
               <Departures
                 toolbar={<AfterFilter stopIds={ids} routeIds={multi ? lineIds : null} />}
+                footer={(departures.data?.departures.length ?? 0) >= limit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}

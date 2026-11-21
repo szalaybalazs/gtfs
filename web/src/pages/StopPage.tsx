@@ -6,7 +6,7 @@ import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
 import { Link, useParams, useSearchParams } from 'react-router'
 import AfterFilter, { useAfter } from '../components/AfterFilter'
 import Alerts from '../components/Alerts'
-import Departures from '../components/Departures'
+import Departures, { MoreButton } from '../components/Departures'
 import { ChevronIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import StopInfoCard from '../components/StopInfoCard'
@@ -58,7 +58,9 @@ export default function StopPage() {
     : []
   const favorite = favoriteOptions.some((o) => has(favoriteId(o)))
 
-  const departures = useDepartures([stopId], { limit: 20, after })
+  const [more, setMore] = useState(0)
+  const limit = 20 + more * 20
+  const departures = useDepartures([stopId], { limit, after })
 
   return (
     <div className="min-h-dvh">
@@ -120,6 +122,7 @@ export default function StopPage() {
                 {view === 'departures' ? (
                   <Departures
                     toolbar={<AfterFilter stopIds={[stopId]} />}
+                    footer={(departures.data?.departures.length ?? 0) >= limit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                     title={null}

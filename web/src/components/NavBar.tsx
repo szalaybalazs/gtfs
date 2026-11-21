@@ -48,7 +48,8 @@ export default function NavBar({
             )}
           </div>
         </div>
-        {title && <h1 className="line-clamp-2 pb-2 text-[30px] leading-tight font-bold tracking-tight">{title}</h1>}
+        {/* Breathing room between the top bar and the big title */}
+        {title && <h1 className="line-clamp-2 pt-2 pb-3 text-[30px] leading-tight font-bold tracking-tight">{title}</h1>}
         {children}
       </div>
     </header>
