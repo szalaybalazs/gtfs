@@ -24,18 +24,18 @@ const maskCss = (url: string) => {
 }
 
 /** Tiny badges row (HTML, for map markers). */
-function badgesHtml(routes: RouteRef[], max = 4, justify = 'center') {
+function badgesHtml(routes: RouteRef[], max = 8, justify = 'center') {
   const shown = routes.slice(0, max)
   const more = routes.length - shown.length
   return (
-    `<div style="display:flex;gap:2px;justify-content:${justify};white-space:nowrap">` +
+    `<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:${justify};width:max-content;max-width:${4 * 34}px">` +
     shown
       .map(
         (r) =>
           `<span style="background:${hex(r.color, '#000')};color:${hex(r.textColor, '#fff')};font:700 10px/14px system-ui;padding:0 4px;min-width:14px;text-align:center;border-radius:3px">${esc(r.shortName ?? '')}</span>`,
       )
       .join('') +
-    (more > 0 ? `<span style="font:600 10px/14px system-ui;color:#555">+${more}</span>` : '') +
+    (more > 0 ? `<span style="background:#6b7280;color:#fff;font:700 10px/14px system-ui;padding:0 4px;min-width:14px;text-align:center;border-radius:3px">…</span>` : '') +
     `</div>`
   )
 }
@@ -44,23 +44,23 @@ export type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>
 
 /**
  * Stop group or platform, like the iOS map: zoomed out a pictogram dot; closer in a small dot with its first few
- * line badges under it (the name and direction are on the card once tapped). A single platform's dot is grey.
+ * line badges under it (the name and direction are on the card once tapped). Coloured by the main kind of vehicle there.
  */
-export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false, platform = false): Icon {
+export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false): Icon {
   const c = mainCategory(station.routes)
   if (!withBadges)
     return {
-      html: `<div style="width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0/.3);display:flex;align-items:center;justify-content:center"><span style="width:20px;height:20px;background:${c.color};${maskCss(c.icon)}"></span></div>`,
-      size: [22, 22],
-      anchor: [11, 11],
+      html: `<div style="width:28px;height:28px;box-sizing:border-box;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 3px rgb(0 0 0/.3);display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;background:#fff;${maskCss(c.icon)}"></span></div>`,
+      size: [28, 28],
+      anchor: [14, 14],
     }
-  const d = selected ? 14 : 10
+  const d = selected ? 20 : 15
   return {
     html:
       // Invisible larger tap area around the dot (the dot alone is too small to hit)
-      `<div style="position:absolute;left:-18px;top:-18px;width:36px;height:36px;border-radius:50%"></div>` +
-      `<div style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${platform ? '#6b7280' : c.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>` +
-      `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%);padding:4px">${badgesHtml(station.routes, 4)}</div>`,
+      `<div style="position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%"></div>` +
+      `<div style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>` +
+      `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%);padding:4px">${badgesHtml(station.routes)}</div>`,
   }
 }
 
@@ -69,12 +69,12 @@ export function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom
   const c = route ? categoryOf(route) : CATEGORIES[CATEGORIES.length - 1]
   const bg = hex(route?.color, c.color)
   const fg = hex(route?.textColor, '#ffffff')
-  if (zoom < GROUPS_ZOOM || !route)
+  if (zoom < GROUPS_ZOOM)
     return {
       html: `<div style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;background:${bg};border:2px solid #fff;box-shadow:0 1px 3px rgb(0 0 0/.35)"></div>`,
       size: [14, 14],
     }
-  const label = esc(route.shortName ?? '')
+  const label = esc(route?.shortName ?? '')
   const size = label.length > 3 ? 34 : 28
   const arrow =
     bearing != null

@@ -5,7 +5,7 @@ import { CATEGORIES } from '../lib/categories'
 import { useT, type MessageKey } from '../lib/i18n'
 import { preloadMap } from '../lib/lazyPages'
 import CategoryIcon from './CategoryIcon'
-import { BusIcon, CloseIcon, GearIcon, HomeIcon, MapIcon, PinIcon } from './Icons'
+import { BusIcon, CloseIcon, GearIcon, HomeIcon, LocationIcon, MapIcon, PinIcon } from './Icons'
 
 const MenuContext = createContext<() => void>(() => {})
 export const useOpenMenu = () => useContext(MenuContext)
@@ -15,6 +15,7 @@ const LINKS: { to: string; label: MessageKey; icon: ReactNode }[] = [
   { to: '/routes', label: 'nav.routes', icon: <BusIcon className="h-5 w-5" /> },
   { to: '/stops', label: 'nav.allStops', icon: <PinIcon className="h-5 w-5" /> },
   { to: '/nearby', label: 'nav.nearby', icon: <PinIcon className="h-5 w-5" /> },
+  { to: '/departures', label: 'tab.nearby', icon: <LocationIcon className="h-5 w-5" /> },
   { to: '/map', label: 'nav.map', icon: <MapIcon className="h-5 w-5" /> },
   { to: '/settings', label: 'nav.settings', icon: <GearIcon className="h-5 w-5" /> },
 ]
@@ -22,10 +23,10 @@ const LINKS: { to: string; label: MessageKey; icon: ReactNode }[] = [
 /** The five tabs along the bottom on phones. `also` are other paths that belong to the same tab. */
 const TABS: { to: string; label: MessageKey; icon: ReactNode; also?: string[] }[] = [
   { to: '/', label: 'nav.home', icon: <HomeIcon className="h-6 w-6" /> },
+  { to: '/departures', label: 'tab.nearby', icon: <LocationIcon className="h-6 w-6" /> },
   { to: '/stops', label: 'tab.stops', icon: <PinIcon className="h-6 w-6" />, also: ['/stations', '/nearby'] },
   { to: '/routes', label: 'nav.routes', icon: <BusIcon className="h-6 w-6" />, also: ['/lines'] },
   { to: '/map', label: 'nav.map', icon: <MapIcon className="h-6 w-6" /> },
-  { to: '/settings', label: 'nav.settings', icon: <GearIcon className="h-6 w-6" /> },
 ]
 
 export const TOP_LEVEL = new Set(LINKS.map((l) => l.to))

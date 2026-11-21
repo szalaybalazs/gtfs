@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { LngLatBounds } from 'maplibre-gl'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { LngLatBoundsLike } from 'maplibre-gl'
 import { Link, useNavigate } from 'react-router'
 import { LayersThree } from '@mynaui/icons-react'
@@ -212,7 +212,7 @@ export default function TransitMap({
           markers.push({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
-            ...groupIcon({ name: s.name ?? station.name, routes }, true, sel, true),
+            ...groupIcon({ name: s.name ?? station.name, routes }, true, sel),
             z: sel ? 1000 : 0,
             // The card only selects; the popup at the bottom is what opens the stop
             onClick: () => (setSelectedStop(s.stopId), setSelected(null)),
@@ -432,7 +432,7 @@ export default function TransitMap({
       {selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
       {selectedStopInfo && !selectedVehicle && (
         // Same bottom card as for a vehicle: name, which way, its lines, and a way in
-        <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
+        <SheetCard onClose={() => setSelectedStop(null)}>
           <button type="button" onClick={() => setSelectedStop(null)} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -447,7 +447,7 @@ export default function TransitMap({
           <Link to={selectedStopInfo.to} className="mt-2 inline-block text-[15px] font-medium text-accent active:opacity-60">
             {t('map.openStop')}
           </Link>
-        </div>
+        </SheetCard>
       )}
       <button
         type="button"
@@ -463,13 +463,45 @@ export default function TransitMap({
   )
 }
 
+/** The bottom card over the map: drag it down (or tap its ✕) to close it, like a bottom sheet. */
+function SheetCard({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+  const [dy, setDy] = useState(0)
+  const start = useRef<number | null>(null)
+  return (
+    <div
+      className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md touch-pan-x rounded-2xl bg-surface p-gutter pr-12 shadow-xl"
+      style={{ transform: dy ? `translateY(${dy}px)` : undefined, transition: start.current == null ? 'transform 180ms ease-out' : undefined, opacity: dy ? Math.max(0.3, 1 - dy / 200) : undefined }}
+      onPointerDown={(e) => {
+        if ((e.target as HTMLElement).closest('a,button')) return
+        start.current = e.clientY
+        e.currentTarget.setPointerCapture(e.pointerId)
+      }}
+      onPointerMove={(e) => {
+        if (start.current != null) setDy(Math.max(0, e.clientY - start.current))
+      }}
+      onPointerUp={() => {
+        const far = dy > 70
+        start.current = null
+        if (far) onClose()
+        else setDy(0)
+      }}
+      onPointerCancel={() => {
+        start.current = null
+        setDy(0)
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 /** Details of the tapped vehicle, as an app card over the map (tap the vehicle again, or the card, to open its trip). */
 function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }) {
   const t = useT()
   const age = v.timestamp ? Math.max(0, Math.round((Date.now() - new Date(v.timestamp).getTime()) / 1000)) : null
   const name = vehicleName(v.vehicleModel)
   return (
-    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
+    <SheetCard onClose={onClose}>
       <button type="button" onClick={onClose} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
         <CloseIcon className="h-4 w-4" />
       </button>
@@ -492,7 +524,7 @@ function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }
           {t('map.openTrip')}
         </Link>
       )}
-    </div>
+    </SheetCard>
   )
 }
 

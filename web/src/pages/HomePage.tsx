@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { LinesCard, LineStopCard, StopCard } from '../components/FavoriteCards'
+import { GearIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import NearbyList from '../components/NearbyList'
 import RouteTile from '../components/RouteTile'
@@ -11,7 +12,16 @@ export default function HomePage() {
   const { favorites, lines, lineStops, stops, multiLines } = useFavorites()
   return (
     <div className="min-h-dvh">
-      <NavBar title={t('nav.home')} menu />
+      <NavBar
+        title={t('nav.home')}
+        menu
+        trailing={
+          // Phones have no side menu and Settings isn't a tab: a gear here
+          <Link to="/settings" aria-label={t('nav.settings')} className="rounded-md p-2 active:opacity-50 md:hidden">
+            <GearIcon className="h-6 w-6" />
+          </Link>
+        }
+      />
       <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {favorites.length === 0 && (
           <p className="rounded-2xl bg-surface p-gutter text-secondary">

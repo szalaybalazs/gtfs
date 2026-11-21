@@ -9,6 +9,7 @@ import { initLocale } from './lib/i18n'
 import { applyTheme } from './lib/theme'
 import HomePage from './pages/HomePage'
 import NearbyPage from './pages/NearbyPage'
+import NearbyDeparturesPage from './pages/NearbyDeparturesPage'
 import AlertsPage from './pages/AlertsPage'
 import LinesPage from './pages/LinesPage'
 import RoutesPage from './pages/RoutesPage'
@@ -45,6 +46,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/stations/:stationId" element={<StationPage />} />
             <Route path="/trips/:tripId" element={<TripPage />} />
             <Route path="/nearby" element={<NearbyPage />} />
+            <Route path="/departures" element={<NearbyDeparturesPage />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

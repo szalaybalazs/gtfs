@@ -223,18 +223,29 @@ struct MapView: View {
     }
 
     private func stopCard(_ m: StopMarker, selected: Bool) -> some View {
-        let tint = m.stopId != nil ? Theme.secondary : m.category.tint
+        let tint = m.category.tint
         return Circle().fill(tint).frame(width: selected ? 14 : 10, height: selected ? 14 : 10)
             .overlay(Circle().stroke(Color.white, lineWidth: 2))
             .overlay(alignment: .top) {
-                HStack(spacing: 2) {
-                    ForEach(m.routes.prefix(4), id: \.routeId) { r in
-                        Text(r.shortName ?? "").font(.system(size: 10, weight: .bold)).lineLimit(1).fixedSize()
-                            .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
-                            .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
-                            .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
+                // Up to two rows of four badges, then "+N"
+                let shown = Array(m.routes.prefix(8))
+                VStack(spacing: 2) {
+                    ForEach(Array(stride(from: 0, to: shown.count, by: 4)), id: \.self) { start in
+                        HStack(spacing: 2) {
+                            ForEach(shown[start..<min(start + 4, shown.count)], id: \.routeId) { r in
+                                Text(r.shortName ?? "").font(.system(size: 10, weight: .bold)).lineLimit(1).fixedSize()
+                                    .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
+                                    .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
+                                    .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
+                            }
+                            // More lines than fit: a grey badge with an ellipsis instead of a count
+                            if start + 4 >= shown.count && m.routes.count > 8 {
+                                Text("…").font(.system(size: 10, weight: .bold)).fixedSize().foregroundStyle(.white)
+                                    .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
+                                    .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
+                            }
+                        }
                     }
-                    if m.routes.count > 4 { Text("+\(m.routes.count - 4)").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.secondary).fixedSize() }
                 }
                 .fixedSize()
                 .offset(y: 14)
@@ -295,9 +306,12 @@ struct MapView: View {
             .overlay(Circle().stroke(selected ? Color.primary : Theme.secondary, lineWidth: 2)).padding(8)
     }
 
+    /// Zoomed out: a coloured circle in the category's colour with its pictogram in white (no outer ring).
     private func groupMarker(_ c: LineCategory, selected: Bool) -> some View {
-        ModeIcon(category: c, size: selected ? 20 : 15)
-            .padding(5).background(Theme.surface, in: Circle()).overlay(Circle().stroke(Theme.separator, lineWidth: 1))
+        let d: CGFloat = selected ? 26 : 22
+        return Circle().fill(c.tint).frame(width: d, height: d)
+            .overlay(Circle().stroke(Color.white, lineWidth: 2))
+            .overlay(ModeIcon(category: c, size: d * 0.55, flat: .white))
             .padding(4)
     }
 

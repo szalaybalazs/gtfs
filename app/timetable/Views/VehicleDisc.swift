@@ -32,7 +32,7 @@ struct VehicleDisc: View {
         let label = line?.shortName ?? ""
         let long = label.count > 3
         let size: CGFloat = long ? 34 : 28
-        if compact || line == nil {
+        if compact {
             Circle().fill(bg).frame(width: 14, height: 14)
                 .overlay(Circle().stroke(Color.white, lineWidth: 2))
                 // Selected: a halo in the line's colour and a bigger dot, like the badge
