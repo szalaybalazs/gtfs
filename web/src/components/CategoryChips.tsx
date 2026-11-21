@@ -45,6 +45,11 @@ export default function CategoryChips({
     return out
   }, [routes])
   const colorOf = (key: string) => colors.get(key) ?? CATEGORIES.find((c) => c.key === key)!.color
+  // Metro lines each have their own colour: picked, the chip runs through all of them (BKK's yellow, red, blue, green)
+  const metroGradient = useMemo(() => {
+    const cs = [...new Set(routes.filter((r) => r.type === 'SUBWAY' && !replacesCategory(r) && r.color).sort((a, b) => (a.shortName ?? '').localeCompare(b.shortName ?? '')).map((r) => `#${r.color}`))]
+    return cs.length > 1 ? `linear-gradient(to right, ${cs.join(', ')})` : null
+  }, [routes])
   const types = CATEGORIES.filter((c) => c.key === keep || routes.some((r) => groupOf(r) === c.key))
 
   return (
@@ -59,16 +64,17 @@ export default function CategoryChips({
       </button>
       {types.map((c) => {
         const on = value === c.key
-        const bg = colorOf(c.key)
+        const gradient = c.key === 'metro' ? metroGradient : null
+        const bg = gradient ? '#000000' : colorOf(c.key)
         return (
           <button
             key={c.key}
             type="button"
             onClick={() => onChange(c.key)}
             className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-sm font-medium outline-none focus:outline-none ${on ? '' : 'bg-fill text-label'}`}
-            style={on ? { backgroundColor: bg, color: onColor(bg) } : undefined}
+            style={on ? (gradient ? { backgroundImage: gradient, color: '#ffffff' } : { backgroundColor: bg, color: onColor(bg) }) : undefined}
           >
-            <CategoryIcon category={c} className="h-5 w-5" color={on ? onColor(bg) : undefined} />
+            <CategoryIcon category={c} className="h-5 w-5" color={on ? (gradient ? '#ffffff' : onColor(bg)) : undefined} />
             {t(`category.${c.key}`)}
           </button>
         )

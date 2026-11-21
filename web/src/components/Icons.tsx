@@ -1,7 +1,6 @@
 import {
   ArrowLeftRight,
   ArrowUpDown,
-  Bike,
   Check,
   ChevronRight,
   ClockCircle,
@@ -38,7 +37,6 @@ export const ChevronIcon = (props: P) => <ChevronRight {...a(props)} />
 export const UpDownIcon = (props: P) => <ArrowUpDown {...a(props)} />
 export const RefreshIcon = (props: P) => <Refresh {...a(props)} />
 export const WheelchairIcon = (props: P) => <Wheelchair {...a(props)} />
-export const BikeIcon = (props: P) => <Bike {...a(props)} />
 export const StarIcon = ({ filled, ...props }: P & { filled?: boolean }) =>
   filled ? <StarSolid {...a(props)} /> : <Star {...a(props)} />
 export const SwapIcon = (props: P) => <ArrowLeftRight {...a(props)} />

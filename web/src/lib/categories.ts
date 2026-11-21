@@ -2,6 +2,7 @@ import busIcon from '../assets/bkk/bus_full.svg'
 import boatIcon from '../assets/bkk/duna_full.svg'
 import otherIcon from '../assets/bkk/funicular_full.svg'
 import metroIcon from '../assets/bkk/metro_full.svg'
+import metroColorIcon from '../assets/bkk/metro_color.svg'
 import nightIcon from '../assets/bkk/suburbanbus_outer.svg'
 import tramIcon from '../assets/bkk/tram_outer.svg'
 import trolleyIcon from '../assets/bkk/trolley_full.svg'
@@ -25,6 +26,9 @@ export const CATEGORIES = [
   { key: 'boat', label: 'Boat', icon: boatIcon, color: '#2b5ba8', test: (r: Routeish) => r.type === 'FERRY' },
   { key: 'other', label: 'Other', icon: otherIcon, color: '#7a6a58', test: () => true },
 ] as const
+
+/** The metro pictogram in full colour: the four lines' colours in its corners (the others are one flat colour). */
+export { metroColorIcon }
 
 export type Category = (typeof CATEGORIES)[number]
 

@@ -8,7 +8,7 @@ import { formatTime } from '../lib/time'
 import { prefetchTrip, type TripPreview } from '../lib/prefetch'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { useNow } from '../lib/useTimetable'
-import { BikeIcon, ChevronIcon, LiveIcon } from './Icons'
+import { ChevronIcon, LiveIcon } from './Icons'
 import RouteBadge from './RouteBadge'
 
 /** How long a departed row stays (seconds) before it collapses away */
@@ -194,8 +194,8 @@ export function DepartureRow({
             {d.terminates && <span className="rounded-md bg-fill px-1.5 text-[12px] leading-[18px] font-semibold text-secondary uppercase">{t('departures.arrives')}</span>}
             {d.frontDoor && shows('frontDoor') && <MarkIcon mark="frontDoor" className="h-4 w-4 text-secondary" />}
             {d.onRequest && shows('demand') && <MarkIcon mark="demand" className="h-4 w-4 text-secondary" />}
-            {d.wheelchairAccessible === 'AVAILABLE' && shows('lowFloor') && <MarkIcon mark="lowFloor" className="h-4 w-4 text-secondary" />}
-            {d.bikesAllowed === 'ALLOWED' && shows('bikes') && <BikeIcon className="h-4 w-4 text-secondary" aria-label={t('common.bikes')} />}
+            {d.wheelchairAccessible === 'AVAILABLE' && shows('lowFloor') && <MarkIcon mark="lowFloor" label={t('common.wheelchair')} className="h-4 w-4 text-secondary" />}
+            {d.bikesAllowed === 'ALLOWED' && shows('bikes') && <MarkIcon mark="bikes" className="h-4 w-4 text-secondary" />}
             {(status === 'late' || status === 'early') && (
               <span className="text-secondary line-through">{formatTime(new Date(time.getTime() - delay! * 1000))}</span>
             )}
