@@ -133,7 +133,16 @@ struct StationDetailView: View {
                     Text(station.name).font(.system(size: 22, weight: .bold))
                     Text(multi ? "Selected lines" : "\(platforms.count) \(platforms.count == 1 ? "stop" : "stops") here")
                         .font(.system(size: 15)).foregroundStyle(Theme.secondary)
-                    LineBadges(lines: multi ? station.routes.filter { target.lines.contains($0.routeId) } : station.routes)
+                    if multi {
+                        LineBadges(lines: station.routes.filter { target.lines.contains($0.routeId) })
+                    } else if !station.routes.isEmpty {
+                        // Whole group: kinds of transport as pictograms, not dozens of badges
+                        HStack(spacing: 6) {
+                            ForEach(LineCategory.allCases.filter { c in station.routes.contains { LineCategory.of($0) == c } }, id: \.self) { ModeIcon(category: $0, size: 24) }
+                            Text(station.routes.count == 1 ? "1 line" : "\(station.routes.count) lines")
+                                .font(.system(size: 15)).foregroundStyle(Theme.secondary).padding(.leading, 2)
+                        }
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
