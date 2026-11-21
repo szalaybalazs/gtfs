@@ -70,10 +70,10 @@ struct FavoritesProvider: AppIntentTimelineProvider {
     }
 
     private static func fetch(_ f: Favorite, longer: Bool) async -> FavoriteData {
-        // A widget shows as many as fit its width, so ask for plenty and a long window (the server's maximum is 6 hours)
+        // A widget shows as many as fit its width: ask for up to 16 over 8 hours (the server currently caps the window at 6)
         var request = f.makeRequest(longer: longer)
-        request.hours = 6
-        request.limit = max(request.limit, 30)
+        request.hours = 8
+        request.limit = 16
         let list = (try? await DeparturesViewModel.fetch(request, client: Network.shared)) ?? []
         let only = f.departureRouteIds.map(Set.init)
         let lines = f.kind == .lineStop ? (f.route.map { [$0.line] } ?? []) : (f.routes ?? []).map(\.line)
