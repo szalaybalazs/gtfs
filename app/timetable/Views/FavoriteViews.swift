@@ -85,6 +85,65 @@ private struct LineTimesRow: View {
     }
 }
 
+/// A bigger favourite: a row per line (its next times) or one departure per row in time order; as many rows as its size allows.
+private struct FavoriteRowsList: View {
+    let departures: [Departure]
+    let pending: Bool
+    var only: Set<String>? = nil
+    let fallback: [LineRef]
+    let grouping: FavGrouping
+    let rows: Int
+
+    private struct Row: Identifiable { let id: String; let line: LineRef; let headsign: String?; let times: [Departure] }
+
+    private func build(now: Foundation.Date) -> [Row] {
+        let upcoming = departures
+            .filter { d in d.route != nil && (only == nil || only!.contains(d.route!.routeId)) && d.departure >= now.addingTimeInterval(-30) }
+            .sorted { $0.departure < $1.departure }
+        if grouping == .time {
+            return upcoming.prefix(rows).map { Row(id: $0.id, line: $0.route!, headsign: $0.headsign, times: [$0]) }
+        }
+        var order: [String] = []
+        var groups: [String: [Departure]] = [:]
+        for d in upcoming {
+            let k = d.route!.routeId
+            if groups[k] == nil { order.append(k) }
+            groups[k, default: []].append(d)
+        }
+        return order.prefix(rows).map { k in
+            let list = Array(groups[k]!.prefix(4))
+            return Row(id: k, line: list[0].route!, headsign: list[0].headsign, times: list)
+        }
+    }
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let list = build(now: context.date)
+            VStack(alignment: .leading, spacing: 8) {
+                if pending || list.isEmpty {
+                    HStack(spacing: 10) {
+                        ForEach(fallback, id: \.routeId) { r in
+                            HStack(spacing: 6) {
+                                LineBadge(line: r, fit: true)
+                                Text(pending ? "…" : "–").font(.system(size: 15)).foregroundStyle(Theme.secondary)
+                            }
+                        }
+                    }
+                } else {
+                    ForEach(list) { row in
+                        HStack(spacing: 8) {
+                            LineBadge(line: row.line, fit: true)
+                            Text(row.headsign ?? "").font(.system(size: 13)).foregroundStyle(Theme.secondary).lineLimit(1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            HStack(spacing: 8) { ForEach(row.times) { ShortTime(departure: $0, now: context.date) } }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// A small yellow "Disruption" pill, shown while an alert for these lines / stops is in effect.
 private struct DisruptionTag: View {
     let routeIds: [String]
@@ -183,7 +242,12 @@ struct FavoriteCard: View {
             let subtitle = towards ?? (fav.kind == .lines ? tr("\((fav.routes ?? []).count) lines") : nil)
             let fallback = fav.kind == .lineStop ? (fav.route.map { [$0.line] } ?? []) : (fav.routes ?? []).map(\.line)
             let card = FavoriteCardBody(title: title, subtitle: subtitle, link: link, alertsFor: (routeIds ?? [], stopIds)) {
-                LineTimesRow(departures: model.departures, pending: !model.loaded, only: routeIds.map(Set.init), fallback: fallback)
+                if (fav.size ?? .small) == .small {
+                    LineTimesRow(departures: model.departures, pending: !model.loaded, only: routeIds.map(Set.init), fallback: fallback)
+                } else {
+                    FavoriteRowsList(departures: model.departures, pending: !model.loaded, only: routeIds.map(Set.init), fallback: fallback,
+                                     grouping: fav.grouping ?? .line, rows: fav.size?.rows ?? 3)
+                }
             }
             Group {
                 if link {
@@ -212,6 +276,25 @@ struct FavoriteSheet: View {
         }
     }
 
+    /// How a saved favourite looks: how many rows it takes, and for more than one, how they are grouped.
+    private func options_(_ option: Favorite) -> some View {
+        let current = store.favorites.first { $0.id == option.id } ?? option
+        let size = current.size ?? .small
+        return VStack(spacing: 8) {
+            Picker("Size", selection: Binding(get: { size }, set: { v in store.update(option.id) { $0.size = v } })) {
+                Text("Small").tag(FavSize.small); Text("Medium").tag(FavSize.medium); Text("Large").tag(FavSize.large)
+            }
+            if size != .small {
+                Picker("Group by", selection: Binding(get: { current.grouping ?? .line }, set: { v in store.update(option.id) { $0.grouping = v } })) {
+                    Text("Line").tag(FavGrouping.line); Text("Time").tag(FavGrouping.time)
+                }
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(12)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -227,13 +310,14 @@ struct FavoriteSheet: View {
                                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(saved ? Theme.accent : Theme.secondary)
                                 }
                                 .padding(.horizontal, 16).padding(.top, 12)
-                                FavoriteCard(fav: option, link: false)
+                                FavoriteCard(fav: store.favorites.first { $0.id == option.id } ?? option, link: false)
                             }
                             .background(Theme.surface)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(saved ? Theme.accent : .clear, lineWidth: 2))
                         }
                         .buttonStyle(.plain)
+                        if saved { options_(option) }
                     }
                 }
                 .padding(16)

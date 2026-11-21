@@ -34,6 +34,53 @@
       }
     },
     "%lld" : {},
+    "%lld earlier stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld earlier stop"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld earlier stops"
+                }
+              }
+            }
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld korábbi megálló"
+          }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paragem anterior"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paragens anteriores"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld lines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -94,6 +141,29 @@
       }
     },
     "%lld m" : {},
+    "%lld min · %@ · %lld stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min · %@ · %lld stops"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld perc · %@ · %lld megálló"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min · %@ · %lld paragens"
+          }
+        }
+      }
+    },
     "%lld min · %lld stops" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -303,6 +373,9 @@
         }
       }
     },
+    "5'" : {},
+    "5' 17:23" : {},
+    "17:23" : {},
     "Accessible" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -565,6 +638,22 @@
         }
       }
     },
+    "Both" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindkettő"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambos"
+          }
+        }
+      }
+    },
     "Bus" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -617,6 +706,22 @@
       }
     },
     "Clear" : {},
+    "Clock time" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Óraidő"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora do relógio"
+          }
+        }
+      }
+    },
     "Close" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1007,6 +1112,22 @@
         }
       }
     },
+    "Group by" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csoportosítás"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrupar por"
+          }
+        }
+      }
+    },
     "Home" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1070,6 +1191,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claro"
+          }
+        }
+      }
+    },
+    "Line" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vonal"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha"
           }
         }
       }
@@ -1268,6 +1405,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "min antes"
+          }
+        }
+      }
+    },
+    "Minutes" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percek"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutos"
           }
         }
       }
@@ -1560,6 +1713,9 @@
         }
       }
     },
+    "One list in time order" : {},
+    "One row per line and direction" : {},
+    "One row per line, its next times" : {},
     "ongoing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1821,6 +1977,7 @@
         }
       }
     },
+    "Route" : {},
     "Route not found." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2400,6 +2557,22 @@
         }
       }
     },
+    "Time" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idő"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora"
+          }
+        }
+      }
+    },
     "Timeline" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2413,6 +2586,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cronologia"
+          }
+        }
+      }
+    },
+    "Times as" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idők formája"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horas como"
           }
         }
       }
@@ -2820,72 +3009,70 @@
         }
       }
     },
-    "%lld min · %@ · %lld stops" : {
+    "Size" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min · %@ · %lld stops"
-          }
-        },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld perc · %@ · %lld megálló"
+            "value" : "Méret"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld min · %@ · %lld paragens"
+            "value" : "Tamanho"
           }
         }
       }
     },
-    "%lld earlier stops" : {
+    "Small" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld earlier stop"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld earlier stops"
-                }
-              }
-            }
-          }
-        },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld korábbi megálló"
+            "value" : "Kicsi"
           }
         },
         "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragem anterior"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragens anteriores"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pequeno"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közepes"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Médio"
+          }
+        }
+      }
+    },
+    "Large" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagy"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grande"
           }
         }
       }

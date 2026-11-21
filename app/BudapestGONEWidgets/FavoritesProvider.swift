@@ -17,6 +17,9 @@ struct FavoriteData {
     let lines: [LineRef]
     let departures: [Departure]
     let url: URL
+    /// The favourite's own settings (nil: the widget's default).
+    var grouping: FavGrouping? = nil
+    var size: FavSize? = nil
 }
 
 struct FavoritesEntry: TimelineEntry {
@@ -27,7 +30,6 @@ struct FavoritesEntry: TimelineEntry {
     /// More than one favourite was asked for (nothing picked in the widget's settings).
     let showsAll: Bool
     /// How the widget is set up to show them.
-    var grouping: DepartureGrouping = .byLine
     var timeStyle: DepartureTimeStyle = .countdown
 }
 
@@ -50,7 +52,7 @@ struct FavoritesProvider: AppIntentTimelineProvider {
         let nextMinute = Date(timeIntervalSinceReferenceDate: (now.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60 + 60)
         let entries = [base] + (0..<Self.entryCount).map { i in
             FavoritesEntry(date: nextMinute.addingTimeInterval(Double(i) * 60), favorites: base.favorites, noFavorites: base.noFavorites, showsAll: base.showsAll,
-                           grouping: base.grouping, timeStyle: base.timeStyle)
+                           timeStyle: base.timeStyle)
         }
         let failed = !base.noFavorites && base.favorites.allSatisfy { $0.departures.isEmpty }
         // Nothing loaded: try again sooner
@@ -72,7 +74,7 @@ struct FavoritesProvider: AppIntentTimelineProvider {
         let picked = configuration.favorite.flatMap { c in saved.first { $0.id == c.id } }
         let all = picked == nil
         let chosen = picked.map { [$0] } ?? Array(saved.prefix(Self.capacity(family, all: true)))
-        guard !chosen.isEmpty else { return FavoritesEntry(date: date, favorites: [], noFavorites: true, showsAll: all, grouping: configuration.grouping, timeStyle: configuration.timeStyle) }
+        guard !chosen.isEmpty else { return FavoritesEntry(date: date, favorites: [], noFavorites: true, showsAll: all, timeStyle: configuration.timeStyle) }
 
         let data = await withTaskGroup(of: (Int, FavoriteData).self) { group in
             for (i, f) in chosen.enumerated() { group.addTask { (i, await Self.fetch(f, longer: picked != nil)) } }
@@ -80,7 +82,7 @@ struct FavoritesProvider: AppIntentTimelineProvider {
             for await r in group { out.append(r) }
             return out.sorted { $0.0 < $1.0 }.map(\.1)
         }
-        return FavoritesEntry(date: date, favorites: data, noFavorites: false, showsAll: all, grouping: configuration.grouping, timeStyle: configuration.timeStyle)
+        return FavoritesEntry(date: date, favorites: data, noFavorites: false, showsAll: all, timeStyle: configuration.timeStyle)
     }
 
     private static func fetch(_ f: Favorite, longer: Bool) async -> FavoriteData {
@@ -90,7 +92,7 @@ struct FavoritesProvider: AppIntentTimelineProvider {
         return FavoriteData(
             id: f.id, title: f.widgetTitle, subtitle: f.widgetSubtitle, lines: lines,
             departures: list.filter { d in d.route != nil && (only == nil || only!.contains(d.route!.routeId)) }.sorted { $0.departure < $1.departure },
-            url: f.stationTarget.url)
+            url: f.stationTarget.url, grouping: f.grouping, size: f.size)
     }
 
     /// Made-up departures for the gallery, placeholder and an empty home screen.
