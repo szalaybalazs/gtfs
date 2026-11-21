@@ -208,20 +208,8 @@ export function DepartureRow({
         {/* Countdown stays plain (black, grey once gone); colour lives on the time line. Live mark in its own gutter. */}
         <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : 'text-label'}`}>
           {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3 text-secondary" aria-hidden />}
-          {unit === 'unit.sec' ? (
-            // Seconds read as one piece ("32s"); the line below stays so rows keep their height
-            <>
-              <p className="text-2xl leading-none font-bold tabular-nums">{t('short.seconds', { n: value })}</p>
-              <p className="text-[11px] font-medium text-secondary" aria-hidden>
-                &nbsp;
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-2xl leading-none font-bold tabular-nums">{value}</p>
-              <p className="text-[11px] font-medium text-secondary">{t(unit)}</p>
-            </>
-          )}
+          <p className="text-2xl leading-none font-bold tabular-nums">{value}</p>
+          <p className="text-[11px] font-medium text-secondary">{t(unit)}</p>
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
