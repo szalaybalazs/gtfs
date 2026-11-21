@@ -122,10 +122,14 @@ struct BoardCountdown: View {
                 .font(.system(size: size, weight: .bold)).monospacedDigit()
                 .lineLimit(1)
                 .frame(height: small ? 16 : 24, alignment: .bottomTrailing)
-            HStack(spacing: 2) {
-                if isLive(d) && !left { LiveIcon(size: small ? 10 : 12) }
-                Text(text.unit ?? " ")
-            }
+                .overlay(alignment: .topTrailing) {
+                    // Live mark right after the number, hanging into the gap between columns so it never shifts the digits
+                    if isLive(d) && !left {
+                        LiveIcon(size: small ? 8 : 10).foregroundStyle(Theme.secondary)
+                            .offset(x: small ? 8 : 10)
+                    }
+                }
+            Text(text.unit ?? " ")
             .font(.system(size: small ? 10 : 11, weight: .medium))
             .foregroundStyle(Theme.secondary)
             .lineLimit(1)
@@ -157,7 +161,7 @@ struct LineBoardRow: View {
                 if d.terminates { ArrivesTag() }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            HStack(spacing: 6) {
+            HStack(spacing: 12) {
                 ForEach(Array(shown.enumerated()), id: \.element.tripId) { i, dep in
                     BoardCountdown(departure: dep, now: now, small: i > 0, fixed: fixed)
                 }
@@ -166,7 +170,6 @@ struct LineBoardRow: View {
                     Color.clear.frame(width: 36, height: 1)
                 }
             }
-            .padding(.trailing, -4)
             .animation(.easeOut(duration: 0.4), value: shown.map(\.tripId))
             Chevron()
         }
