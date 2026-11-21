@@ -8,6 +8,7 @@ query Vehicles($bbox: BboxInput) {
     vehicleLicensePlate
     vehicleModel
     tripStartDate
+    timestamp
     trip {
       tripId
       headsign

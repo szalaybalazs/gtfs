@@ -7,7 +7,7 @@ public class VehiclesQuery: GraphQLQuery {
   public static let operationName: String = "Vehicles"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query Vehicles($bbox: BboxInput) { vehiclePositions(bbox: $bbox) { __typename id latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel tripStartDate trip { __typename tripId headsign route { __typename routeId shortName color textColor type } } } }"#
+      #"query Vehicles($bbox: BboxInput) { vehiclePositions(bbox: $bbox) { __typename id latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel tripStartDate timestamp trip { __typename tripId headsign route { __typename routeId shortName color textColor type } } } }"#
     ))
 
   public var bbox: GraphQLNullable<BboxInput>
@@ -47,6 +47,7 @@ public class VehiclesQuery: GraphQLQuery {
         .field("vehicleLicensePlate", String?.self),
         .field("vehicleModel", String?.self),
         .field("tripStartDate", String?.self),
+        .field("timestamp", TimetableAPI.DateTime?.self),
         .field("trip", Trip?.self),
       ] }
 
@@ -58,6 +59,7 @@ public class VehiclesQuery: GraphQLQuery {
       public var vehicleLicensePlate: String? { __data["vehicleLicensePlate"] }
       public var vehicleModel: String? { __data["vehicleModel"] }
       public var tripStartDate: String? { __data["tripStartDate"] }
+      public var timestamp: TimetableAPI.DateTime? { __data["timestamp"] }
       public var trip: Trip? { __data["trip"] }
 
       /// VehiclePosition.Trip

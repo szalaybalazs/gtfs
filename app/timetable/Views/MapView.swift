@@ -48,7 +48,6 @@ struct MapView: View {
     @State private var layers = MapLayers()
     @State private var selection: MapSelection?
     @Namespace private var mapScope
-    @State private var now = Foundation.Date()
     /// Stops inside the visible area (plus a margin), capped; computed off the main thread when the view settles.
     @State private var visibleStops: [StopMarker] = []
     /// Lines in view, thinned to the zoom: drawing every point of every line exhausts Metal buffers and crashes MapKit.
@@ -65,7 +64,11 @@ struct MapView: View {
     /// Group markers from here, single platforms when closer still (web: GROUPS_ZOOM / STOPS_ZOOM).
     private var platformsZoom: Bool { span < 0.004 }
     private var showVehicles: Bool { layers.vehicles && span < 0.25 }
-    private let tick = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+
+    private var followed: CLLocationCoordinate2D? {
+        guard case .vehicle(let id) = selection else { return nil }
+        return model.vehicles.first { $0.id == id }?.coordinate
+    }
 
     private var visibleVehicles: [Vehicle] {
         Array(model.vehicles.filter { v in
@@ -84,10 +87,6 @@ struct MapView: View {
             }
             .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .onMapCameraChange(frequency: .onEnd) { region = $0.region }
-            .onReceive(tick) { date in
-                // Many vehicles: every other tick, so the map isn't rebuilt ten times a second
-                if showVehicles, visibleVehicles.count < 150 || Int(date.timeIntervalSinceReferenceDate * 10) % 2 == 0 { now = date }
-            }
             .onReceive(morphTick) { date in
                 guard let start = morphStart else { return }
                 let t = min(1, date.timeIntervalSince(start) / MapView.morphSeconds)
@@ -99,6 +98,12 @@ struct MapView: View {
                 morphT = 0; morphStart = Foundation.Date()
             }
             .mapControls { MapScaleView() }
+            // A highlighted vehicle keeps the map centred on it as it moves
+            .onChange(of: followed.map { [$0.latitude, $0.longitude] }) { _, p in
+                guard let p else { return }
+                let c = CLLocationCoordinate2D(latitude: p[0], longitude: p[1])
+                position = .region(MKCoordinateRegion(center: c, span: region.span))
+            }
 
             VStack(spacing: 10) {
                 VStack(spacing: 0) {
@@ -185,7 +190,7 @@ struct MapView: View {
                 // Platforms spread out of their group's spot; groups fade in as the platforms fold back
                 let from: (Double, Double)? = m.stopId != nil && morphStart != nil ? m.homeLat.flatMap { la in m.homeLon.map { (la, $0) } } : nil
                 let at = from.map { CLLocationCoordinate2D(latitude: $0.0 + (m.latitude - $0.0) * e, longitude: $0.1 + (m.longitude - $0.1) * e) } ?? m.coordinate
-                Annotation("", coordinate: at, anchor: m.stopId != nil || span < 0.012 ? .bottom : .center) {
+                Annotation("", coordinate: at, anchor: .center) {
                     marker(m).opacity(morphStart != nil ? max(e, 0.01) : 1)
                         .onTapGesture { selection = .station(m.stationId, stopId: m.stopId) }
                 }
@@ -193,7 +198,7 @@ struct MapView: View {
             // Platforms folding back into their group
             ForEach(ghosts) { m in
                 let h = (m.homeLat ?? m.latitude, m.homeLon ?? m.longitude)
-                Annotation("", coordinate: CLLocationCoordinate2D(latitude: m.latitude + (h.0 - m.latitude) * e, longitude: m.longitude + (h.1 - m.longitude) * e), anchor: .bottom) {
+                Annotation("", coordinate: CLLocationCoordinate2D(latitude: m.latitude + (h.0 - m.latitude) * e, longitude: m.longitude + (h.1 - m.longitude) * e), anchor: .center) {
                     marker(m).opacity(max(1 - e, 0.01)).allowsHitTesting(false)
                 }
             }
@@ -203,7 +208,7 @@ struct MapView: View {
     @MapContentBuilder private var vehiclesContent: some MapContent {
         if showVehicles {
             ForEach(visibleVehicles) { v in
-                Annotation("", coordinate: model.tracks[v.id]?.position(at: now) ?? v.coordinate) {
+                Annotation("", coordinate: v.coordinate) {
                     VehicleDisc(line: v.route, bearing: v.bearing, selected: selection == .vehicle(v.id), compact: span >= 0.02)
                         .onTapGesture { selection = .vehicle(v.id) }
                 }
@@ -215,22 +220,17 @@ struct MapView: View {
 
     @ViewBuilder private func marker(_ m: StopMarker) -> some View {
         let selected = selection == .station(m.stationId, stopId: m.stopId)
-        // Names from about web zoom 15 (stop groups) and for every single platform; a plain pictogram dot further out
+        // Zoomed in (and for every single platform): a small dot with its first few line badges under it; the name is on the card once tapped.
+        // Further out: a plain pictogram dot
         if m.stopId != nil || span < 0.012 || selected { stopCard(m, selected: selected) }
         else { groupMarker(m.category, selected: selected) }
     }
 
-    /// Name, direction and a few line badges, like the web's stop cards: the card sits centred above the stop, a pin dot on the stop.
     private func stopCard(_ m: StopMarker, selected: Bool) -> some View {
         let tint = m.stopId != nil ? Theme.secondary : m.category.tint
-        return VStack(spacing: 3) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(m.name).font(.system(size: 12, weight: .semibold)).lineLimit(1)
-                    .frame(maxWidth: 170, alignment: .leading)
-                if !m.towards.isEmpty {
-                    Text("▸ " + m.towards.prefix(2).joined(separator: " / ")).font(.system(size: 11)).foregroundStyle(Theme.secondary).lineLimit(1)
-                        .frame(maxWidth: 170, alignment: .leading)
-                }
+        return Circle().fill(tint).frame(width: selected ? 14 : 10, height: selected ? 14 : 10)
+            .overlay(Circle().stroke(Color.white, lineWidth: 2))
+            .overlay(alignment: .top) {
                 HStack(spacing: 2) {
                     ForEach(m.routes.prefix(4), id: \.routeId) { r in
                         Text(r.shortName ?? "").font(.system(size: 10, weight: .bold)).lineLimit(1).fixedSize()
@@ -240,14 +240,10 @@ struct MapView: View {
                     }
                     if m.routes.count > 4 { Text("+\(m.routes.count - 4)").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.secondary).fixedSize() }
                 }
+                .fixedSize()
+                .offset(y: 14)
             }
-            .padding(.horizontal, 7).padding(.vertical, 5)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(tint, lineWidth: selected ? 3 : 1.5))
-            Circle().fill(tint).frame(width: 10, height: 10).overlay(Circle().stroke(Color.white, lineWidth: 2))
-        }
-        .fixedSize()
-        .offset(y: 5)
+            .padding(10)
     }
 
     /// Lines touching the view (with a margin), points closer together than the screen can show dropped.
@@ -374,6 +370,13 @@ private struct VehicleCard: View {
                 Text(vehicle.headsign ?? tr("Unknown destination")).font(.system(size: 17, weight: .semibold)).lineLimit(2)
                     .padding(.trailing, 28)
             }
+            if let updated = vehicle.updated {
+                TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                    let age = max(0, Int(ctx.date.timeIntervalSince(updated)))
+                    Text(age < 60 ? tr("Updated \(age)s ago") : tr("Updated \(age / 60) min ago"))
+                        .font(.system(size: 13)).foregroundStyle(Theme.secondary).monospacedDigit()
+                }
+            }
             let info = [vehicle.model, vehicle.plate].compactMap { $0 }.joined(separator: " · ")
             if !info.isEmpty { Text(info).font(.system(size: 15)).foregroundStyle(Theme.secondary) }
             if delayKnown, let delay {
@@ -406,12 +409,8 @@ private struct StopCard: View {
     let station: Station
     let stopId: String?
     let close: () -> Void
-    @State private var model = DeparturesViewModel()
-
     private var platform: Platform? { station.platforms.first { $0.stopId == stopId } }
-    private var request: DeparturesRequest {
-        DeparturesRequest(stopIds: stopId.map { [$0] } ?? station.sortedPlatforms.map(\.stopId), limit: 5)
-    }
+    private var lines: [LineRef] { platform?.routes ?? station.routes }
 
     var body: some View {
         CardChrome(close: close) {
@@ -419,23 +418,13 @@ private struct StopCard: View {
             if let p = platform, !p.headsigns.isEmpty {
                 Text(tr("towards \(p.headsigns.joined(separator: " / "))")).font(.system(size: 13)).foregroundStyle(Theme.secondary)
             }
-            TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                VStack(spacing: 6) {
-                    ForEach(model.departures.filter { !$0.terminates }.prefix(5)) { d in
-                        HStack(spacing: 10) {
-                            if let r = d.route { LineBadge(line: r) }
-                            Text(d.headsign ?? "—").font(.system(size: 15)).lineLimit(1)
-                            Spacer()
-                            let c = Countdown.text(seconds: d.time.timeIntervalSince(ctx.date), at: d.time, fixed: false)
-                            Text(c.unit.map { "\(c.value) \($0)" } ?? c.value).font(.system(size: 15, weight: .semibold)).monospacedDigit()
-                        }
-                    }
-                }
+            // Just the lines that stop here; times are on the departures page
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) { ForEach(lines, id: \.routeId) { r in LineBadge(line: r) } }
             }
             NavigationLink(value: StationTarget(stationId: station.stationId, from: stopId)) {
                 Text("Departures →").font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
             }
         }
-        .task(id: request) { await model.run(request) }
     }
 }

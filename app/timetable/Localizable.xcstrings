@@ -1,53 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
-    " " : {},
-    "%lld more ongoing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "még %lld folyamatban"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mais %lld em curso"
-          }
-        }
-      }
+    "" : {
+
     },
-    "%lld planned" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld tervezett"
-          }
-        },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld agendado"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld agendados"
-                }
-              }
-            }
-          }
-        }
-      }
+    " " : {
+
     },
     "-%llds" : {
       "extractionState" : "manual",
@@ -66,248 +24,18 @@
         }
       }
     },
-    "Accessible" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Akadálymentes"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acessível"
-          }
-        }
-      }
+    "–" : {
+
     },
-    "from %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kezdete: %@"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "a partir de %@"
-          }
-        }
-      }
+    "…" : {
+
     },
-    "No details." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs részletes leírás."
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem detalhes."
-          }
-        }
-      }
+    "'" : {
+
     },
-    "No service changes." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs forgalmi változás."
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem alterações de serviço."
-          }
-        }
-      }
+    "%lld" : {
+
     },
-    "Ongoing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folyamatban"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Em curso"
-          }
-        }
-      }
-    },
-    "ongoing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "visszavonásig"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "em curso"
-          }
-        }
-      }
-    },
-    "Open in browser" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megnyitás böngészőben"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir no navegador"
-          }
-        }
-      }
-    },
-    "Planned" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tervezett"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agendados"
-          }
-        }
-      }
-    },
-    "See all" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Összes"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ver tudo"
-          }
-        }
-      }
-    },
-    "Service changes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forgalmi változások"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alterações de serviço"
-          }
-        }
-      }
-    },
-    "since %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ óta"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "desde %@"
-          }
-        }
-      }
-    },
-    "today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ma"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "hoje"
-          }
-        }
-      }
-    },
-    "tomorrow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "holnap"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "amanhã"
-          }
-        }
-      }
-    },
-    "until %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@-ig"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "até %@"
-          }
-        }
-      }
-    },
-    "–" : {},
-    "…" : {},
-    "'" : {},
-    "%lld" : {},
     "%lld lines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -367,7 +95,9 @@
         }
       }
     },
-    "%lld m" : {},
+    "%lld m" : {
+
+    },
     "%lld min · %lld stops" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -415,6 +145,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld min atrasado"
+          }
+        }
+      }
+    },
+    "%lld more ongoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "még %lld folyamatban"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mais %lld em curso"
+          }
+        }
+      }
+    },
+    "%lld planned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tervezett"
+          }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld agendado"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld agendados"
+                }
+              }
+            }
           }
         }
       }
@@ -495,7 +271,9 @@
         }
       }
     },
-    "%lld'" : {},
+    "%lld'" : {
+
+    },
     "%llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -513,7 +291,9 @@
         }
       }
     },
-    "+%lld" : {},
+    "+%lld" : {
+
+    },
     "⋯ Earlier" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -527,6 +307,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "⋯ Anteriores"
+          }
+        }
+      }
+    },
+    "Accessible" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akadálymentes"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acessível"
           }
         }
       }
@@ -826,6 +623,9 @@
           }
         }
       }
+    },
+    "Clear" : {
+
     },
     "Close" : {
       "extractionState" : "manual",
@@ -1145,6 +945,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A obter a sua localização…"
+          }
+        }
+      }
+    },
+    "from %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kezdete: %@"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a partir de %@"
           }
         }
       }
@@ -1565,6 +1382,23 @@
         }
       }
     },
+    "No details." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs részletes leírás."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem detalhes."
+          }
+        }
+      }
+    },
     "No events" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1578,6 +1412,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sem eventos"
+          }
+        }
+      }
+    },
+    "No service changes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs forgalmi változás."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem alterações de serviço."
           }
         }
       }
@@ -1650,7 +1501,9 @@
         }
       }
     },
-    "OK" : {},
+    "OK" : {
+
+    },
     "On time" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1664,6 +1517,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A horas"
+          }
+        }
+      }
+    },
+    "ongoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visszavonásig"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "em curso"
+          }
+        }
+      }
+    },
+    "Ongoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folyamatban"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em curso"
+          }
+        }
+      }
+    },
+    "Open in browser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megnyitás böngészőben"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir no navegador"
           }
         }
       }
@@ -1749,6 +1653,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Colar JSON"
+          }
+        }
+      }
+    },
+    "Planned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tervezett"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agendados"
+          }
+        }
+      }
+    },
+    "Planned (one)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planned"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tervezett"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agendado"
           }
         }
       }
@@ -1957,6 +1901,23 @@
         }
       }
     },
+    "See all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Összes"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver tudo"
+          }
+        }
+      }
+    },
     "Selected lines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1970,6 +1931,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Linhas selecionadas"
+          }
+        }
+      }
+    },
+    "Service changes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forgalmi változások"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterações de serviço"
           }
         }
       }
@@ -2055,6 +2033,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mostrar a minha localização"
+          }
+        }
+      }
+    },
+    "since %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ óta"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desde %@"
           }
         }
       }
@@ -2178,7 +2173,9 @@
         }
       }
     },
-    "Tab bar icons: Mynaui Icons, MIT License, Copyright (c) Praveen Juge.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." : {},
+    "Tab bar icons: Mynaui Icons, MIT License, Copyright (c) Praveen Juge.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." : {
+
+    },
     "Tap the star on a line or a stop to pin it here." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2349,6 +2346,23 @@
         }
       }
     },
+    "today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ma"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hoje"
+          }
+        }
+      }
+    },
     "Today" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2362,6 +2376,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoje"
+          }
+        }
+      }
+    },
+    "tomorrow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "holnap"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "amanhã"
           }
         }
       }
@@ -2485,6 +2516,23 @@
         }
       }
     },
+    "until %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@-ig"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "até %@"
+          }
+        }
+      }
+    },
     "Upcoming · starts %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2536,6 +2584,9 @@
         }
       }
     },
+    "Updated %lld min ago" : {
+
+    },
     "updated %lld s ago" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2552,6 +2603,9 @@
           }
         }
       }
+    },
+    "Updated %llds ago" : {
+
     },
     "Use my location" : {
       "extractionState" : "manual",
@@ -2634,29 +2688,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A SUA VIAGEM"
-          }
-        }
-      }
-    },
-    "Planned (one)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Planned"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tervezett"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agendado"
           }
         }
       }

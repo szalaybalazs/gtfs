@@ -39,30 +39,17 @@ struct Vehicle: Identifiable, Hashable {
     let serviceDate: String?
     let headsign: String?
     let route: LineRef?
+    /// When the vehicle last reported its position.
+    var updated: Foundation.Date? = nil
 
     static func == (a: Vehicle, b: Vehicle) -> Bool { a.id == b.id && a.coordinate.latitude == b.coordinate.latitude && a.coordinate.longitude == b.coordinate.longitude }
     func hash(into h: inout Hasher) { h.combine(id) }
-}
-
-/// Where a vehicle was and where it is going, so it glides between two reports.
-struct VehicleTrack {
-    var from: CLLocationCoordinate2D
-    var to: CLLocationCoordinate2D
-    var start: Foundation.Date
-    var duration: TimeInterval
-
-    func position(at now: Foundation.Date) -> CLLocationCoordinate2D {
-        let t = min(1, max(0, now.timeIntervalSince(start) / duration))
-        return CLLocationCoordinate2D(latitude: from.latitude + (to.latitude - from.latitude) * t,
-                                      longitude: from.longitude + (to.longitude - from.longitude) * t)
-    }
 }
 
 @MainActor
 @Observable
 final class MapViewModel {
     private(set) var vehicles: [Vehicle] = []
-    private(set) var tracks: [String: VehicleTrack] = [:]
     private(set) var stations: [Station] = []
     private(set) var lines: [LineFeature] = []
     private var linesRequested = false
@@ -80,21 +67,23 @@ final class MapViewModel {
             minLat: region.center.latitude - region.span.latitudeDelta / 2 * m, minLon: region.center.longitude - region.span.longitudeDelta / 2 * m,
             maxLat: region.center.latitude + region.span.latitudeDelta / 2 * m, maxLon: region.center.longitude + region.span.longitudeDelta / 2 * m)
         guard let data = try? await client.fetch(VehiclesQuery(bbox: .some(bbox))), !Task.isCancelled else { return }
-        let now = Foundation.Date()
         var next: [Vehicle] = []
-        var newTracks: [String: VehicleTrack] = [:]
         for v in data.vehiclePositions.compactMap({ $0 }) {
             guard let lat = v.latitude, let lon = v.longitude else { continue }
             let to = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             let route = v.trip?.route.map { r in LineRef(routeId: r.routeId, shortName: r.shortName, color: r.color, textColor: r.textColor, type: r.type?.rawValue) }
-            next.append(Vehicle(id: v.id, coordinate: to, bearing: v.bearing, label: v.vehicleLabel, plate: v.vehicleLicensePlate, model: v.vehicleModel,
-                                tripId: v.trip?.tripId, serviceDate: v.tripStartDate, headsign: v.trip?.headsign, route: route))
-            // Glide from wherever it is drawn now
-            let from = tracks[v.id]?.position(at: now) ?? to
-            newTracks[v.id] = VehicleTrack(from: from, to: to, start: now, duration: Self.refreshSeconds)
+            var vehicle = Vehicle(id: v.id, coordinate: to, bearing: v.bearing, label: v.vehicleLabel, plate: v.vehicleLicensePlate, model: v.vehicleModel,
+                                  tripId: v.trip?.tripId, serviceDate: v.tripStartDate, headsign: v.trip?.headsign, route: route,
+                                  updated: v.timestamp.flatMap(APIDate.parse))
+            // A vehicle never goes back in time: an older fix than the one already held is ignored
+            if let old = vehicles.first(where: { $0.id == v.id }), let o = old.updated, let n = vehicle.updated, n < o {
+                vehicle = old
+                next.append(vehicle)
+                continue
+            }
+            next.append(vehicle)
         }
         vehicles = next
-        tracks = newTracks
     }
 
     private var stationCache: [String: Station] = [:]
