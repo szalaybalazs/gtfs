@@ -1,3 +1,5 @@
+import { RADII, useNearbyRadius, type Radius } from '../lib/nearbyRadius'
+import { formatDistance } from '../lib/geo'
 import { CircleHalf, Moon, Sun } from '@mynaui/icons-react'
 import type { ReactNode } from 'react'
 import Menu from '../components/Menu'
@@ -57,6 +59,7 @@ export default function SettingsPage() {
   const t = useT()
   const [theme, setThemeState] = useState(getTheme)
   const [language, setLanguage] = useLocaleSetting()
+  const [radius, setRadius] = useNearbyRadius()
   const { favorites, clear } = useFavorites()
 
   return (
@@ -89,6 +92,26 @@ export default function SettingsPage() {
               icon={
                 <span className="flex items-center gap-1 text-[17px] text-secondary">
                   {t(LANGUAGES.find((o) => o.value === language)!.label)}
+                  <UpDownIcon className="h-4 w-4" />
+                </span>
+              }
+            />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="px-1 pb-2 text-xl font-bold">{t('nav.nearby')}</h2>
+          {/* How far "Nearby stops" looks; wider helps where stops are sparse */}
+          <div className="flex items-center justify-between rounded-2xl bg-surface py-1 pr-1 pl-4">
+            <span className="text-[17px]">{t('settings.radius')}</span>
+            <Menu
+              label={t('settings.radius')}
+              value={String(radius)}
+              options={RADII.map((r) => ({ value: String(r), title: formatDistance(r) }))}
+              onChange={(v) => setRadius(Number(v) as Radius)}
+              icon={
+                <span className="flex items-center gap-1 text-[17px] text-secondary">
+                  {formatDistance(radius)}
                   <UpDownIcon className="h-4 w-4" />
                 </span>
               }

@@ -16,11 +16,44 @@ type State = {
  * position on mount when `auto` is set, otherwise only when `request` is
  * called.
  */
+/**
+ * Dev only: a fake position for testing far from any stop.
+ * Open the app once with ?mockLocation=kalvin (or =47.4897,19.0613), and =off to stop.
+ * Remembered in localStorage; never active in production builds.
+ */
+const MOCK_PLACES: Record<string, Coords> = {
+  kalvin: { lat: 47.4897, lon: 19.0613 },
+  deak: { lat: 47.4977, lon: 19.0544 },
+  szell: { lat: 47.5073, lon: 19.0236 },
+}
+function mockLocation(): Coords | null {
+  if (!import.meta.env.DEV) return null
+  try {
+    const param = new URLSearchParams(window.location.search).get('mockLocation')
+    if (param === 'off') localStorage.removeItem('mock-location')
+    else if (param) {
+      const named = MOCK_PLACES[param.toLowerCase()]
+      const [lat, lon] = param.split(',').map(Number)
+      const coords = named ?? (Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : null)
+      if (coords) localStorage.setItem('mock-location', JSON.stringify(coords))
+    }
+    const saved = localStorage.getItem('mock-location')
+    return saved ? (JSON.parse(saved) as Coords) : null
+  } catch {
+    return null
+  }
+}
+
 export function useGeolocation(auto = false) {
   const t = useT()
   const [state, setState] = useState<State>({ coords: null, failure: null, loading: false })
 
   const request = useCallback(() => {
+    const mock = mockLocation()
+    if (mock) {
+      setState({ coords: mock, failure: null, loading: false })
+      return
+    }
     if (!('geolocation' in navigator)) {
       setState((s) => ({ ...s, failure: { code: 'unsupported' } }))
       return

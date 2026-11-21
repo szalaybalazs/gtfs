@@ -18,8 +18,11 @@ export default function RouteTile({
   selected,
   selecting,
   onSelect,
+  to,
 }: {
   route: TileRoute
+  /** Where the tile goes (default: the line's page) */
+  to?: string
   compact?: boolean
   selected?: boolean
   selecting?: boolean
@@ -35,7 +38,7 @@ export default function RouteTile({
 
   return (
     <Link
-      to={`/routes/${encodeURIComponent(route.routeId)}`}
+      to={to ?? `/routes/${encodeURIComponent(route.routeId)}`}
       title={route.desc ?? route.longName ?? undefined}
       aria-pressed={selecting ? !!selected : undefined}
       onPointerDown={(e) => {

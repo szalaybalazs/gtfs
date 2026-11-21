@@ -72,7 +72,7 @@ export default function HomePage() {
               {t('home.seeAll')}
             </Link>
           </div>
-          <NearbyList radius={500} limit={5} />
+          <NearbyList limit={5} />
         </section>
       </main>
     </div>
