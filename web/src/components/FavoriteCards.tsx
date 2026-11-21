@@ -52,7 +52,7 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
               {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
               <span className="flex items-center gap-3 pr-2">
                 {times.slice(0, 4).map((d) => (
-                  <Countdown key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} small />
+                  <Countdown key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} small inline />
                 ))}
               </span>
             </span>

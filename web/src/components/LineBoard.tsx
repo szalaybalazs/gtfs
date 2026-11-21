@@ -129,7 +129,20 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
  * - an hour or more either way (sparse lines, far "Earlier" rows): the clock time, set smaller to fit
  * - the live mark sits just after the number, in the gap between columns
  */
-export function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now: Date; small?: boolean; fixed?: boolean }) {
+export function Countdown({
+  d,
+  now,
+  small = false,
+  fixed = false,
+  inline = false,
+}: {
+  d: Departure
+  now: Date
+  small?: boolean
+  fixed?: boolean
+  /** In a flowing row next to a badge (favourites): natural width instead of a fixed column */
+  inline?: boolean
+}) {
   const t = useT()
   const at = new Date(d.terminates ? d.arrival : d.departure)
   const seconds = (at.getTime() - now.getTime()) / 1000
@@ -145,7 +158,7 @@ export function Countdown({ d, now, small = false, fixed = false }: { d: Departu
         : countdown(seconds)
   const size = clock ? (small ? 'text-[12px]' : 'text-[15px]') : small ? 'text-[16px]' : 'text-2xl'
   return (
-    <div className={`text-right whitespace-nowrap ${small ? 'w-9 text-secondary' : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`text-right whitespace-nowrap ${small ? `${inline ? '' : 'w-9'} text-secondary` : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
       {/* Same line height for clock times and countdowns, so the unit lines stay level */}
       <p className={`relative flex items-end justify-end font-bold tabular-nums ${small ? 'h-4' : 'h-6'} leading-none ${size}`}>
         <span data-value>{value}</span>
