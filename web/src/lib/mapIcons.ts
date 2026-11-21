@@ -67,21 +67,6 @@ export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges:
   }
 }
 
-/** Single stop: a small card with its direction and lines, pinned by a dot in its main category colour. */
-export function stopIcon(routes: RouteRef[], towards: string[] = []): Icon {
-  const c = mainCategory(routes)
-  return {
-    html:
-      `<div style="position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 5px));display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;padding:3px 5px;background:#fff;border-radius:7px;border:1.5px solid ${c.color};box-shadow:0 1px 4px rgb(0 0 0/.25);white-space:nowrap">` +
-      (towards.length
-        ? `<div style="font:500 9px/11px system-ui;color:#555;max-width:110px;overflow:hidden;text-overflow:ellipsis">▸ ${esc(towards.slice(0, 2).join(' / '))}</div>`
-        : '') +
-      badgesHtml(routes, 3, 'flex-start') +
-      `</div>` +
-      `<div style="position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:${c.color};border:2px solid #fff;box-sizing:border-box"></div>`,
-  }
-}
-
 /** Vehicle: a round marker in the line's colour with its number; an arrow on the rim shows the heading. */
 export function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom: number, selected: boolean): Icon {
   const c = route ? categoryOf(route) : CATEGORIES[CATEGORIES.length - 1]

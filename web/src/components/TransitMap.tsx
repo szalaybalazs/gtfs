@@ -8,7 +8,7 @@ import { CloseIcon, LocationIcon } from './Icons'
 import RouteBadge from './RouteBadge'
 import { gql, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
 import { distance } from '../lib/geo'
-import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, stopIcon, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
+import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
 import { formatTime } from '../lib/time'
 import { LIVE_ICON_HTML, statusCss, type RealtimeStatus } from '../lib/realtimeStatus'
 import { categoryOf } from '../lib/categories'
@@ -212,10 +212,14 @@ export default function TransitMap({
           markers.push({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
-            ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true, s.headsigns ?? []) : stopIcon(routes, s.headsigns ?? [])),
+            ...groupIcon({ name: s.name ?? station.name, routes }, true, sel, s.headsigns ?? []),
+            // Branch out from the group's spot when zooming in
+            from: [station.lon, station.lat],
+            animate: true,
+            glideMs: 450,
             z: sel ? 1000 : 0,
-            onClick: () =>
-              sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`) : (setSelectedStop(s.stopId), setSelected(null)),
+            // The card only selects; the popup at the bottom is what opens the stop
+            onClick: () => (setSelectedStop(s.stopId), setSelected(null)),
           })
         }
       } else {
@@ -227,7 +231,7 @@ export default function TransitMap({
           // First tap shows the card (or highlights it); tapping it again opens the stop
           ...groupIcon(station, badgesZoom || sel, sel),
           z: sel ? 1000 : 0,
-          onClick: () => (sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}`) : (setSelectedStop(station.stationId), setSelected(null))),
+          onClick: () => (setSelectedStop(station.stationId), setSelected(null)),
         })
       }
     }
@@ -452,7 +456,7 @@ export default function TransitMap({
         onClick={location.request}
         aria-label={t('map.showMyLocation')}
         className={`absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-accent shadow-lg active:opacity-70 ${
-          selectedVehicle || selectedStopInfo ? 'bottom-[calc(env(safe-area-inset-bottom)+9.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom)+1.5rem)]'
+          'bottom-[calc(env(safe-area-inset-bottom)+1.5rem)]'
         }`}
       >
         <LocationIcon filled={!!location.coords} className={`h-5 w-5 ${location.loading ? 'animate-pulse' : ''}`} />

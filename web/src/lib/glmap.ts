@@ -116,6 +116,9 @@ export type HtmlMarker = {
   paths?: LngLat[][] | null
   /** Glide to new positions at all (straight line if there's no path) */
   animate?: boolean
+  /** Where a new marker starts from, gliding to `at` (stops branching out of their group) */
+  from?: LngLat
+  glideMs?: number
 }
 
 const GLIDE_MS = 1500
@@ -194,8 +197,8 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
         inner.style.cssText += `;opacity:0;scale:.6;transition:opacity ${FADE_MS}ms,scale ${FADE_MS}ms;transform-origin:0 0`
         el.appendChild(inner)
         requestAnimationFrame(() => requestAnimationFrame(() => ((inner.style.opacity = '1'), (inner.style.scale = '1'))))
-        const marker = new maplibregl.Marker({ element: el, anchor: 'top-left' }).setLngLat(item.at).addTo(map)
-        entry = { marker, el, inner, html: '', item, at: item.at }
+        const marker = new maplibregl.Marker({ element: el, anchor: 'top-left' }).setLngLat(item.from ?? item.at).addTo(map)
+        entry = { marker, el, inner, html: '', item, at: item.from ?? item.at }
         const e = entry
         el.addEventListener('click', (ev) => {
           ev.stopPropagation()
@@ -222,7 +225,7 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
         const start = performance.now()
         const e = entry
         const step = (now: number) => {
-          const t = Math.min(1, (now - start) / GLIDE_MS)
+          const t = Math.min(1, (now - start) / (item.glideMs ?? GLIDE_MS))
           e.marker.setLngLat(at(1 - (1 - t) ** 3))
           e.anim = t < 1 ? requestAnimationFrame(step) : undefined
         }
