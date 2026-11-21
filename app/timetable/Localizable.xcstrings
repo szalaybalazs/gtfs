@@ -1457,6 +1457,28 @@
           }
         }
       }
+    },
+    "Mynaui icons": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mynaui ikonok"
+          }
+        }
+      }
+    },
+    "Acknowledgements": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Köszönetnyilvánítás"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -10,25 +10,26 @@ import TimetableAPI
 
 struct ContentView: View {
     @State private var path = NavigationPath()
+    @State private var tab = 0
     @State private var settings = AppSettings.shared
 
     var body: some View {
-        TabView {
+        TabView(selection: $tab) {
             NavigationStack { HomeView() }
-                .tabItem { Label("Home", systemImage: "house.fill") }
+                .tabItem { Label { Text("Home") } icon: { Image(tab == 0 ? "tab_home_solid" : "tab_home") } }.tag(0)
             NavigationStack { StationsView() }
-                .tabItem { Label("Stops", systemImage: "mappin.and.ellipse") }
+                .tabItem { Label { Text("Stops") } icon: { Image(tab == 1 ? "tab_pin_solid" : "tab_pin") } }.tag(1)
             NavigationStack(path: $path) {
                 RoutesView()
                     .navigationDestination(for: TimetableQuery.Data.Timetable.self) { event in
                         Text("EVENT")
                     }
             }
-            .tabItem { Label("Routes", systemImage: "tram.fill") }
+            .tabItem { Label { Text("Routes") } icon: { Image(tab == 2 ? "tab_routes_solid" : "tab_routes") } }.tag(2)
             NavigationStack { MapView() }
-                .tabItem { Label("Map", systemImage: "map") }
+                .tabItem { Label { Text("Map") } icon: { Image(tab == 3 ? "tab_map_solid" : "tab_map") } }.tag(3)
             NavigationStack { SettingsView() }
-                .tabItem { Label("Settings", systemImage: "gear") }
+                .tabItem { Label { Text("Settings") } icon: { Image(tab == 4 ? "tab_settings_solid" : "tab_settings") } }.tag(4)
         }
         .environment(settings)
         .environment(\.locale, settings.language == .auto ? Locale.current : L10n.locale)
