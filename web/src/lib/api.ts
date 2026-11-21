@@ -419,3 +419,10 @@ export const SHARED_STATIONS_QUERY = /* GraphQL */ `
     }
   }
 `
+
+/** BKK lines for the map's Lines layer: GeoJSON FeatureCollection as a string (route types to include). */
+export const ROUTE_LINES_QUERY = /* GraphQL */ `
+  query RouteLines($types: [RouteType!]) {
+    routeLines(types: $types)
+  }
+`

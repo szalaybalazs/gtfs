@@ -3,12 +3,16 @@ import type { LngLatBounds } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { LngLatBoundsLike } from 'maplibre-gl'
 import { Link, useNavigate } from 'react-router'
+import { LayersThree } from '@mynaui/icons-react'
 import { CloseIcon, LocationIcon } from './Icons'
 import RouteBadge from './RouteBadge'
-import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
+import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
 import { distance, roundedHull } from '../lib/geo'
 import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, mainCategory, stopIcon, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
 import { formatTime } from '../lib/time'
+import { categoryOf } from '../lib/categories'
+import { useMapLayers } from '../lib/mapLayers'
+import LayersMenu from './LayersMenu'
 import { tappedMarker, useGeoJson, useGlMap, useMarkers, type GlMap, type HtmlMarker } from '../lib/glmap'
 import { useGeolocation } from '../lib/useGeolocation'
 import { vehicleName } from '../lib/vehicle'
@@ -61,6 +65,8 @@ export default function TransitMap({
   const map = useGlMap(container, bounds ? { bounds, padding: 48 } : { center: DEFAULT_CENTER, zoom: 15 })
   // With a trip: just that trip until "show everything"
   const [showAll, setShowAll] = useState(!trip)
+  const [layers] = useMapLayers()
+  const [layersOpen, setLayersOpen] = useState(false)
   const [selectedTripStop, setSelectedTripStop] = useState<string | null>(null)
   const navigate = useNavigate()
   const [view, setView] = useState<View | null>(null)
@@ -92,7 +98,7 @@ export default function TransitMap({
 
   // Stop groups around the centre; radius covers the visible area (capped), rounded so small pans reuse the cache
   const zoom = view?.zoom ?? 0
-  const enabled = !!view && zoom >= GROUPS_ZOOM && showAll
+  const enabled = !!view && zoom >= GROUPS_ZOOM && showAll && layers.stops
   const round = (n: number) => Math.round(n * 500) / 500
   const center = view ? { lat: round(view.center.lat), lon: round(view.center.lon) } : { lat: 0, lon: 0 }
   // Farthest visible corner from the (rounded) centre, plus slack: a stop group's
@@ -149,9 +155,9 @@ export default function TransitMap({
           v.latitude != null &&
           v.longitude != null &&
           !!view &&
-          (showAll ? view.bounds.contains([v.longitude, v.latitude]) : v.trip?.tripId === trip?.tripId),
+          (v.trip?.tripId === trip?.tripId || (showAll && layers.vehicles && view.bounds.contains([v.longitude, v.latitude]))),
       ),
-    [vehicleQuery.data, view, showAll, trip?.tripId],
+    [vehicleQuery.data, view, showAll, trip?.tripId, layers.vehicles],
   )
 
   const groups = useMemo(() => (stations.data?.stationsByRadius ?? []).filter((s) => s.routes.length > 0), [stations.data])
@@ -196,21 +202,6 @@ export default function TransitMap({
     return { stopMarkers: markers, outlines: features }
   }, [enabled, groups, zoom, selectedStop, navigate])
 
-  const vehicleMarkers = useMemo<HtmlMarker[]>(
-    () =>
-      vehicles.map((v) => ({
-        key: `veh:${v.id}`,
-        at: [v.longitude, v.latitude],
-        ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
-        z: selected === v.id ? 2000 : 500,
-        // First tap: details card. Tap the same vehicle again: open its trip.
-        onClick: () => {
-          if (selected === v.id && v.trip) navigate(tripUrl(v))
-          else setSelected(v.id)
-        },
-      })),
-    [vehicles, zoom, selected, navigate],
-  )
 
   const me = useMemo<HtmlMarker[]>(
     () =>
@@ -233,6 +224,65 @@ export default function TransitMap({
     { id: 'stop-outlines-fill', type: 'fill', paint: { 'fill-color': '#8e8e93', 'fill-opacity': 0.1 } },
     { id: 'stop-outlines-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': '#8e8e93', 'line-width': 1.5, 'line-opacity': 0.5 } },
   ])
+  // Lines layer: every line of the chosen types, under everything else, in its own colour
+  const lineTypes = [...new Set(layers.lines.map((k) => ({ metro: 'SUBWAY', tram: 'TRAM', trolley: 'TROLLEYBUS', bus: 'BUS', night: 'BUS', boat: 'FERRY' })[k as string]).filter(Boolean))].sort()
+  const linesQuery = useQuery({
+    queryKey: ['routeLines', lineTypes],
+    queryFn: () => gql<{ routeLines: string }>(ROUTE_LINES_QUERY, { types: lineTypes }),
+    enabled: lineTypes.length > 0 && showAll,
+    staleTime: 24 * 60 * 60_000,
+  })
+  const lines = useMemo(() => {
+    if (!linesQuery.data || lineTypes.length === 0 || !showAll) return null
+    const all = JSON.parse(linesQuery.data.routeLines) as GeoJSON.FeatureCollection
+    const want = new Set(layers.lines)
+    // Day vs night buses share a type; tell them apart like the Routes page does
+    const features = all.features.filter((f) => want.has(categoryOf({ type: f.properties!.type, color: f.properties!.color }).key))
+    return { type: 'FeatureCollection', features } as GeoJSON.FeatureCollection
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linesQuery.data, layers.lines.join(','), showAll])
+  useGeoJson(map, 'route-lines', lines, [
+    {
+      id: 'route-lines',
+      type: 'line',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-opacity': 0.85,
+        // Metro a bit bolder; all thicker as you zoom in
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, ['case', ['==', ['get', 'type'], 'SUBWAY'], 2.5, 1.2], 16, ['case', ['==', ['get', 'type'], 'SUBWAY'], 7, 4]],
+      },
+    },
+  ])
+
+  // Line paths per route, both directions (from the Lines layer, when loaded), for vehicles to glide along
+  const pathsByRoute = useMemo(() => {
+    const m = new Map<string, [number, number][][]>()
+    for (const f of lines?.features ?? []) {
+      const id = f.properties?.routeId as string
+      m.set(id, [...(m.get(id) ?? []), (f.geometry as GeoJSON.LineString).coordinates as [number, number][]])
+    }
+    return m
+  }, [lines])
+  const vehicleMarkers = useMemo<HtmlMarker[]>(
+    () =>
+      vehicles.map((v) => ({
+        key: `veh:${v.id}`,
+        at: [v.longitude, v.latitude],
+        ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
+        // Glide to each new position, along the line's path when we have it
+        animate: true,
+        paths: v.trip?.tripId === trip?.tripId && trip?.path.length ? [trip.path] : (pathsByRoute.get(v.trip?.route?.routeId ?? '') ?? null),
+        z: selected === v.id ? 2000 : 500,
+        // First tap: details card. Tap the same vehicle again: open its trip.
+        onClick: () => {
+          if (selected === v.id && v.trip) navigate(tripUrl(v))
+          else setSelected(v.id)
+        },
+      })),
+    [vehicles, zoom, selected, navigate, pathsByRoute, trip],
+  )
+
   // The trip: its path as a line in the line's colour, its stops as dots with the time it gets there
   useGeoJson(
     map,
@@ -299,6 +349,21 @@ export default function TransitMap({
           <CloseIcon className="h-5 w-5" />
         </button>
       )}
+      {/* Layers (like Google Maps): vehicles, stops, lines by type */}
+      {showAll && (
+        <button
+          type="button"
+          onClick={() => setLayersOpen((v) => !v)}
+          aria-label={t('layers.title')}
+          aria-expanded={layersOpen}
+          className={`absolute right-3 z-20 rounded-full bg-surface p-2.5 shadow-lg active:opacity-60 ${
+            onClose ? 'top-[calc(env(safe-area-inset-top)+4rem)]' : 'top-3'
+          } ${layersOpen ? 'text-accent' : ''}`}
+        >
+          <LayersThree className="h-5 w-5" />
+        </button>
+      )}
+      {layersOpen && showAll && <LayersMenu onClose={() => setLayersOpen(false)} top={onClose ? 'calc(env(safe-area-inset-top) + 7.25rem)' : '3.75rem'} />}
       {trip && (
         <button
           type="button"

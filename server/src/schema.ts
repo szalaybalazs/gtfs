@@ -353,6 +353,8 @@ export const typeDefs = `#graphql
     vehiclePositions(bbox: BboxInput): [VehiclePosition]!
 
     shapes: FeatureCollection!
+    "BKK lines as a GeoJSON FeatureCollection (JSON string): one simplified path per line and direction, for the map's Lines layer"
+    routeLines(types: [RouteType!]): String!
 
     timetable(stopId: ID!, routeId: ID!, range: RangeInput): [TimetableEntry!]!
 

@@ -111,6 +111,62 @@ export type HtmlMarker = {
   anchor?: [number, number]
   z?: number
   onClick?: () => void
+  /** When the position changes, glide there along whichever of these paths ([lon, lat]) it's on, instead of jumping (vehicles) */
+  paths?: LngLat[][] | null
+  /** Glide to new positions at all (straight line if there's no path) */
+  animate?: boolean
+}
+
+const GLIDE_MS = 1500
+
+/** Distance along `path` of the point on it nearest to `p`, plus how far off the path `p` is (in degrees-ish, lat-scaled). */
+function project(path: LngLat[], p: LngLat) {
+  const k = Math.cos((p[1] * Math.PI) / 180)
+  let best = { along: 0, off: Infinity }
+  let acc = 0
+  for (let i = 1; i < path.length; i++) {
+    const [ax, ay] = path[i - 1], [bx, by] = path[i]
+    const dx = (bx - ax) * k, dy = by - ay
+    const len2 = dx * dx + dy * dy
+    const tt = len2 ? Math.max(0, Math.min(1, (((p[0] - ax) * k) * dx + (p[1] - ay) * dy) / len2)) : 0
+    const off = Math.hypot((ax + (bx - ax) * tt - p[0]) * k, ay + (by - ay) * tt - p[1])
+    const seg = Math.sqrt(len2)
+    if (off < best.off) best = { along: acc + seg * tt, off }
+    acc += seg
+  }
+  return best
+}
+
+/** The point at distance `d` along `path` (same units as project) */
+function pointAt(path: LngLat[], d: number): LngLat {
+  const k = Math.cos((path[0][1] * Math.PI) / 180)
+  let acc = 0
+  for (let i = 1; i < path.length; i++) {
+    const [ax, ay] = path[i - 1], [bx, by] = path[i]
+    const seg = Math.hypot((bx - ax) * k, by - ay)
+    if (acc + seg >= d) {
+      const tt = seg ? (d - acc) / seg : 0
+      return [ax + (bx - ax) * tt, ay + (by - ay) * tt]
+    }
+    acc += seg
+  }
+  return path[path.length - 1]
+}
+
+/**
+ * A function of t in [0, 1] giving the in-between position from `from` to `to`:
+ * along the path when both lie on it and `to` is ahead (≤ ~3 km), otherwise a straight line.
+ */
+function glide(from: LngLat, to: LngLat, paths?: LngLat[][] | null): (t: number) => LngLat {
+  for (const path of paths ?? []) {
+    if (path.length < 2) continue
+    const a = project(path, from), b = project(path, to)
+    const near = 0.0008 // ~80 m off the path still counts as on it
+    if (a.off < near && b.off < near && b.along >= a.along && b.along - a.along < 0.03) {
+      return (t) => pointAt(path, a.along + (b.along - a.along) * t)
+    }
+  }
+  return (t) => [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t]
 }
 
 /** Taps on markers shouldn't also count as taps on the empty map. */
@@ -119,7 +175,7 @@ export const tappedMarker = () => Date.now() - lastMarkerTap < 300
 
 /** HTML markers, diffed by key so panning doesn't rebuild them. */
 export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
-  const store = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement; inner: HTMLDivElement; html: string; item: HtmlMarker }>())
+  const store = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement; inner: HTMLDivElement; html: string; item: HtmlMarker; at: LngLat; anim?: number }>())
 
   useEffect(() => {
     if (!map) return
@@ -134,7 +190,7 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
         inner.style.position = 'absolute'
         el.appendChild(inner)
         const marker = new maplibregl.Marker({ element: el, anchor: 'top-left' }).setLngLat(item.at).addTo(map)
-        entry = { marker, el, inner, html: '', item }
+        entry = { marker, el, inner, html: '', item, at: item.at }
         const e = entry
         el.addEventListener('click', (ev) => {
           ev.stopPropagation()
@@ -144,7 +200,25 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
         store.current.set(item.key, entry)
       }
       entry.item = item
-      entry.marker.setLngLat(item.at)
+      const moved = entry.at[0] !== item.at[0] || entry.at[1] !== item.at[1]
+      if (moved && item.animate && !document.hidden) {
+        // Glide from where it is now (mid-glide included) to the new spot
+        if (entry.anim) cancelAnimationFrame(entry.anim)
+        const current = entry.marker.getLngLat()
+        const at = glide([current.lng, current.lat], item.at, item.paths)
+        const start = performance.now()
+        const e = entry
+        const step = (now: number) => {
+          const t = Math.min(1, (now - start) / GLIDE_MS)
+          e.marker.setLngLat(at(1 - (1 - t) ** 3))
+          e.anim = t < 1 ? requestAnimationFrame(step) : undefined
+        }
+        entry.anim = requestAnimationFrame(step)
+      } else if (moved || !item.animate) {
+        if (entry.anim) cancelAnimationFrame(entry.anim)
+        entry.marker.setLngLat(item.at)
+      }
+      entry.at = item.at
       if (entry.html !== item.html) {
         entry.inner.innerHTML = item.html
         entry.html = item.html
@@ -159,6 +233,7 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
     }
     for (const [key, entry] of store.current) {
       if (!seen.has(key)) {
+        if (entry.anim) cancelAnimationFrame(entry.anim)
         entry.marker.remove()
         store.current.delete(key)
       }
