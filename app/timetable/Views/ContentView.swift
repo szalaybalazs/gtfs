@@ -9,15 +9,24 @@ import SwiftUI
 import TimetableAPI
 
 struct ContentView: View {
-    @State private var path = NavigationPath()  
-    
+    @State private var path = NavigationPath()
+    @State private var settings = AppSettings.shared
+
     var body: some View {
-        NavigationStack(path: $path) {
-            RoutesView()
-                .navigationDestination(for: TimetableQuery.Data.Timetable.self) { event in
-                    Text("EVENT")
-                }
+        TabView {
+            NavigationStack { StationsView() }
+                .tabItem { Label("Stops", systemImage: "mappin.and.ellipse") }
+            NavigationStack(path: $path) {
+                RoutesView()
+                    .navigationDestination(for: TimetableQuery.Data.Timetable.self) { event in
+                        Text("EVENT")
+                    }
+            }
+            .tabItem { Label("Routes", systemImage: "tram.fill") }
+            NavigationStack { SettingsView() }
+                .tabItem { Label("Settings", systemImage: "gear") }
         }
+        .environment(settings)
     }
 }
 
