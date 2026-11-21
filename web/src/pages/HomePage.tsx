@@ -3,7 +3,6 @@ import { LinesCard, LineStopCard, StopCard } from '../components/FavoriteCards'
 import NavBar from '../components/NavBar'
 import NearbyList from '../components/NearbyList'
 import RouteTile from '../components/RouteTile'
-import TimeModeMenu from '../components/TimeModeMenu'
 import { useFavorites } from '../lib/favorites'
 import { useT } from '../lib/i18n'
 
@@ -12,7 +11,7 @@ export default function HomePage() {
   const { favorites, lines, lineStops, stops, multiLines } = useFavorites()
   return (
     <div className="min-h-dvh">
-      <NavBar title={t('nav.home')} menu trailing={<TimeModeMenu />} />
+      <NavBar title={t('nav.home')} menu />
       <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {favorites.length === 0 && (
           <p className="rounded-2xl bg-surface p-gutter text-secondary">

@@ -124,10 +124,6 @@ const en = {
   'home.seeAll': 'See all',
 
   // Time display menu
-  'timeMode.label': 'Show times as',
-  'timeMode.hint': 'A departure 5 minutes from now:',
-  'timeMode.relative': 'Relative',
-  'timeMode.absolute': 'Absolute',
 
   // Departures / timetable toggle
   'view.showTimetable': 'Show timetable',
@@ -416,10 +412,6 @@ const hu: Record<MessageKey, Message> = {
   'home.nearbyStops': 'Közeli megállók',
   'home.seeAll': 'Összes megálló',
 
-  'timeMode.label': 'Időpontok',
-  'timeMode.hint': 'Egy 5 perc múlva induló járat:',
-  'timeMode.relative': 'Hátralévő idő',
-  'timeMode.absolute': 'Pontos idő',
 
   'view.showTimetable': 'Menetrend mutatása',
   'view.showDepartures': 'Indulások mutatása',
@@ -594,7 +586,7 @@ const hu: Record<MessageKey, Message> = {
 
 const CATALOGS: Record<Locale, Record<MessageKey, Message>> = { en, hu, pt }
 
-// ---- Locale store (like timeMode.ts / favorites.ts) ----
+// ---- Locale store ----
 
 const KEY = 'locale'
 const listeners = new Set<() => void>()
