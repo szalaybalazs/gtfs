@@ -57,8 +57,10 @@ export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges:
   const d = selected ? 14 : 10
   return {
     html:
+      // Invisible larger tap area around the dot (the dot alone is too small to hit)
+      `<div style="position:absolute;left:-18px;top:-18px;width:36px;height:36px;border-radius:50%"></div>` +
       `<div style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${platform ? '#6b7280' : c.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>` +
-      `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%)">${badgesHtml(station.routes, 4)}</div>`,
+      `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%);padding:4px">${badgesHtml(station.routes, 4)}</div>`,
   }
 }
 
