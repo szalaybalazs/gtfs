@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
 import { compareLines } from '../lib/categories'
@@ -9,8 +10,8 @@ import { useNow } from '../lib/useTimetable'
 import { ChevronIcon, LiveIcon } from './Icons'
 import RouteBadge from './RouteBadge'
 
-/** Departed times show (-1… -5 s) only briefly here; the board is about what comes next */
-const LINGER_S = 5
+/** Departed times count on (-1… -10 s), then drop; same as the departures list */
+const LINGER_S = 10
 
 /**
  * A stop group's departures as a board: one row per line + direction, metro
@@ -20,25 +21,32 @@ const LINGER_S = 5
  */
 export default function LineBoard({ departures, stationPath }: { departures: Departure[]; stationPath: string }) {
   const now = useNow(1_000)
+  // Only times shown while still to come may count on after leaving; one already gone when it loaded never shows
+  const shownUpcoming = useRef(new Set<string>())
   const groups = new Map<string, Departure[]>()
   for (const d of departures) {
-    if (new Date(d.terminates ? d.arrival : d.departure).getTime() < now.getTime() - LINGER_S * 1000) continue
+    const at = new Date(d.terminates ? d.arrival : d.departure).getTime()
+    if (at < now.getTime() && !shownUpcoming.current.has(d.tripId)) continue
+    if (at < now.getTime() - LINGER_S * 1000) continue
+    if (at >= now.getTime()) shownUpcoming.current.add(d.tripId)
     // Arrivals get their own row, apart from the same line leaving
     const key = `${d.route?.routeId}|${d.headsign}|${d.terminates ? 'arr' : 'dep'}`
     const list = groups.get(key) ?? []
+    // A trip calling at two platforms of the group counts once (its first stop here)
+    if (list.some((x) => x.tripId === d.tripId)) continue
     list.push(d)
     groups.set(key, list)
   }
-  const rows = [...groups.values()].sort(
-    (a, b) =>
+  const rows = [...groups.entries()].sort(
+    ([, a], [, b]) =>
       compareLines(a[0].route ?? {}, b[0].route ?? {}) ||
       (a[0].headsign ?? '').localeCompare(b[0].headsign ?? '', 'hu'),
   )
 
   return (
     <ul className="divide-y divide-separator">
-      {rows.map((list) => (
-        <BoardRow key={`${list[0].route?.routeId}|${list[0].headsign}`} list={list} now={now} stationPath={stationPath} />
+      {rows.map(([key, list]) => (
+        <BoardRow key={key} list={list} now={now} stationPath={stationPath} />
       ))}
     </ul>
   )
@@ -47,6 +55,28 @@ export default function LineBoard({ departures, stationPath }: { departures: Dep
 function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; stationPath: string }) {
   const t = useT()
   const d = list[0]
+  const shown = list.slice(0, 4)
+  const boxes = useRef(new Map<string, HTMLDivElement>())
+  // When the first one leaves, the others slide over to their new places and the next one grows into
+  // the big slot (FLIP: measure, jump back with a transform, then let the transform go; GPU only)
+  const last = useRef(new Map<string, { right: number; height: number }>())
+  const order = shown.map((n) => n.tripId).join()
+  useLayoutEffect(() => {
+    const next = new Map<string, { right: number; height: number }>()
+    for (const [id, el] of boxes.current) next.set(id, { right: el.offsetLeft + el.offsetWidth, height: el.offsetHeight })
+    for (const [id, el] of boxes.current) {
+      const was = last.current.get(id)
+      const is = next.get(id)!
+      if (!was || !is.height || (Math.abs(was.right - is.right) < 1 && was.height === is.height)) continue
+      el.style.transition = 'none'
+      el.style.transformOrigin = 'right center'
+      el.style.transform = `translateX(${was.right - is.right}px) scale(${was.height / is.height})`
+      void el.offsetWidth
+      el.style.transition = 'transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1)'
+      el.style.transform = ''
+    }
+    last.current = next
+  }, [order])
   const to = `${stationPath}?from=${encodeURIComponent(d.stopId)}${d.route ? `&lines=${encodeURIComponent(d.route.routeId)}` : ''}`
   return (
     <li>
@@ -60,11 +90,17 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
           )}
         </div>
         {/* The next departure big, then the following ones smaller to its right. How many depends only on
-            the screen (two more on a phone, three from 640 px), and the columns have fixed widths so they line up */}
+            the screen (two more on a phone, three from 640 px), and the columns have fixed widths so they line up.
+            One list keyed by trip, so a time keeps its element as it moves from small to big */}
         <div className="-mr-1 flex shrink-0 items-center gap-0.5">
-          <Countdown d={d} now={now} />
-          {list.slice(1, 4).map((n, i) => (
-            <Countdown key={n.tripId} d={n} now={now} small className={i === 2 ? 'hidden sm:block' : ''} />
+          {shown.map((n, i) => (
+            <div key={n.tripId} ref={(el) => void (el ? boxes.current.set(n.tripId, el) : boxes.current.delete(n.tripId))} className={i === 3 ? 'hidden sm:block' : ''}>
+              <Countdown d={n} now={now} small={i > 0} />
+            </div>
+          ))}
+          {/* Empty columns when a line has fewer coming, so the big times stay lined up */}
+          {Array.from({ length: 4 - shown.length }, (_, i) => (
+            <div key={`pad${i}`} aria-hidden className={`w-10 ${shown.length + i === 3 ? 'hidden sm:block' : ''}`} />
           ))}
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
@@ -74,7 +110,7 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
 }
 
 /** Minutes / seconds until a departure, negative seconds just after it leaves; the live mark in its own corner */
-function Countdown({ d, now, small = false, className = '' }: { d: Departure; now: Date; small?: boolean; className?: string }) {
+function Countdown({ d, now, small = false }: { d: Departure; now: Date; small?: boolean }) {
   const t = useT()
   const seconds = (new Date(d.terminates ? d.arrival : d.departure).getTime() - now.getTime()) / 1000
   const left = seconds < 0
@@ -87,7 +123,7 @@ function Countdown({ d, now, small = false, className = '' }: { d: Departure; no
       ? { value: formatTime(new Date(Date.now() + seconds * 1000)), unit: null }
       : countdown(seconds)
   return (
-    <div className={`relative text-right ${className} ${small ? 'w-10 pr-2 text-secondary' : 'w-12 pr-3 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`relative text-right ${small ? 'w-10 pr-2 text-secondary' : 'w-12 pr-3 text-label'} ${left ? 'opacity-45' : ''}`}>
       {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
       <p className={`leading-none font-bold tabular-nums ${small ? 'text-[16px]' : 'text-2xl'}`}>{value}</p>
       <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{unit ? t(unit) : '\u00a0'}</p>

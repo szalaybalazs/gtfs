@@ -12,7 +12,7 @@ import { BikeIcon, ChevronIcon, LiveIcon } from './Icons'
 import RouteBadge from './RouteBadge'
 
 /** How long a departed row stays (seconds) before it collapses away */
-const LINGER_S = 30
+const LINGER_S = 10
 import { MarkIcon } from './LineMarks'
 
 /**
@@ -55,9 +55,16 @@ export default function Departures({
 }) {
   const t = useT()
   const now = useNow(1_000)
-  // Departed rows linger (counting -1, -2…) and collapse after LINGER_S: BKK often corrects a
-  // "departed" vehicle back to "still at the stop" within ~20 s, so hiding sooner makes rows jump
-  const kept = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - (LINGER_S + 5) * 1000)
+  // Rows shown while still to come; only those may linger after leaving (one that had already
+  // gone when it loaded never appears)
+  const shownUpcoming = useRef(new Set<string>())
+  // Departed rows linger (counting -1, -2…) and collapse after LINGER_S
+  const kept = includePast
+    ? departures
+    : departures.filter((d) => {
+        const t = new Date(d.departure).getTime()
+        return t >= now.getTime() || (shownUpcoming.current.has(rowKey(d)) && t >= now.getTime() - (LINGER_S + 5) * 1000)
+      })
   // Rows still counting down after leaving don't use up a slot, so the list stays the same length
   // (Not with a chosen time: there nothing is "leaving", and past rows would all count)
   const leaving = includePast ? 0 : kept.filter((d) => new Date(d.departure).getTime() < now.getTime()).length
@@ -68,7 +75,10 @@ export default function Departures({
   const entered = useRef(new Map<string, 'top' | 'bottom'>())
   const firstSeen = upcoming.findIndex((d) => seen.current.has(rowKey(d)))
   useEffect(() => {
-    for (const d of upcoming) seen.current.add(rowKey(d))
+    for (const d of upcoming) {
+      seen.current.add(rowKey(d))
+      if (new Date(d.departure).getTime() >= Date.now()) shownUpcoming.current.add(rowKey(d))
+    }
   })
 
   return (
