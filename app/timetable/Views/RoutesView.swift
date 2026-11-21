@@ -87,6 +87,16 @@ struct RoutesView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 Text("Routes").font(.system(size: 34, weight: .bold)).padding(.horizontal, 4).padding(.bottom, -8)
                     .accessibilityAddTraits(.isHeader)
+                // Own search field: the system search bar over this scroll view broke scrolling and pull to refresh on device
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(Theme.secondary)
+                    TextField("Search lines", text: $searchText).textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.search)
+                    if !searchText.isEmpty {
+                        Button { searchText = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.secondary) }.accessibilityLabel("Clear")
+                    }
+                }
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                .background(Theme.fill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 chips
                 if let message = model.state.errorMessage {
                     ErrorView(message: message) { await model.load() }
@@ -150,7 +160,6 @@ struct RoutesView: View {
         .navigationTitle("Routes")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .principal) { Text(" ") } } // the title is in the content; the name still labels Back buttons
-        .searchable(text: $searchText, prompt: "Search lines")
         .task {
             if !model.loaded { await model.load() }
             // Favourite lines are the likeliest next tap: have their pages ready

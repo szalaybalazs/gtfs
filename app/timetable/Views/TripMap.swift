@@ -69,17 +69,16 @@ struct TripMapContent: MapContent {
     let path: [CLLocationCoordinate2D]
     let color: Color
     let big: Bool
-    /// Mini map: stop dots are map circles (always under annotations, so the vehicle stays on top); this is their radius in metres.
-    var dotRadius: Double = 0
 
     var body: some MapContent {
         if path.count > 1 {
             MapPolyline(coordinates: path).stroke(color, lineWidth: big ? 5 : 4)
         }
-        do {
-            ForEach(trip.stops.filter { $0.lat != nil && $0.lon != nil }) { s in
-                MapCircle(center: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), radius: dotRadius)
-                    .foregroundStyle(Color.white).stroke(color, lineWidth: 2)
+        // Stop dots are annotations, so they stay the same size on screen however far you zoom
+        ForEach(trip.stops.filter { $0.lat != nil && $0.lon != nil }) { s in
+            Annotation("", coordinate: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), anchor: .center) {
+                Circle().fill(Color.white).frame(width: big ? 10 : 7, height: big ? 10 : 7)
+                    .overlay(Circle().stroke(color, lineWidth: 2))
             }
         }
         ForEach(trip.stops.filter { big && $0.lat != nil && $0.lon != nil }) { s in
@@ -132,8 +131,7 @@ struct TripMiniMap: View {
     var body: some View {
         if let region = tripRegion(trip, vehicle: vehicle, path: path) {
             Map(initialPosition: .region(region), interactionModes: []) {
-                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false,
-                                   dotRadius: region.span.latitudeDelta * 111_000 / 180 * 3.5)
+                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false)
             }
             .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .frame(height: 180)
@@ -158,8 +156,7 @@ private struct TripFullMap: View {
 
     var body: some View {
         Map(initialPosition: .region(region)) {
-            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true,
-                           dotRadius: region.span.latitudeDelta * 111_000 / 800 * 5)
+            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true)
         }
         .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
         .overlay(alignment: .topTrailing) {

@@ -86,6 +86,7 @@ struct RouteDetailsView: View {
             await model.chooseNearest()
         }
         .task(id: request) { if let r = request { await departures.run(r) } }
+        .transitDestinations()
     }
 
     /// What the page looks like before its data: same shapes, made-up text.
@@ -155,7 +156,9 @@ struct RouteDetailsView: View {
                         let end = context.date.addingTimeInterval(Double(90 * (1 + more)) * 60)
                         // Switching stop / direction: keep the previous rows up until the new ones answer (a moment later), so the card doesn't collapse and refill
                         let current = departures.loadedStopIds == [stop.stopId]
-                        let list = departures.departures.filter { $0.route?.routeId == id && $0.time <= end && (!current || $0.stopId == stop.stopId) }
+                        // Only this direction: not arrivals ending here, nor trips headed for the other direction's destination
+                        let opposite = model.otherDirection.map(\.headsign).flatMap { $0 == model.direction?.headsign ? nil : $0 }
+                        let list = departures.departures.filter { $0.route?.routeId == id && $0.time <= end && !$0.terminates && $0.headsign != opposite && (!current || $0.stopId == stop.stopId) }
                         if list.isEmpty {
                             Text("No departures").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
                         } else {

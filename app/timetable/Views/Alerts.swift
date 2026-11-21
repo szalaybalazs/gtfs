@@ -96,7 +96,7 @@ struct AlertCard: View {
                     HFlowBadges(lines: Array(alert.routes.prefix(6)))
                 }
                 Text(alert.header).font(.system(size: 15, weight: .semibold)).lineLimit(2).multilineTextAlignment(.leading)
-                Text((alert.planned ? tr("Planned") + " · " : "") + alert.period).font(.system(size: 13)).opacity(0.7)
+                Text((alert.planned ? tr("Planned (one)") + " · " : "") + alert.period).font(.system(size: 13)).opacity(0.7)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).opacity(0.5).padding(.top, 4)
