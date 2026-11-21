@@ -40,7 +40,7 @@ final class NearbyDeparturesModel {
         self.here = here
         phase = .loading
         do {
-            let data = try await Network.shared.fetch(NearbyStationsQuery(lat: here.latitude, lon: here.longitude, radius: AimCone.maxRange + 100))
+            let data = try await Network.shared.fetch(NearbyStationsQuery(lat: here.latitude, lon: here.longitude, radius: AimCone.range + 100))
             let origin = CLLocation(latitude: here.latitude, longitude: here.longitude)
             let stations = data.stationsByRadius.map(Station.init)
             spots = stations.flatMap { st in
@@ -64,8 +64,9 @@ struct NearbyDeparturesView: View {
     /// "Point at the stop": a cone from where you stand picks the platforms (otherwise it's the ones right here).
     @State private var aiming = false
     @State private var cone = AimCone()
-    @State private var compassNote: String?
-    private let compass = HeadingReader()
+    /// Frozen: the cone stays where it is, so you can lower the phone and read the list.
+    @State private var frozen = false
+    @State private var compass = HeadingTracker()
 
     var body: some View {
         ScrollView {
@@ -84,24 +85,7 @@ struct NearbyDeparturesView: View {
                     } else if !departures.loaded {
                         Card { SkeletonDepartureRows(count: 6) }
                     } else {
-                        TimelineView(.periodic(from: .now, by: 1)) { context in
-                            // A departure that left stays a few seconds (counting -1, -2…), fading, then slides away
-                            let list = Array(departures.departures.filter { $0.time >= context.date.addingTimeInterval(-8) }.prefix(25))
-                            Card {
-                                VStack(spacing: 0) {
-                                    ForEach(list) { d in
-                                        NavigationLink(value: TripTarget(tripId: d.tripId, serviceDate: d.serviceDate, from: d.stopId, route: d.route, headsign: d.headsign)) {
-                                            DepartureRow(departure: d, now: context.date, platform: here.names[d.stopId])
-                                        }
-                                        .buttonStyle(RowButtonStyle())
-                                        .opacity(d.time < context.date ? 0.5 : 1)
-                                        .transition(.opacity.combined(with: .move(edge: .leading)))
-                                        if d.id != list.last?.id { Divider().overlay(Theme.separator) }
-                                    }
-                                }
-                                .animation(.easeInOut(duration: 0.45), value: list.map(\.id))
-                            }
-                        }
+                        NearbyList(departures: departures.departures, names: here.names, spots: here.spots, at: aiming ? here.here : nil)
                     }
                 }
             }
@@ -113,7 +97,7 @@ struct NearbyDeparturesView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     aiming.toggle()
-                    if aiming { Task { await useCompass() } }
+                    if aiming { frozen = false; compass.start() } else { compass.stop() }
                 } label: { Image(systemName: aiming ? "scope" : "location.north.line") }
                     .accessibilityLabel(aiming ? tr("Stop pointing") : tr("Point at a stop"))
                     .tint(aiming ? Theme.accent : nil)
@@ -121,6 +105,12 @@ struct NearbyDeparturesView: View {
         }
         .onChange(of: aiming) { _, _ in here.refreshStops(aim: aiming ? cone : nil) }
         .onChange(of: cone) { _, new in if aiming { here.refreshStops(aim: new) } }
+        // Follow the compass unless frozen; small wobbles are ignored
+        .onChange(of: compass.heading) { _, h in
+            guard aiming, !frozen, let h, abs(Geo.angleDiff(h, cone.heading)) >= 3 else { return }
+            cone.heading = h
+        }
+        .onDisappear { compass.stop() }
         .onChange(of: here.spots) { _, _ in here.refreshStops(aim: aiming ? cone : nil) }
         .transitDestinations()
         .refreshable { await here.locate() }
@@ -131,32 +121,83 @@ struct NearbyDeparturesView: View {
         }
     }
 
-    /// The small map with the cone, a button for the phone's heading, and what the cone is set to.
+    /// Map on the left, on the right where you point and a Freeze button.
     @ViewBuilder private func aimPanel(_ at: CLLocationCoordinate2D) -> some View {
-        VStack(spacing: 8) {
-            AimMap(here: at, spots: here.spots, cone: $cone)
-            HStack {
-                Button { Task { await useCompass() } } label: {
-                    Label("Use phone heading", systemImage: "location.north.line.fill").font(.system(size: 15, weight: .semibold))
+        HStack(spacing: 12) {
+            AimMap(here: at, spots: here.spots, cone: cone)
+                .frame(width: 190, height: 190)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            VStack(alignment: .leading, spacing: 10) {
+                Text(compass.available ? tr("Pointing \(Self.compassName(cone.heading))") : tr("No compass"))
+                    .font(.system(size: 17, weight: .semibold))
+                Text(frozen ? tr("Frozen. Tap to follow your phone again.") : tr("Point your phone at the stop. Freeze to put it down."))
+                    .font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                Button { frozen.toggle() } label: {
+                    Label(frozen ? "Unfreeze" : "Freeze", systemImage: frozen ? "play.fill" : "pause.fill")
+                        .font(.system(size: 16, weight: .semibold)).frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
-                Spacer()
-                Text("\(Int(cone.heading.rounded()))° · \(Int(cone.angle.rounded()))° wide · \(Int(cone.range.rounded())) m")
-                    .font(.system(size: 13)).monospacedDigit().foregroundStyle(Theme.secondary)
+                .buttonStyle(.borderedProminent)
+                .tint(frozen ? Theme.accent : Color.gray)
             }
-            if let compassNote { Text(compassNote).font(.system(size: 13)).foregroundStyle(Theme.secondary).frame(maxWidth: .infinity, alignment: .leading) }
-            Text("Point at the stop you want. Drag the white dot to change the width and the range.")
-                .font(.system(size: 13)).foregroundStyle(Theme.secondary).frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.bottom, 12)
     }
 
-    private func useCompass() async {
-        if let h = await compass.read() { cone.heading = h; compassNote = nil }
-        else { compassNote = tr("No compass reading. Allow location, or this device has no compass.") }
+    private static func compassName(_ deg: Double) -> String {
+        let names = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+        return names[Int(((deg + 22.5).truncatingRemainder(dividingBy: 360)) / 45) % 8]
     }
 
     private func message(_ text: String) -> some View {
         Text(text).foregroundStyle(Theme.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(24)
+    }
+}
+
+/// The departures in time order (or, while pointing, nearest platform first). A departure that left stays a few seconds,
+/// counting -1, -2…, greyed, then fades and slides away.
+private struct NearbyList: View {
+    let departures: [Departure]
+    let names: [String: String]
+    let spots: [AimSpot]
+    /// Where you are, when ranking by distance.
+    let at: CLLocationCoordinate2D?
+
+    private func ordered(_ now: Foundation.Date) -> [Departure] {
+        var list = departures.filter { $0.time >= now.addingTimeInterval(-8) }
+        if let at {
+            var dist: [String: Double] = [:]
+            for sp in spots where dist[sp.stopId] == nil { dist[sp.stopId] = Geo.distance(at, sp.coordinate) }
+            list.sort { x, y in
+                let dx = dist[x.stopId] ?? Double.infinity, dy = dist[y.stopId] ?? Double.infinity
+                return dx != dy ? dx < dy : x.time < y.time
+            }
+        }
+        return Array(list.prefix(25))
+    }
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let list = ordered(context.date)
+            Card {
+                VStack(spacing: 0) {
+                    ForEach(list) { d in
+                        row(d, now: context.date, isLast: d.id == list.last?.id)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.45), value: list.map(\.id))
+            }
+        }
+    }
+
+    @ViewBuilder private func row(_ d: Departure, now: Foundation.Date, isLast: Bool) -> some View {
+        let target = TripTarget(tripId: d.tripId, serviceDate: d.serviceDate, from: d.stopId, route: d.route, headsign: d.headsign)
+        NavigationLink(value: target) {
+            DepartureRow(departure: d, now: now, platform: names[d.stopId])
+        }
+        .buttonStyle(RowButtonStyle())
+        .opacity(d.time < now ? 0.5 : 1)
+        .transition(.opacity)
+        if !isLast { Divider().overlay(Theme.separator) }
     }
 }

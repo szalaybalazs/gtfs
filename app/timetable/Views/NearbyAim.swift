@@ -10,46 +10,39 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-/// The cone: where you stand, which way you face, how wide and how far.
+/// The cone: where you stand, which way you face. Width and range are fixed; relevance falls off with distance.
 struct AimCone: Equatable {
     var heading: Double = 0      // degrees clockwise from north
-    var angle: Double = 70       // full width in degrees
-    var range: Double = 200      // metres
-
-    static let minAngle = 20.0, maxAngle = 160.0
-    static let minRange = 50.0, maxRange = 600.0
+    static let angle = 70.0      // full width in degrees
+    static let range = 300.0     // metres
 
     func contains(_ point: CLLocationCoordinate2D, from here: CLLocationCoordinate2D) -> Bool {
         let d = Geo.distance(here, point)
-        if d > range { return false }
+        if d > Self.range { return false }
         if d < 20 { return true } // right next to you counts whichever way you face
-        return abs(Geo.angleDiff(Geo.bearing(here, point), heading)) <= angle / 2
+        return abs(Geo.angleDiff(Geo.bearing(here, point), heading)) <= Self.angle / 2
     }
 
-    /// Where the grab handle sits: the cone's right-hand edge, at full range.
-    func handle(from here: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
-        Geo.destination(here, bearing: heading + angle / 2, metres: range)
-    }
-
-    /// Dragging the handle to `point` sets the width (its bearing against the heading) and the range (its distance).
-    func dragging(to point: CLLocationCoordinate2D, from here: CLLocationCoordinate2D) -> AimCone {
-        var c = self
-        let half = abs(Geo.angleDiff(Geo.bearing(here, point), heading))
-        c.angle = min(max(half * 2, Self.minAngle), Self.maxAngle)
-        c.range = min(max(Geo.distance(here, point), Self.minRange), Self.maxRange)
-        return c
-    }
-
-    /// The outline: the pointer, then an arc.
-    func polygon(from here: CLLocationCoordinate2D) -> [CLLocationCoordinate2D] {
-        var pts = [here]
-        let steps = 24
-        for i in 0...steps {
-            let b = heading - angle / 2 + angle * Double(i) / Double(steps)
-            pts.append(Geo.destination(here, bearing: b, metres: range))
+    /// The cone drawn as bands from you outwards, each fainter than the last: a solid shape that fades with distance.
+    static let bands = 18
+    func band(_ i: Int, from here: CLLocationCoordinate2D) -> [CLLocationCoordinate2D] {
+        let r0 = Self.range * Double(i) / Double(Self.bands), r1 = Self.range * Double(i + 1) / Double(Self.bands)
+        let steps = 16
+        var pts: [CLLocationCoordinate2D] = []
+        for k in 0...steps {
+            let b = heading - Self.angle / 2 + Self.angle * Double(k) / Double(steps)
+            pts.append(Geo.destination(here, bearing: b, metres: r1))
+        }
+        if i == 0 { pts.append(here) }
+        else {
+            for k in stride(from: steps, through: 0, by: -1) {
+                let b = heading - Self.angle / 2 + Self.angle * Double(k) / Double(steps)
+                pts.append(Geo.destination(here, bearing: b, metres: r0))
+            }
         }
         return pts
     }
+    static func opacity(_ i: Int) -> Double { 0.5 * pow(1 - Double(i) / Double(bands), 1.6) + 0.03 }
 }
 
 enum Geo {
@@ -77,33 +70,25 @@ enum Geo {
     }
 }
 
-/// One reading of the phone's compass (true north when the phone knows it); nil when there's no compass (the Simulator) or no reading.
+/// The phone's compass, live while started (true north when the phone knows it). No compass in the Simulator.
 @MainActor
-final class HeadingReader: NSObject, CLLocationManagerDelegate {
+@Observable
+final class HeadingTracker: NSObject, CLLocationManagerDelegate {
+    private(set) var heading: Double?
     private let manager = CLLocationManager()
-    private var continuation: CheckedContinuation<Double?, Never>?
+    var available: Bool { CLLocationManager.headingAvailable() }
 
-    func read() async -> Double? {
-        guard CLLocationManager.headingAvailable() else { return nil }
-        return await withCheckedContinuation { c in
-            continuation = c
-            manager.delegate = self
-            manager.headingFilter = 1
-            manager.startUpdatingHeading()
-            Task { try? await Task.sleep(nanoseconds: 2_500_000_000); finish(nil) }
-        }
+    func start() {
+        guard available else { return }
+        manager.delegate = self
+        manager.headingFilter = 2
+        manager.startUpdatingHeading()
     }
-
-    private func finish(_ value: Double?) {
-        guard let c = continuation else { return }
-        continuation = nil
-        manager.stopUpdatingHeading()
-        c.resume(returning: value)
-    }
+    func stop() { manager.stopUpdatingHeading() }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading h: CLHeading) {
         let v = h.trueHeading >= 0 ? h.trueHeading : h.magneticHeading
-        Task { @MainActor in self.finish(v) }
+        Task { @MainActor in self.heading = v }
     }
 }
 
@@ -117,64 +102,34 @@ struct AimSpot: Identifiable, Hashable {
     var coordinate: CLLocationCoordinate2D { CLLocationCoordinate2D(latitude: lat, longitude: lon) }
 }
 
-/// Small map above the departures: you, the platforms, the cone, and a dot on the cone's side to reshape it.
+/// A small map: you at the bottom, the map turned so the way you point is up, the cone fading away from you.
 struct AimMap: View {
     let here: CLLocationCoordinate2D
     let spots: [AimSpot]
-    @Binding var cone: AimCone
-    @State private var camera: MapCameraPosition = .automatic
-    @State private var grabbed = false
-    /// The range the camera was fitted to: refitted when a drag ends, not during it (the map would chase the handle).
-    @State private var fittedRange: Double = 0
+    let cone: AimCone
 
-    private func fit() {
-        fittedRange = cone.range
-        let span = max(cone.range * 2.6, 300) / 111_000
-        camera = .region(MKCoordinateRegion(center: here, span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)))
+    private var camera: MapCameraPosition {
+        // Centre a little ahead of you, so you sit low and the cone fills the map
+        let centre = Geo.destination(here, bearing: cone.heading, metres: AimCone.range * 0.35)
+        return .camera(MapCamera(centerCoordinate: centre, distance: AimCone.range * 3.2, heading: cone.heading, pitch: 0))
     }
 
     var body: some View {
-        MapReader { proxy in
-            Map(position: $camera, interactionModes: []) {
-                MapPolygon(coordinates: cone.polygon(from: here))
-                    .foregroundStyle(Theme.accent.opacity(0.22))
-                    .stroke(Theme.accent, lineWidth: 1.5)
-                ForEach(spots) { s in
-                    let inside = cone.contains(s.coordinate, from: here)
-                    Annotation("", coordinate: s.coordinate, anchor: .center) {
-                        Circle().fill(inside ? Theme.accent : Theme.secondary.opacity(0.7)).frame(width: inside ? 11 : 8, height: inside ? 11 : 8)
-                            .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
-                    }
-                }
-                Annotation("", coordinate: here, anchor: .center) {
-                    Circle().fill(Color.blue).frame(width: 16, height: 16).overlay(Circle().stroke(Color.white, lineWidth: 3))
-                }
-                Annotation("", coordinate: cone.handle(from: here), anchor: .center) {
-                    Circle().fill(Color.white).frame(width: 22, height: 22)
-                        .overlay(Circle().stroke(Theme.accent, lineWidth: 3))
-                        .shadow(radius: 2)
-                        .allowsHitTesting(false)
+        Map(position: .constant(camera), interactionModes: []) {
+            ForEach(0..<AimCone.bands, id: \.self) { i in
+                MapPolygon(coordinates: cone.band(i, from: here)).foregroundStyle(Theme.accent.opacity(AimCone.opacity(i)))
+            }
+            ForEach(spots) { s in
+                let inside = cone.contains(s.coordinate, from: here)
+                Annotation("", coordinate: s.coordinate, anchor: .center) {
+                    Circle().fill(inside ? Theme.accent : Color.gray.opacity(0.5)).frame(width: inside ? 9 : 6, height: inside ? 9 : 6)
                 }
             }
-            .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { v in
-                        if !grabbed {
-                            // Only a touch that starts on the handle reshapes the cone
-                            guard let p = proxy.convert(cone.handle(from: here), to: .local),
-                                  hypot(p.x - v.startLocation.x, p.y - v.startLocation.y) < 40 else { return }
-                            grabbed = true
-                        }
-                        if let c = proxy.convert(v.location, from: .local) { cone = cone.dragging(to: c, from: here) }
-                    }
-                    .onEnded { _ in
-                        if grabbed { grabbed = false; fit() }
-                    }
-            )
+            Annotation("", coordinate: here, anchor: .center) {
+                Circle().fill(Color.blue).frame(width: 14, height: 14).overlay(Circle().stroke(Color.white, lineWidth: 2.5))
+            }
         }
-        .frame(height: 250)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .onAppear { fit() }
+        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
+        .allowsHitTesting(false)
     }
 }
