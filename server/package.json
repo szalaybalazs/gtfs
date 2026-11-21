@@ -9,7 +9,9 @@
     "gtfs:geojson": "gtfs-to-geojson --configPath ./gtfs/config.json",
     "gtfs:update": "gtfsrealtime-update --configPath ./gtfs/config.json",
     "dev": "sst shell -- tsx src/server.ts",
-    "deploy": "sst deploy --stage production"
+    "deploy": "sst deploy --stage production",
+    "check:schema": "tsx scripts/check-schema.ts",
+    "predeploy": "pnpm run check:schema"
   },
   "keywords": [],
   "author": "",

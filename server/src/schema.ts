@@ -283,7 +283,7 @@ export const typeDefs = `#graphql
 
   type VehiclePosition {
     id: ID!
-    "Vehicle model, e.g. \"Mercedes-Benz Citaro C2G\" (BKK only)"
+    "Vehicle model, e.g. Mercedes-Benz Citaro C2G (BKK only)"
     vehicleModel: String
     bearing:  Float
     latitude: Float
