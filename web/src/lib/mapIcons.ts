@@ -23,21 +23,20 @@ const maskCss = (url: string) => {
   return `-webkit-mask:url('${u}') center/contain no-repeat;mask:url('${u}') center/contain no-repeat`
 }
 
-/** Tiny badges row (HTML, for map markers). */
+/** Tiny badges (HTML, for map markers): one row up to four, else two even rows; a grey "…" badge when there are more than fit. */
 function badgesHtml(routes: RouteRef[], max = 8, justify = 'center') {
   const shown = routes.slice(0, max)
   const more = routes.length - shown.length
-  return (
-    `<div style="display:flex;flex-wrap:wrap;gap:2px;justify-content:${justify};width:max-content;max-width:${4 * 34}px">` +
-    shown
-      .map(
-        (r) =>
-          `<span style="background:${hex(r.color, '#000')};color:${hex(r.textColor, '#fff')};font:700 10px/14px system-ui;padding:0 4px;min-width:14px;text-align:center;border-radius:3px">${esc(r.shortName ?? '')}</span>`,
-      )
-      .join('') +
-    (more > 0 ? `<span style="background:#6b7280;color:#fff;font:700 10px/14px system-ui;padding:0 4px;min-width:14px;text-align:center;border-radius:3px">…</span>` : '') +
-    `</div>`
-  )
+  const badge = (r: RouteRef) =>
+    `<span style="background:${hex(r.color, '#000')};color:${hex(r.textColor, '#fff')};font:700 10px/14px system-ui;padding:0 4px;min-width:14px;text-align:center;border-radius:3px">${esc(r.shortName ?? '')}</span>`
+  const ellipsis = `<span style="background:#6b7280;color:#fff;font:700 10px/14px system-ui;padding:0 4px;min-width:14px;text-align:center;border-radius:3px">…</span>`
+  const perRow = shown.length > 4 ? Math.ceil(shown.length / 2) : Math.max(shown.length, 1)
+  const rows: string[][] = []
+  for (let i = 0; i < shown.length; i += perRow) rows.push(shown.slice(i, i + perRow).map(badge))
+  if (more > 0 && rows.length) rows[rows.length - 1].push(ellipsis)
+  return `<div style="display:flex;flex-direction:column;gap:2px;align-items:${justify === 'center' ? 'center' : 'flex-start'};white-space:nowrap">${rows
+    .map((r) => `<div style="display:flex;gap:2px">${r.join('')}</div>`)
+    .join('')}</div>`
 }
 
 export type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>

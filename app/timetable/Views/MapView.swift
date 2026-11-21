@@ -230,16 +230,17 @@ struct MapView: View {
                 // Up to two rows of four badges, then "+N"
                 let shown = Array(m.routes.prefix(8))
                 VStack(spacing: 2) {
-                    ForEach(Array(stride(from: 0, to: shown.count, by: 4)), id: \.self) { start in
+                    let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1) // two even rows, or one
+                    ForEach(Array(stride(from: 0, to: shown.count, by: perRow)), id: \.self) { start in
                         HStack(spacing: 2) {
-                            ForEach(shown[start..<min(start + 4, shown.count)], id: \.routeId) { r in
+                            ForEach(shown[start..<min(start + perRow, shown.count)], id: \.routeId) { r in
                                 Text(r.shortName ?? "").font(.system(size: 10, weight: .bold)).lineLimit(1).fixedSize()
                                     .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
                                     .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
                                     .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
                             }
                             // More lines than fit: a grey badge with an ellipsis instead of a count
-                            if start + 4 >= shown.count && m.routes.count > 8 {
+                            if start + perRow >= shown.count && m.routes.count > 8 {
                                 Text("…").font(.system(size: 10, weight: .bold)).fixedSize().foregroundStyle(.white)
                                     .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
                                     .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
