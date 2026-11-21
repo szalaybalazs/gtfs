@@ -388,7 +388,7 @@ const hu: Record<MessageKey, Message> = {
   'settings.language.en': 'English',
   'settings.language.hu': 'Magyar',
   'settings.favourites': 'Kedvencek',
-  'fav.disruption': 'Zavar',
+  'fav.disruption': 'Üzemzavar',
   'settings.favExport': 'Másolás JSON-ként',
   'settings.favImport': 'JSON beillesztése',
   'settings.favCopied': '{n} kedvenc kimásolva',

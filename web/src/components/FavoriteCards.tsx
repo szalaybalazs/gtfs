@@ -5,7 +5,7 @@ import { useT } from '../lib/i18n'
 import { useDepartures } from '../lib/useDepartures'
 import { useNow } from '../lib/useTimetable'
 import { ChevronIcon, LiveIcon } from './Icons'
-import { splitAlerts, useAlerts } from './Alerts'
+import { useAlerts } from './Alerts'
 import RouteBadge from './RouteBadge'
 import { countdown } from '../lib/countdown'
 import { realtimeStatus } from '../lib/realtimeStatus'
@@ -64,12 +64,16 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
   )
 }
 
-/** A small "Disruption" tag when any of these lines / stops has an ongoing service alert */
+/** A small "Üzemzavar" tag while any of these lines / stops has a service alert in effect */
 function DisruptionTag({ routeIds, stopIds }: { routeIds: string[]; stopIds: string[] }) {
   const t = useT()
   const alerts = useAlerts(routeIds, stopIds)
-  const { ongoing } = splitAlerts(alerts.data?.alerts ?? [])
-  if (ongoing.length === 0) return null
+  // Only a disruption in effect right now: started, and not yet over
+  const now = Date.now()
+  const active = (alerts.data?.alerts ?? []).some(
+    (a) => (!a.start || new Date(a.start).getTime() <= now) && (!a.end || new Date(a.end).getTime() > now),
+  )
+  if (!active) return null
   return (
     <span className="alert-card inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 text-[12px] leading-[20px] font-semibold text-alert-text">
       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
