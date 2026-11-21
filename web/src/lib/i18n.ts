@@ -558,7 +558,7 @@ const hu: Record<MessageKey, Message> = {
   'trip.scheduled': 'Menetrend szerint',
   'trip.via': '{stops}',
   'trip.finished': 'A járat beérkezett.',
-  'trip.past': 'Elmúlt járat',
+  'trip.past': 'Múltbéli járat',
   'trip.earlierStops': '{n} korábbi megálló',
   'trip.upcoming': 'Későbbi járat · indul {time}',
   'trip.startsAt': 'Indulás: {time}',
