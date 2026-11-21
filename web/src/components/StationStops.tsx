@@ -2,6 +2,7 @@ import { comparePlatforms, isTerminusPlatform } from '../lib/categories'
 import { useQuery } from '@tanstack/react-query'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { useT } from '../lib/i18n'
+import { mainCategory } from '../lib/mapIcons'
 import MiniMap from './MiniMap'
 import StopRow from './StopRow'
 
@@ -62,13 +63,10 @@ export default function StationStops({
       <section>
         <h2 className="px-1 pb-heading text-xl font-bold">{t('common.map')}</h2>
         <MiniMap
-          area
-          // A stop group is a neutral grey footprint, not a line colour
-          color="#8e8e93"
           height={220}
           points={stops
             .filter((s) => s.lat != null && s.lon != null)
-            .map((s) => ({ lat: s.lat!, lon: s.lon!, strong: s.stopId === current }))}
+            .map((s) => ({ lat: s.lat!, lon: s.lon!, strong: s.stopId === current, color: mainCategory((s.routes ?? []).filter((r) => r != null)).color }))}
         />
       </section>
     </>

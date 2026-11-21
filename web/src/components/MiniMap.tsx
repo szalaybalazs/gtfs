@@ -2,16 +2,13 @@ import maplibregl from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { RouteRef } from '../lib/api'
-import { roundedHull } from '../lib/geo'
 import { vehicleIcon } from '../lib/mapIcons'
 import { useGeoJson, useGlMap, useMarkers, type HtmlMarker, type LngLat } from '../lib/glmap'
 import { useT } from '../lib/i18n'
 
-export type MapPoint = { lat: number; lon: number; label?: string; strong?: boolean }
+export type MapPoint = { lat: number; lon: number; label?: string; strong?: boolean; color?: string }
 
 type Props = {
-  /** Shade the convex hull of the points, e.g. a stop group's footprint. */
-  area?: boolean
   points: MapPoint[]
   line?: [number, number][] // [lat, lon]
   color?: string
@@ -52,14 +49,13 @@ export default function MiniMap(props: Props) {
   )
 }
 
-function MapView({ points, line, color = '#2563eb', vehicle, area, interactive }: Props & { interactive: boolean }) {
+function MapView({ points, line, color = '#2563eb', vehicle, interactive }: Props & { interactive: boolean }) {
   const container = useRef<HTMLDivElement>(null)
-  // Everything that must be in view; with an area, its rounded outline (not just the stops)
-  const all = useMemo<LngLat[]>(() => {
-    const pts = points.map((p) => [p.lat, p.lon] as [number, number])
-    const outline = area && pts.length > 1 ? roundedHull(pts, 28) : []
-    return [...(line ?? []), ...pts, ...outline].map(([lat, lon]) => [lon, lat])
-  }, [line, points, area])
+  // Everything that must be in view
+  const all = useMemo<LngLat[]>(
+    () => [...(line ?? []), ...points.map((p) => [p.lat, p.lon] as [number, number])].map(([lat, lon]) => [lon, lat]),
+    [line, points],
+  )
   const bounds = useMemo(() => {
     const b = new maplibregl.LngLatBounds(all[0], all[0])
     for (const p of all) b.extend(p)
@@ -82,37 +78,21 @@ function MapView({ points, line, color = '#2563eb', vehicle, area, interactive }
   )
   useGeoJson(
     map,
-    'mini-area',
-    area && points.length > 1
-      ? ({
-          type: 'Feature',
-          properties: {},
-          geometry: { type: 'Polygon', coordinates: [roundedHull(points.map((p) => [p.lat, p.lon]), 28).map(([lat, lon]) => [lon, lat])] },
-        } as GeoJSON.Feature)
-      : null,
-    [
-      // Soft, rounded footprint of the stop group: light fill, thin translucent edge
-      { id: 'mini-area-fill', type: 'fill', paint: { 'fill-color': color, 'fill-opacity': 0.1 } },
-      { id: 'mini-area-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.45 } },
-    ],
-  )
-  useGeoJson(
-    map,
     'mini-points',
     {
       type: 'FeatureCollection',
-      features: points.map((p) => ({ type: 'Feature', properties: { strong: !!p.strong }, geometry: { type: 'Point', coordinates: [p.lon, p.lat] } })),
+      features: points.map((p) => ({ type: 'Feature', properties: { strong: !!p.strong, color: p.color ?? color }, geometry: { type: 'Point', coordinates: [p.lon, p.lat] } })),
     },
     [
       {
         id: 'mini-points',
         type: 'circle',
         paint: {
-          // Small dots; the stop you came from is the bigger, filled one
-          'circle-radius': ['case', ['get', 'strong'], 6.5, 4.5],
-          'circle-color': ['case', ['get', 'strong'], color, '#ffffff'],
-          'circle-stroke-width': ['case', ['get', 'strong'], 3, 2],
-          'circle-stroke-color': ['case', ['get', 'strong'], '#ffffff', color],
+          // Pins in each stop's own colour; the stop you came from is the bigger, filled one
+          'circle-radius': ['case', ['get', 'strong'], 7, 5],
+          'circle-color': ['case', ['get', 'strong'], ['get', 'color'], '#ffffff'],
+          'circle-stroke-width': ['case', ['get', 'strong'], 3, 2.5],
+          'circle-stroke-color': ['case', ['get', 'strong'], '#ffffff', ['get', 'color']],
         },
       },
     ],
