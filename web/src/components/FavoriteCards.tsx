@@ -2,13 +2,11 @@ import { Link } from 'react-router'
 import type { Departure, RouteRef } from '../lib/api'
 import type { Favorite, FavoriteDraft } from '../lib/favorites'
 import { useT } from '../lib/i18n'
-import { realtimeStatus, statusColor } from '../lib/realtimeStatus'
-import { formatTime } from '../lib/time'
-import { shortRelative, useTimeMode } from '../lib/timeMode'
 import { useDepartures } from '../lib/useDepartures'
 import { useNow } from '../lib/useTimetable'
 import { ChevronIcon } from './Icons'
 import RouteBadge from './RouteBadge'
+import { Countdown } from './LineBoard'
 
 /** How many upcoming departures a favourite row shows. */
 const MAX_TIMES = 8
@@ -37,9 +35,7 @@ function runs(departures: Departure[], now: Date, onlyRoute?: string | string[])
  * Side-scrollable when it doesn't fit. Times are coloured by realtime status.
  */
 function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures: Departure[]; pending: boolean; onlyRoute?: string | string[]; fallback: RouteRef[] }) {
-  const t = useT()
   const now = useNow(1_000)
-  const [mode] = useTimeMode()
   const groups = runs(departures, now, onlyRoute)
   return (
     <div className="-mx-gutter flex items-center gap-4 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
@@ -53,19 +49,11 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
         : groups.map(({ route, times }) => (
             <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-1.5">
               <RouteBadge route={route} fit />
-              <span className="text-[17px] font-semibold whitespace-nowrap tabular-nums">
-                {times.map((d, i) => {
-                  const status = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay)
-                  const at = new Date(d.departure)
-                  return (
-                    <span key={`${d.tripId}-${d.serviceDate}`}>
-                      {i > 0 && <span className="text-secondary">, </span>}
-                      <span className={statusColor[status]}>
-                        {mode === 'relative' ? shortRelative((at.getTime() - now.getTime()) / 1000, t) : formatTime(at)}
-                      </span>
-                    </span>
-                  )
-                })}
+              {/* Same countdowns as the station's Lines view: next one big, the rest smaller, live mark after the number */}
+              <span className="flex items-center gap-3 pr-2">
+                {times.slice(0, 4).map((d, i) => (
+                  <Countdown key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} small={i > 0} />
+                ))}
               </span>
             </span>
           ))}

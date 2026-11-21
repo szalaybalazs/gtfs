@@ -129,7 +129,7 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
  * - an hour or more either way (sparse lines, far "Earlier" rows): the clock time, set smaller to fit
  * - the live mark sits just after the number, in the gap between columns
  */
-function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now: Date; small?: boolean; fixed?: boolean }) {
+export function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now: Date; small?: boolean; fixed?: boolean }) {
   const t = useT()
   const at = new Date(d.terminates ? d.arrival : d.departure)
   const seconds = (at.getTime() - now.getTime()) / 1000
