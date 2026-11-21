@@ -69,6 +69,8 @@ struct TripMapContent: MapContent {
     let path: [CLLocationCoordinate2D]
     let color: Color
     let big: Bool
+    /// A stop or the vehicle was tapped.
+    var onSelect: (MapSelection) -> Void = { _ in }
 
     var body: some MapContent {
         if path.count > 1 {
@@ -79,6 +81,8 @@ struct TripMapContent: MapContent {
             Annotation("", coordinate: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), anchor: .center) {
                 Circle().fill(Color.white).frame(width: big ? 10 : 7, height: big ? 10 : 7)
                     .overlay(Circle().stroke(color, lineWidth: 2))
+                    .padding(8).contentShape(Circle())
+                    .onTapGesture { onSelect(.station(s.stationId ?? s.stopId, stopId: s.stopId)) }
             }
         }
         ForEach(trip.stops.filter { big && $0.lat != nil && $0.lon != nil }) { s in
@@ -101,6 +105,7 @@ struct TripMapContent: MapContent {
         if let v = vehicle, let lat = v.latitude, let lon = v.longitude {
             Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
                 VehicleDisc(line: trip.route, bearing: v.bearing)
+                    .onTapGesture { onSelect(.vehicle(trip.tripId)) }
             }
         }
     }
@@ -127,11 +132,13 @@ struct TripMiniMap: View {
     let path: [CLLocationCoordinate2D]
     let color: Color
     @State private var full = false
+    /// What was tapped on the small map: the big one opens with it already selected.
+    @State private var picked: MapSelection?
 
     var body: some View {
         if let region = tripRegion(trip, vehicle: vehicle, path: path) {
             Map(initialPosition: .region(region), interactionModes: []) {
-                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false)
+                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false) { picked = $0; full = true }
             }
             .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .frame(height: 180)
@@ -140,7 +147,10 @@ struct TripMiniMap: View {
             .accessibilityLabel(tr("Trip map"))
             .accessibilityAddTraits(.isButton)
             .fullScreenCover(isPresented: $full) {
-                TripFullMap(trip: trip, vehicle: vehicle, path: path, color: color, region: region)
+                NavigationStack {
+                    TripFullMap(trip: trip, vehicle: vehicle, path: path, color: color, region: region, initial: picked)
+                        .transitDestinations().toolbar(.hidden, for: .navigationBar)
+                }
             }
         }
     }
@@ -152,13 +162,20 @@ private struct TripFullMap: View {
     let path: [CLLocationCoordinate2D]
     let color: Color
     let region: MKCoordinateRegion
+    @State var initial: MapSelection?
     @Environment(\.dismiss) private var dismiss
+    @State private var selection: MapSelection?
 
     var body: some View {
         Map(initialPosition: .region(region)) {
-            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true)
+            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true) { selection = $0 }
         }
         .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
+        .onAppear { selection = initial }
+        .overlay(alignment: .bottom) {
+            if let selection { card(selection).transition(.move(edge: .bottom).combined(with: .opacity)) }
+        }
+        .animation(.easeOut(duration: 0.2), value: selection)
         .overlay(alignment: .topTrailing) {
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.accent)
@@ -166,6 +183,20 @@ private struct TripFullMap: View {
             }
             .accessibilityLabel(tr("Close"))
             .padding(12)
+        }
+    }
+
+    @ViewBuilder private func card(_ selection: MapSelection) -> some View {
+        switch selection {
+        case .vehicle:
+            if let v = vehicle, let lat = v.latitude, let lon = v.longitude {
+                VehicleCard(vehicle: Vehicle(id: trip.tripId, coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon), bearing: v.bearing,
+                                             label: v.label, plate: v.plate, model: v.model, tripId: trip.tripId, serviceDate: trip.serviceDate,
+                                             headsign: trip.headsign, route: trip.route, updated: v.updated)) { self.selection = nil }
+            }
+        case .station(let id, let stopId):
+            StopCard(stationId: id, stopId: stopId, fallbackName: trip.stops.first { $0.stopId == stopId }?.name) { self.selection = nil }
+                .id(stopId ?? id)
         }
     }
 }
