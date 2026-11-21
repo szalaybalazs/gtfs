@@ -105,7 +105,7 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
         {/* The next departure big, then the following ones smaller to its right. How many depends only on
             the screen (two more on a phone, three from 640 px), and the columns have fixed widths so they line up.
             One list keyed by trip, so a time keeps its element as it moves from small to big */}
-        <div className="-mr-1 flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-3">
           {shown.map((n, i) => (
             <div key={n.tripId} ref={(el) => void (el ? boxes.current.set(n.tripId, el) : boxes.current.delete(n.tripId))} className={i === 3 ? 'hidden sm:block' : ''}>
               <Countdown d={n} now={now} small={i > 0} fixed={fixed} />
@@ -127,7 +127,7 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
  * One countdown column. Fixed width, so every row lines up; nothing may overflow it:
  * - under an hour: minutes / ½ minutes / seconds at full size ("59", "2½", "-10")
  * - an hour or more either way (sparse lines, far "Earlier" rows): the clock time, set smaller to fit
- * - the live mark sits on the unit line, never over the digits
+ * - the live mark sits just after the number, in the gap between columns
  */
 function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now: Date; small?: boolean; fixed?: boolean }) {
   const t = useT()
@@ -147,11 +147,12 @@ function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now
   return (
     <div className={`text-right whitespace-nowrap ${small ? 'w-9 text-secondary' : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
       {/* Same line height for clock times and countdowns, so the unit lines stay level */}
-      <p className={`flex items-end justify-end font-bold tabular-nums ${small ? 'h-4' : 'h-6'} leading-none ${size}`}>
+      <p className={`relative flex items-end justify-end font-bold tabular-nums ${small ? 'h-4' : 'h-6'} leading-none ${size}`}>
         <span data-value>{value}</span>
+        {/* Live mark right after the number, hanging into the gap between columns so it never shifts the digits */}
+        {live && !left && <LiveIcon className={`absolute top-0 -right-2.5 text-secondary ${small ? 'h-2 w-2' : 'h-2.5 w-2.5'}`} aria-hidden />}
       </p>
       <p className={`flex items-center justify-end gap-0.5 font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>
-        {live && !left && <LiveIcon className={small ? 'h-2.5 w-2.5' : 'h-3 w-3'} aria-hidden />}
         {unit ? t(unit) : '\u00a0'}
       </p>
     </div>
