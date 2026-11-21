@@ -198,15 +198,24 @@ struct MapView: View {
             .padding(4)
     }
 
+    /// Selected: a soft halo in the line's own colour and slightly bigger; the white border stays.
     private func vehicleBadge(_ v: Vehicle, selected: Bool) -> some View {
         let line = v.route
+        let bg = Color(hex: line?.color ?? "#6b7280")
+        let long = (line?.shortName ?? "?").count > 3
         return Text(line?.shortName ?? "?")
-            .font(.system(size: selected ? 12 : 10, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
+            .font(.system(size: long ? 9 : 10, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
             .foregroundStyle(Color(hex: line?.textColor ?? "#ffffff"))
-            .frame(width: selected ? 34 : 28, height: selected ? 18 : 15)
-            .background(Color(hex: line?.color ?? "#6b7280"), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(selected ? Color.primary : .white, lineWidth: selected ? 2 : 1))
-            .padding(6)
+            .frame(width: long ? 34 : 28, height: 15)
+            .background(bg, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(Color.white, lineWidth: 2))
+            .background {
+                RoundedRectangle(cornerRadius: 11, style: .continuous).fill(bg.opacity(selected ? 0.25 : 0)).padding(-7)
+            }
+            .shadow(color: .black.opacity(selected ? 0.35 : 0.3), radius: selected ? 3 : 2, y: selected ? 2 : 1)
+            .scaleEffect(selected ? 1.15 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: selected)
+            .padding(12)
     }
 
     // MARK: Controls
