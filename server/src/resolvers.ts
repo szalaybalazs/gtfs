@@ -179,7 +179,9 @@ const formatVehiclePosition = (vp: any) => {
     vehicleId: vp.vehicle_id,
     vehicleLabel: vp.vehicle_label,
     vehicleLicensePlate: vp.vehicle_license_plate,
-    vehicleWheelchairAccessible: vp.vehicle_wheelchair_accessible,
+    // Stored as the GTFS-RT enum (WHEELCHAIR_ACCESSIBLE / WHEELCHAIR_INACCESSIBLE / NO_VALUE / UNKNOWN, or its
+    // number 2 / 3 / 0 / 1); the schema field is a Boolean, so map it (null when not known)
+    vehicleWheelchairAccessible: wheelchairBool(vp.vehicle_wheelchair_accessible),
     timestamp: vp.timestamp,
     createdTimestamp: vp.created_timestamp,
     expirationTimestamp: vp.expiration_timestamp,
@@ -241,6 +243,13 @@ const variantIndex = (): VariantIndex =>
     }
     return { canonical, variants };
   });
+const wheelchairBool = (v: unknown): boolean | null =>
+  v === true || v === 2 || v === "2" || v === "WHEELCHAIR_ACCESSIBLE"
+    ? true
+    : v === false || v === 3 || v === "3" || v === "WHEELCHAIR_INACCESSIBLE"
+      ? false
+      : null;
+
 const canonicalRoute = (id: string): string => variantIndex().canonical.get(String(id)) ?? id;
 /** Every route_id behind a (canonical or variant) ID */
 const routeVariants = (id: string): string[] => variantIndex().variants.get(canonicalRoute(id)) ?? [id];
