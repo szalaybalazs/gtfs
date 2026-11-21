@@ -9,7 +9,7 @@ import SwiftUI
 import TimetableAPI
 
 struct ContentView: View {
-    @State private var paths = Array(repeating: NavigationPath(), count: 5)
+    @State private var paths = Array(repeating: NavigationPath(), count: 4)
     @State private var tab = 0
     @State private var reselect = TabReselect()
     @State private var settings = AppSettings.shared
@@ -40,8 +40,6 @@ struct ContentView: View {
             .tabItem { Label { Text("Routes") } icon: { Image(tab == 2 ? "tab_routes_solid" : "tab_routes") } }.tag(2)
             NavigationStack(path: $paths[3]) { MapView() }
                 .tabItem { Label { Text("Map") } icon: { Image(tab == 3 ? "tab_map_solid" : "tab_map") } }.tag(3)
-            NavigationStack(path: $paths[4]) { SettingsView() }
-                .tabItem { Label { Text("Settings") } icon: { Image(tab == 4 ? "tab_settings_solid" : "tab_settings") } }.tag(4)
         }
         .environment(\.tabReselect, reselect)
         .environment(settings)

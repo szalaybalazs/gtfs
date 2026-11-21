@@ -41,6 +41,7 @@ private struct ShortTime: View {
             Text(text).font(.system(size: 21, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
             if live && s >= 0 { LiveIcon(size: 10).foregroundStyle(Theme.secondary).padding(.top, 2) }
         }
+        .padding(.horizontal, s >= 3600 ? 4 : 0) // a clock time needs room around it
         .opacity(s < 0 ? 0.45 : 1)
     }
 }
@@ -59,14 +60,14 @@ private struct LineTimesRow: View {
                 HStack(spacing: 12) {
                     if pending || groups.isEmpty {
                         ForEach(fallback, id: \.routeId) { r in
-                            HStack(spacing: 6) {
+                            HStack(spacing: 8) {
                                 LineBadge(line: r, large: true, fit: true)
                                 Text(pending ? "…" : "–").font(.system(size: 18)).foregroundStyle(Theme.secondary)
                             }
                         }
                     } else {
                         ForEach(Array(groups.enumerated()), id: \.offset) { _, g in
-                            HStack(spacing: 4) {
+                            HStack(spacing: 8) {
                                 LineBadge(line: g.route, large: true, fit: true)
                                 // One-line times with the live mark after them; full colour
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {

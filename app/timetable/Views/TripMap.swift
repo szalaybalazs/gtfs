@@ -164,10 +164,7 @@ private struct TripFullMap: View {
         }
         .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
         .onAppear { selection = initial }
-        .overlay(alignment: .bottom) {
-            if let selection { card(selection).transition(.move(edge: .bottom).combined(with: .opacity)) }
-        }
-        .animation(.easeOut(duration: 0.2), value: selection)
+        .mapCardSheet(selection: $selection) { card($0) }
         .overlay(alignment: .topTrailing) {
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.accent)

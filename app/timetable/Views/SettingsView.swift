@@ -75,7 +75,6 @@ struct SettingsView: View {
         .alert(message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
         }
-        .scrollsToTopOnReselect(tab: 4)
-        .navigationTitle("Settings")
+                .navigationTitle("Settings")
     }
 }

@@ -41,16 +41,16 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
   const now = useNow(1_000)
   const groups = runs(departures, now, onlyRoute)
   return (
-    <div className="-mx-gutter flex items-center gap-2.5 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
+    <div className="-mx-gutter flex items-center gap-3 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
       {pending || groups.length === 0
         ? fallback.map((r) => (
-            <span key={r.routeId} className="flex shrink-0 items-center gap-1">
+            <span key={r.routeId} className="flex shrink-0 items-center gap-2">
               <RouteBadge route={r} size="lg" fit />
               <span className="text-[18px] text-secondary">{pending ? '…' : '–'}</span>
             </span>
           ))
         : groups.map(({ route, times }) => (
-            <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-1">
+            <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-2">
               <RouteBadge route={route} size="lg" fit />
               {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
               <span className="flex items-baseline gap-2.5 text-[21px] font-semibold whitespace-nowrap tabular-nums">
@@ -136,7 +136,7 @@ function ShortTime({ d, now }: { d: Departure; now: Date }) {
   const text =
     s < 0 ? `-${Math.ceil(-s)}s` : s >= 3600 ? formatTime(at) : s < 60 ? `${Math.round(s)}s` : `${countdown(s).value}'`
   return (
-    <span className={`inline-flex items-start ${s < 0 ? 'opacity-45' : ''}`}>
+    <span className={`inline-flex items-start ${s >= 3600 ? 'px-1' : ''} ${s < 0 ? 'opacity-45' : ''}`}>
       {text}
       {live && s >= 0 && <LiveIcon className="ml-0.5 h-2.5 w-2.5 text-secondary" aria-hidden />}
     </span>

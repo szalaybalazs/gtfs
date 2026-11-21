@@ -115,10 +115,7 @@ struct MapView: View {
         }
         .mapScope(mapScope)
         // An overlay, not a safe-area inset: an inset resizes the map, which made it jump when a card opened or closed
-        .overlay(alignment: .bottom) {
-            if let selection { card(for: selection).transition(.move(edge: .bottom).combined(with: .opacity)) }
-        }
-        .animation(.easeOut(duration: 0.2), value: selection)
+        .mapCardSheet(selection: $selection) { card(for: $0) }
         .onChange(of: selection) { _, new in
             if case .vehicle(let id) = new { model.pinnedVehicleId = id } else { model.pinnedVehicleId = nil }
         }

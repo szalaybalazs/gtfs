@@ -54,11 +54,14 @@ struct HomeView: View {
         .scrollsToTopOnReselect(tab: 0)
         .navigationTitle("Home")
         .toolbar {
-            if store.favorites.count > 1 {
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink { FavoritesEditView() } label: { Image(systemName: "arrow.up.arrow.down") }
-                        .accessibilityLabel("Edit favourites")
-                }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    if store.favorites.count > 1 {
+                        NavigationLink { FavoritesEditView() } label: { Label("Edit favourites", systemImage: "arrow.up.arrow.down") }
+                    }
+                    NavigationLink { SettingsView() } label: { Label("Settings", systemImage: "gearshape") }
+                } label: { Image(systemName: "ellipsis.circle") }
+                    .accessibilityLabel("Menu")
             }
         }
         .transitDestinations()
