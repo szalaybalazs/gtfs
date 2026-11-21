@@ -30,8 +30,11 @@ export default function StopRow({
             {stop.code && stop.code !== stop.stopId && <span className="ml-2 text-[13px] font-normal text-secondary">#{stop.code}</span>}
             {distance != null && <span className="ml-2 font-normal text-secondary">{formatDistance(distance)}</span>}
           </p>
-          {stop.headsigns && stop.headsigns.length > 0 && (
+          {stop.headsigns && stop.headsigns.length > 0 ? (
             <p className="truncate text-[15px] text-secondary">{t('common.towards', { to: stop.headsigns.join(' / ') })}</p>
+          ) : (
+            // Lines stop here but nothing leaves: a terminus platform (arrivals only)
+            routes.length > 0 && <p className="truncate text-[15px] text-secondary">{t('stop.terminus')}</p>
           )}
           {routes.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
@@ -51,8 +54,11 @@ export default function StopRow({
             {stop.code && stop.code !== stop.stopId && <span className="ml-2 text-[13px] font-normal text-secondary">#{stop.code}</span>}
             {distance != null && <span className="ml-2 font-normal text-secondary">{formatDistance(distance)}</span>}
           </p>
-          {stop.headsigns && stop.headsigns.length > 0 && (
+          {stop.headsigns && stop.headsigns.length > 0 ? (
             <p className="truncate text-[15px] text-secondary">{t('common.towards', { to: stop.headsigns.join(' / ') })}</p>
+          ) : (
+            // Lines stop here but nothing leaves: a terminus platform (arrivals only)
+            routes.length > 0 && <p className="truncate text-[15px] text-secondary">{t('stop.terminus')}</p>
           )}
           {routes.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">

@@ -29,6 +29,8 @@ export default function StopInfoCard({
           {t.rich('common.towards', { to: <span className="font-medium text-label">{headsigns.join(' / ')}</span> })}
         </p>
       )}
+      {/* A platform (headsigns given) where lines only arrive: say it's a terminus */}
+      {headsigns && headsigns.length === 0 && routes.length > 0 && <p className="mt-1 text-[15px] text-secondary">{t('stop.terminus')}</p>}
       {note && <p className="mt-1 text-[13px] text-secondary">{note}</p>}
       {routes.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
