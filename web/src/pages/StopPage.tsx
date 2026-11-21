@@ -17,6 +17,7 @@ import { recordVisit } from '../lib/usage'
 import { useDepartures, useSteadyLimit } from '../lib/useDepartures'
 import type { Departure } from '../lib/api'
 import { useT } from '../lib/i18n'
+import { towardsOf } from '../lib/favorites'
 
 /** One platform: its lines, then departures or the combined timetable. */
 export default function StopPage() {
@@ -53,7 +54,7 @@ export default function StopPage() {
           stopId: stop.stopId,
           stationId: stopId,
           stopName: stop.name ?? stop.stopId,
-          headsign: null,
+          headsign: towardsOf(stop.headsigns),
         })),
       ]
     : []

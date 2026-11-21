@@ -99,10 +99,12 @@ function Card({ title, subtitle, to, link, children }: { title: string; subtitle
 export function LineStopCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { kind: 'lineStop' }>; link?: boolean }) {
   const t = useT()
   const query = useDepartures([fav.stopId], { limit: 8, routeIds: [fav.route.routeId] })
+  // Saved without a direction (older favourites): take it from where the next departures go
+  const towards = fav.headsign ?? [...new Set((query.data?.departures ?? []).map((d) => d.headsign).filter(Boolean))].join(' / ')
   return (
     <Card
       title={fav.stopName}
-      subtitle={fav.headsign ? t('common.towards', { to: fav.headsign }) : null}
+      subtitle={towards ? t('common.towards', { to: towards }) : null}
       to={`/routes/${encodeURIComponent(fav.route.routeId)}?stop=${encodeURIComponent(fav.stopId)}`}
       link={link}
     >

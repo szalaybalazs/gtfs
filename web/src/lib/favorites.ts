@@ -108,3 +108,6 @@ export function useFavorites() {
   )
   return { favorites, ...groups, has, toggle, clear, exportJson, importJson }
 }
+
+/** A platform's direction(s) as one label for a saved line-from-stop ("Széll Kálmán tér" or "A / B") */
+export const towardsOf = (headsigns: string[] | null | undefined) => (headsigns?.length ? headsigns.join(' / ') : null)

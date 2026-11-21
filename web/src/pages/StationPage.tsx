@@ -18,6 +18,7 @@ import { useDepartures, useSteadyLimit } from '../lib/useDepartures'
 import { useDeparturesView } from '../lib/departuresView'
 import type { Departure } from '../lib/api'
 import { useT } from '../lib/i18n'
+import { towardsOf } from '../lib/favorites'
 
 /**
  * A stop group (e.g. Széll Kálmán tér): every line at the top, departures
@@ -87,7 +88,8 @@ export default function StationPage() {
           stopId: favStop.stopId,
           stationId: station?.stationId ?? stationId,
           stopName: favStop.name ?? favStop.stopId,
-          headsign: null,
+          // Where it goes from this platform
+          headsign: towardsOf(favStop.headsigns),
         })),
       ]
     : []
