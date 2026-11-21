@@ -1,7 +1,8 @@
+import { pt } from './i18n.pt'
 import { createElement, Fragment, useCallback, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 
 /**
- * English + Hungarian UI text. Small and hand-rolled:
+ * English, Hungarian and Portuguese UI text. Small and hand-rolled:
  *
  *   const t = useT()
  *   t('nav.home')                       // "Home" / "Kezdőlap"
@@ -12,7 +13,7 @@ import { createElement, Fragment, useCallback, useMemo, useSyncExternalStore, ty
  * Data from the API (stop names, headsigns, line numbers) is never translated.
  */
 
-export type Locale = 'en' | 'hu'
+export type Locale = 'en' | 'hu' | 'pt'
 /** What the user picked in Settings; 'auto' follows the browser. */
 export type LocaleSetting = 'auto' | Locale
 
@@ -95,6 +96,7 @@ const en = {
   'settings.language.auto': 'Auto',
   'settings.language.en': 'English',
   'settings.language.hu': 'Magyar',
+  'settings.language.pt': 'Português',
   'settings.favourites': 'Favourites',
   'fav.disruption': 'Disruption',
   'settings.favExport': 'Copy as JSON',
@@ -386,6 +388,7 @@ const hu: Record<MessageKey, Message> = {
   'settings.language.auto': 'Automatikus',
   'settings.language.en': 'English',
   'settings.language.hu': 'Magyar',
+  'settings.language.pt': 'Português',
   'settings.favourites': 'Kedvencek',
   'fav.disruption': 'Üzemzavar',
   'settings.favExport': 'Másolás JSON-ként',
@@ -585,7 +588,7 @@ const hu: Record<MessageKey, Message> = {
   'map.close': 'Térkép bezárása',
 }
 
-const CATALOGS: Record<Locale, Record<MessageKey, Message>> = { en, hu }
+const CATALOGS: Record<Locale, Record<MessageKey, Message>> = { en, hu, pt }
 
 // ---- Locale store (like timeMode.ts / favorites.ts) ----
 
@@ -595,7 +598,7 @@ const listeners = new Set<() => void>()
 function readSetting(): LocaleSetting {
   try {
     const v = localStorage.getItem(KEY)
-    return v === 'en' || v === 'hu' ? v : 'auto'
+    return v === 'en' || v === 'hu' || v === 'pt' ? v : 'auto'
   } catch {
     return 'auto'
   }
@@ -603,7 +606,8 @@ function readSetting(): LocaleSetting {
 
 function browserLocale(): Locale {
   try {
-    return (navigator.language ?? '').toLowerCase().startsWith('hu') ? 'hu' : 'en'
+    const l = (navigator.language ?? '').toLowerCase()
+    return l.startsWith('hu') ? 'hu' : l.startsWith('pt') ? 'pt' : 'en'
   } catch {
     return 'en'
   }
@@ -617,7 +621,7 @@ export function getLocale(): Locale {
 
 /** BCP 47 tag for Intl / toLocale* formatting. */
 export function intlLocale(locale: Locale = getLocale()) {
-  return locale === 'hu' ? 'hu-HU' : 'en-GB'
+  return locale === 'hu' ? 'hu-HU' : locale === 'pt' ? 'pt-PT' : 'en-GB'
 }
 
 /** Sets <html lang>; call once at startup. Also follows browser language changes in 'auto'. */

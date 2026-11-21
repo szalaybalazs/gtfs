@@ -21,6 +21,7 @@ const LANGUAGES: { value: LocaleSetting; label: MessageKey }[] = [
   { value: 'auto', label: 'settings.language.auto' },
   { value: 'en', label: 'settings.language.en' },
   { value: 'hu', label: 'settings.language.hu' },
+  { value: 'pt', label: 'settings.language.pt' },
 ]
 
 /** Row of choices in a rounded card, the selected one tinted. */
