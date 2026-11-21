@@ -13,6 +13,7 @@ import { vehicleName } from '../lib/vehicle'
 import { distance } from '../lib/geo'
 import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
+import { MarkIcon } from '../components/LineMarks'
 import { hex } from '../lib/geo'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { formatNumber, useT, type TFunction } from '../lib/i18n'
@@ -192,12 +193,11 @@ export default function TripPage() {
                 <h2 className="px-1 pb-heading text-xl font-bold">{t('trip.vehicle')}</h2>
                 {/* What it is, big; its plate / fleet number under it. (BKK's "label" is the destination, so it isn't shown.) */}
                 <div className="rounded-2xl bg-surface p-gutter">
-                  <p className="text-[20px] leading-snug font-semibold">{vehicleName(vehicle.vehicleModel) ?? vehicle.vehicleLicensePlate}</p>
-                  <p className="mt-0.5 text-[15px] text-secondary">
-                    {[vehicle.vehicleModel ? vehicle.vehicleLicensePlate : null, vehicle.vehicleWheelchairAccessible ? t('common.wheelchair') : null]
-                      .filter(Boolean)
-                      .join(' · ')}
+                  <p className="flex items-center gap-2 text-[20px] leading-snug font-semibold">
+                    {vehicleName(vehicle.vehicleModel) ?? vehicle.vehicleLicensePlate}
+                    {vehicle.vehicleWheelchairAccessible && <MarkIcon mark="lowFloor" label={t('common.wheelchair')} className="h-5 w-5 shrink-0 text-secondary" />}
                   </p>
+                  {vehicle.vehicleModel && vehicle.vehicleLicensePlate && <p className="mt-0.5 text-[15px] text-secondary">{vehicle.vehicleLicensePlate}</p>}
                 </div>
               </section>
             )}
