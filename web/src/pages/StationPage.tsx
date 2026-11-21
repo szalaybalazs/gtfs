@@ -241,12 +241,17 @@ export default function StationPage() {
                   !from && !multi ? (
                     <>
                       {t('departures.title')}
-                      <span role="group" aria-label={t('departures.view')} className="ml-auto flex rounded-lg bg-fill p-0.5">
-                        {([['board', GridIcon, t('departures.byLine')], ['time', ListIcon, t('departures.timeOrder')]] as const).map(([v, Icon, label]) => (
+                      {/* iOS-style segmented control: the white thumb slides (transform only) */}
+                      <span role="group" aria-label={t('departures.view')} className="relative ml-auto grid grid-cols-2 rounded-[10px] bg-fill p-0.5 text-[13px] font-semibold">
+                        <span
+                          aria-hidden
+                          className="absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-lg bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.04)] transition-transform duration-300 ease-[cubic-bezier(0.3,0.9,0.3,1)]"
+                          style={{ transform: board ? 'translateX(0)' : 'translateX(100%)' }}
+                        />
+                        {([['board', GridIcon, t('departures.viewLines')], ['time', ListIcon, t('departures.viewTime')]] as const).map(([v, Icon, label]) => (
                           <button
                             key={v}
                             type="button"
-                            aria-label={label}
                             aria-pressed={(v === 'board') === board}
                             onClick={() =>
                               setParams(
@@ -258,9 +263,10 @@ export default function StationPage() {
                                 { replace: true },
                               )
                             }
-                            className={`rounded-md px-2 py-1 ${(v === 'board') === board ? 'bg-surface text-label shadow-sm' : 'text-secondary'}`}
+                            className={`relative flex items-center justify-center gap-1.5 px-3 py-1.5 transition-colors ${(v === 'board') === board ? 'text-label' : 'text-secondary'}`}
                           >
-                            <Icon className="h-4 w-4" />
+                            <Icon className="h-3.5 w-3.5" />
+                            {label}
                           </button>
                         ))}
                       </span>
