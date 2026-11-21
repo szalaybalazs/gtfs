@@ -92,7 +92,7 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
         {/* The next departure big, then the following ones smaller to its right. How many depends only on
             the screen (two more on a phone, three from 640 px), and the columns have fixed widths so they line up.
             One list keyed by trip, so a time keeps its element as it moves from small to big */}
-        <div className="-mr-1 flex shrink-0 items-center gap-0.5">
+        <div className="-mr-1 flex shrink-0 items-center">
           {shown.map((n, i) => (
             <div key={n.tripId} ref={(el) => void (el ? boxes.current.set(n.tripId, el) : boxes.current.delete(n.tripId))} className={i === 3 ? 'hidden sm:block' : ''}>
               <Countdown d={n} now={now} small={i > 0} />
@@ -100,7 +100,7 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
           ))}
           {/* Empty columns when a line has fewer coming, so the big times stay lined up */}
           {Array.from({ length: 4 - shown.length }, (_, i) => (
-            <div key={`pad${i}`} aria-hidden className={`w-10 ${shown.length + i === 3 ? 'hidden sm:block' : ''}`} />
+            <div key={`pad${i}`} aria-hidden className={`w-9 ${shown.length + i === 3 ? 'hidden sm:block' : ''}`} />
           ))}
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
@@ -123,7 +123,7 @@ function Countdown({ d, now, small = false }: { d: Departure; now: Date; small?:
       ? { value: formatTime(new Date(Date.now() + seconds * 1000)), unit: null }
       : countdown(seconds)
   return (
-    <div className={`relative text-right ${small ? 'w-10 pr-2 text-secondary' : 'w-12 pr-3 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`relative text-right ${small ? 'w-9 pr-1.5 text-secondary' : 'w-11 pr-2.5 text-label'} ${left ? 'opacity-45' : ''}`}>
       {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
       <p className={`leading-none font-bold tabular-nums ${small ? 'text-[16px]' : 'text-2xl'}`}>{value}</p>
       <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{unit ? t(unit) : '\u00a0'}</p>
