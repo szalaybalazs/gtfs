@@ -28,9 +28,8 @@
   --color-late: #dc2626;
   --color-early: #9333ea;
   --color-realtime: #2563eb;
-  /* Service-change cards: soft amber with faint hatching (see .alert-card) */
+  /* Service-change cards: flat amber (see .alert-card) */
   --color-alert: #fff1a6;
-  --color-alert-stripe: rgb(255 255 255 / 0.12);
   --color-alert-text: #3d2e00;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
@@ -50,8 +49,7 @@
   --color-early: #c084fc;
     --color-realtime: #60a5fa;
     --color-alert: #3f3210;
-    --color-alert-stripe: rgb(255 214 90 / 0.04);
-    --color-alert-text: #f6e7c3;
+      --color-alert-text: #f6e7c3;
     --color-early: #c084fc;
   }
 }
@@ -68,8 +66,7 @@
     --color-late: #f87171;
     --color-realtime: #60a5fa;
     --color-alert: #3f3210;
-    --color-alert-stripe: rgb(255 214 90 / 0.04);
-    --color-alert-text: #f6e7c3;
+      --color-alert-text: #f6e7c3;
   --color-early: #c084fc;
     --color-early: #c084fc;
   }
@@ -131,9 +128,8 @@ html, body { overflow-x: clip; }
   .row-in-top, .row-in-bottom { animation: none; }
 }
 
-/* Service-change cards (alerts and their "N more" summary): one amber, hatched up to the right (10 px / 10 px) */
+/* Service-change cards (alerts and their "N more" summary): one flat amber */
 .alert-card {
   background-color: var(--color-alert);
-  background-image: repeating-linear-gradient(135deg, var(--color-alert-stripe) 0 10px, transparent 10px 20px);
   color: var(--color-alert-text);
 }
