@@ -27,7 +27,10 @@ const maskCss = (url: string) => {
 /** Variants (56A, 56É…) are left out when the base line (56) is there too. */
 export function baseLines(routes: RouteRef[]): RouteRef[] {
   const names = new Set(routes.map((r) => r.shortName))
+  // Custom: with 4, 6 and 4-6 all here, just 4-6
+  const merged46 = names.has('4') && names.has('6') && names.has('4-6')
   return routes.filter((r) => {
+    if (merged46 && (r.shortName === '4' || r.shortName === '6')) return false
     const m = /^(\d+)\p{L}$/u.exec(r.shortName ?? '')
     return !(m && names.has(m[1]))
   })

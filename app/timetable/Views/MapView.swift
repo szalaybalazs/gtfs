@@ -230,7 +230,10 @@ struct MapView: View {
                 // Up to two rows of four badges, then "+N"
                 // Variants (56A, 56É…) are left out when the base line (56) is there too
                 let names = Set(m.routes.compactMap(\.shortName))
+                // Custom: with 4, 6 and 4-6 all here, just 4-6
+                let merged46 = names.contains("4") && names.contains("6") && names.contains("4-6")
                 let base = m.routes.filter { r in
+                    if merged46 && (r.shortName == "4" || r.shortName == "6") { return false }
                     guard let n = r.shortName, let last = n.last, last.isLetter, n.count > 1 else { return true }
                     let head = String(n.dropLast())
                     return !(head.allSatisfy(\.isNumber) && names.contains(head))
