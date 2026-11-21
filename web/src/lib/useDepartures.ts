@@ -21,18 +21,26 @@ export function useDepartures(
 
 /**
  * How many departures to fetch so a list of `show` rows never runs short:
- * two spare, plus one for every departure leaving within a minute (or that
- * just left and is still counting down), since each of those is about to drop
- * out. Re-checked every few seconds against the data on screen.
+ * two spare, plus one for each departure about to drop out (leaving within a
+ * minute, or gone less than 35 s ago and still counting down), at most 5.
+ * With a chosen time (`fixed`) nothing drops out, so it's just show + 2.
+ * Re-checked every few seconds against the data on screen.
  */
-export function useSteadyLimit(show: number, departures: { departure: string }[] | undefined) {
+export function useSteadyLimit(show: number, departures: { departure: string }[] | undefined, fixed = false) {
   const [soon, setSoon] = useState(0)
   useEffect(() => {
-    const count = () =>
-      setSoon((departures ?? []).filter((d) => new Date(d.departure).getTime() - Date.now() < 60_000).length)
+    if (fixed) return
+    const count = () => {
+      const now = Date.now()
+      const n = (departures ?? []).filter((d) => {
+        const dt = new Date(d.departure).getTime() - now
+        return dt > -35_000 && dt < 60_000
+      }).length
+      setSoon(Math.min(n, 5))
+    }
     count()
     const id = setInterval(count, 5_000)
     return () => clearInterval(id)
-  }, [departures])
-  return show + 2 + soon
+  }, [departures, fixed])
+  return show + 2 + (fixed ? 0 : soon)
 }

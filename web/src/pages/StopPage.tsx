@@ -63,7 +63,7 @@ export default function StopPage() {
   // One stop: show 10, fetch just enough spare (see useSteadyLimit)
   const limit = 10 + more * 20
   const [fetched, setFetched] = useState<Departure[] | undefined>()
-  const fetchLimit = useSteadyLimit(limit, fetched)
+  const fetchLimit = useSteadyLimit(limit, fetched, !!after)
   const departures = useDepartures([stopId], { limit: fetchLimit, after })
   useEffect(() => setFetched(departures.data?.departures), [departures.data])
 

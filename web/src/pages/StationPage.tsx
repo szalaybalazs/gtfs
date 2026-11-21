@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import FavoriteSheet from '../components/FavoriteSheet'
 import { StarIcon } from '../components/Icons'
 import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
@@ -101,11 +101,17 @@ export default function StationPage() {
   // Show 20 for a whole stop group, 10 for one platform; fetch just enough spare (see useSteadyLimit)
   const limit = (from ? 10 : 20) + more * 20
   const [fetched, setFetched] = useState<Departure[] | undefined>()
-  const fetchLimit = useSteadyLimit(limit, fetched)
+  const fetchLimit = useSteadyLimit(limit, fetched, !!after)
   // Arrivals too: always on a terminus platform (nothing departs there), otherwise via the switch
   const terminus = !!fromPlatform && (fromPlatform.headsigns ?? []).length === 0 && (fromPlatform.routes ?? []).some(Boolean)
   const arrivals = terminus || params.get('arrivals') === '1'
-  const departures = useDepartures(ids, { limit: fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals })
+  // A single platform always asks for arrivals (we don't know yet if it's a terminus when the request
+  // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
+  const departures = useDepartures(ids, { limit: fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
+  const shownDepartures = useMemo(
+    () => (departures.data?.departures ?? []).filter((d) => arrivals || !d.terminates),
+    [departures.data, arrivals],
+  )
   useEffect(() => setFetched(departures.data?.departures), [departures.data])
 
   return (
@@ -222,7 +228,7 @@ export default function StationPage() {
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}
-                departures={departures.data?.departures ?? []}
+                departures={shownDepartures}
                 isPending={departures.isPending}
                 error={departures.isError}
                 onRetry={() => departures.refetch()}

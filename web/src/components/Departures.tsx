@@ -56,10 +56,13 @@ export default function Departures({
   // "departed" vehicle back to "still at the stop" within ~20 s, so hiding sooner makes rows jump
   const kept = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - (LINGER_S + 5) * 1000)
   // Rows still counting down after leaving don't use up a slot, so the list stays the same length
-  const leaving = kept.filter((d) => new Date(d.departure).getTime() < now.getTime()).length
+  // (Not with a chosen time: there nothing is "leaving", and past rows would all count)
+  const leaving = includePast ? 0 : kept.filter((d) => new Date(d.departure).getTime() < now.getTime()).length
   const upcoming = show ? kept.slice(0, show + leaving) : kept
   // Which rows were already on screen (to animate only the new ones)
   const seen = useRef(new Set<string>())
+  // The side each new row slid in from, kept for the row's lifetime so a re-render mid-animation doesn't cut it
+  const entered = useRef(new Map<string, 'top' | 'bottom'>())
   const firstSeen = upcoming.findIndex((d) => seen.current.has(rowKey(d)))
   useEffect(() => {
     for (const d of upcoming) seen.current.add(rowKey(d))
@@ -93,7 +96,9 @@ export default function Departures({
             {upcoming.map((d) => {
               const key = rowKey(d)
               // Rows that weren't there before slide in: from the top when earlier ones load, from below otherwise
-              const enter = seen.current.size > 0 && !seen.current.has(key) ? (firstSeen !== -1 && upcoming.indexOf(d) < firstSeen ? 'top' : 'bottom') : undefined
+              if (seen.current.size > 0 && !seen.current.has(key) && !entered.current.has(key))
+                entered.current.set(key, firstSeen !== -1 && upcoming.indexOf(d) < firstSeen ? 'top' : 'bottom')
+              const enter = entered.current.get(key)
               return <DepartureRow key={key} departure={d} now={now} mine={d.tripId === highlightTrip} autoHide={!includePast} enter={enter} />
             })}
           </ul>
