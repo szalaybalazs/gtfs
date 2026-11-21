@@ -90,7 +90,7 @@ export default function RouteDetailsPage() {
   const direction = choice?.direction
   const stop = choice?.stop
 
-  const { after } = useAfter()
+  const { after, picked } = useAfter()
   const arrivedOn = useSearchParams()[0].get('trip')
   // Everything on this line in the next 90 minutes (filtered by line on the server)
   const departuresQuery = useDepartures(stop ? [stop.stopId] : [], { limit: 60, after, routeIds: [routeId] })
@@ -222,6 +222,7 @@ export default function RouteDetailsPage() {
           <>
             {view === 'departures' ? (
               <Departures
+                reference={picked}
                 toolbar={<AfterFilter stopIds={stop ? [stop.stopId] : []} routeIds={[routeId]} />}
                 includePast={!!after}
                 highlightTrip={arrivedOn}

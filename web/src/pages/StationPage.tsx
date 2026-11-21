@@ -94,7 +94,7 @@ export default function StationPage() {
 
   // The selected stop (from ?from=) narrows the departures; none selected = every stop in the group
   const ids = from ? [from] : platforms.map((s) => s.stopId)
-  const { after } = useAfter()
+  const { after, picked } = useAfter()
   const arrivedOn = useSearchParams()[0].get('trip')
   // With ?from= the stop is already known, so departures load in parallel with the stop group (no waterfall)
   // A whole stop group shows more than one platform; each "Show more" adds 20
@@ -112,7 +112,10 @@ export default function StationPage() {
   // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
   const departures = useDepartures(ids, { perLine: board ? 4 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
   const shownDepartures = useMemo(
-    () => (departures.data?.departures ?? []).filter((d) => arrivals || !d.terminates),
+    () => (departures.data?.departures ?? []).filter(
+        // A trip calling at two platforms of the group shows once (its first stop here)
+        (d, i, all) => (arrivals || !d.terminates) && all.findIndex((x) => x.tripId === d.tripId && x.serviceDate === d.serviceDate) === i,
+      ),
     [departures.data, arrivals],
   )
   useEffect(() => setFetched(departures.data?.departures), [departures.data])
@@ -201,6 +204,7 @@ export default function StationPage() {
 
             <section className="space-y-2">
               <Departures
+                reference={picked}
                 toolbar={
                   <AfterFilter
                     stopIds={ids}
@@ -231,7 +235,7 @@ export default function StationPage() {
                     }
                   />
                 }
-                board={board && shownDepartures.length > 0 ? <LineBoard departures={shownDepartures} stationPath={`/stations/${encodeURIComponent(station.stationId)}`} /> : undefined}
+                board={board && shownDepartures.length > 0 ? <LineBoard reference={picked} departures={shownDepartures} stationPath={`/stations/${encodeURIComponent(station.stationId)}`} /> : undefined}
                 show={limit}
                 footer={!board && (departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
@@ -241,34 +245,38 @@ export default function StationPage() {
                   !from && !multi ? (
                     <>
                       {t('departures.title')}
-                      {/* iOS-style segmented control: the white thumb slides (transform only) */}
-                      <span role="group" aria-label={t('departures.view')} className="relative ml-auto grid grid-cols-2 rounded-[10px] bg-fill p-0.5 text-[13px] font-semibold">
+                      {/* Two plain icons; the chosen view is accent-coloured with a dot under it that slides across */}
+                      <span role="group" aria-label={t('departures.view')} className="relative ml-auto flex items-center gap-1">
+                        {([['board', GridIcon, t('departures.viewLines')], ['time', ListIcon, t('departures.viewTime')]] as const).map(([v, Icon, label]) => {
+                          const on = (v === 'board') === board
+                          return (
+                            <button
+                              key={v}
+                              type="button"
+                              aria-label={label}
+                              title={label}
+                              aria-pressed={on}
+                              onClick={() =>
+                                setParams(
+                                  (p) => {
+                                    if (v === 'time') p.set('view', 'time')
+                                    else p.delete('view')
+                                    return p
+                                  },
+                                  { replace: true },
+                                )
+                              }
+                              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors active:bg-fill ${on ? 'text-accent' : 'text-secondary/70'}`}
+                            >
+                              <Icon className="h-5 w-5" />
+                            </button>
+                          )
+                        })}
                         <span
                           aria-hidden
-                          className="absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-lg bg-surface shadow-[0_1px_3px_rgb(0_0_0/0.12),0_0_0_0.5px_rgb(0_0_0/0.04)] transition-transform duration-300 ease-[cubic-bezier(0.3,0.9,0.3,1)]"
-                          style={{ transform: board ? 'translateX(0)' : 'translateX(100%)' }}
+                          className="absolute -bottom-1 left-[14px] h-1 w-1 rounded-full bg-accent transition-transform duration-300 ease-[cubic-bezier(0.3,0.9,0.3,1)]"
+                          style={{ transform: board ? 'translateX(0)' : 'translateX(36px)' }}
                         />
-                        {([['board', GridIcon, t('departures.viewLines')], ['time', ListIcon, t('departures.viewTime')]] as const).map(([v, Icon, label]) => (
-                          <button
-                            key={v}
-                            type="button"
-                            aria-pressed={(v === 'board') === board}
-                            onClick={() =>
-                              setParams(
-                                (p) => {
-                                  if (v === 'time') p.set('view', 'time')
-                                  else p.delete('view')
-                                  return p
-                                },
-                                { replace: true },
-                              )
-                            }
-                            className={`relative flex items-center justify-center gap-1.5 px-3 py-1.5 transition-colors ${(v === 'board') === board ? 'text-label' : 'text-secondary'}`}
-                          >
-                            <Icon className="h-3.5 w-3.5" />
-                            {label}
-                          </button>
-                        ))}
                       </span>
                     </>
                   ) : null

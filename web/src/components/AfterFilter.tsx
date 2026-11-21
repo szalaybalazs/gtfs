@@ -122,10 +122,12 @@ export function TimeControl() {
     setOpen(false)
   }
   const hhmm = `${pad(h)}:${pad(m)}`
-  const label = after
-    ? localParts(after).date !== days[0]
-      ? `${dayLabel(localParts(after).date)}, ${t('after.from', { time: formatTime(after) })}`
-      : t('after.from', { time: formatTime(after) })
+  // The chosen time (what the countdowns run from), not where "Earlier" made the list start
+  const shownAt = picked ?? after
+  const label = shownAt
+    ? localParts(shownAt).date !== days[0]
+      ? `${dayLabel(localParts(shownAt).date)}, ${t('after.from', { time: formatTime(shownAt) })}`
+      : t('after.from', { time: formatTime(shownAt) })
     : t('after.now')
 
   return (

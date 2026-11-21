@@ -33,7 +33,7 @@ export default function StopPage() {
   // Visits count towards the stop's group, which is what search lists
   useEffect(() => recordVisit(`station:${stopId}`), [stopId])
   const routes = (stop?.routes ?? []).filter((r) => r != null)
-  const { after } = useAfter()
+  const { after, picked } = useAfter()
   const arrivedOn = useSearchParams()[0].get('trip')
   const { has } = useFavorites()
   const [sheet, setSheet] = useState(false)
@@ -126,6 +126,7 @@ export default function StopPage() {
               <>
                 {view === 'departures' ? (
                   <Departures
+                    reference={picked}
                     toolbar={<AfterFilter stopIds={[stopId]} />}
                     show={limit}
                 footer={(departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}

@@ -19,15 +19,25 @@ const LINGER_S = 10
  * row looks like a departure row (next departure big, the following ones
  * smaller beside it); tapping it opens that line's departures from its platform.
  */
-export default function LineBoard({ departures, stationPath }: { departures: Departure[]; stationPath: string }) {
-  const now = useNow(1_000)
+export default function LineBoard({
+  departures,
+  stationPath,
+  reference,
+}: {
+  departures: Departure[]
+  stationPath: string
+  /** Count from this time instead of now (a chosen time): everything shows, earlier ones as "N min before" */
+  reference?: Date | null
+}) {
+  const live = useNow(1_000)
+  const now = reference ?? live
   // Only times shown while still to come may count on after leaving; one already gone when it loaded never shows
   const shownUpcoming = useRef(new Set<string>())
   const groups = new Map<string, Departure[]>()
   for (const d of departures) {
     const at = new Date(d.terminates ? d.arrival : d.departure).getTime()
-    if (at < now.getTime() && !shownUpcoming.current.has(d.tripId)) continue
-    if (at < now.getTime() - LINGER_S * 1000) continue
+    if (!reference && at < now.getTime() && !shownUpcoming.current.has(d.tripId)) continue
+    if (!reference && at < now.getTime() - LINGER_S * 1000) continue
     if (at >= now.getTime()) shownUpcoming.current.add(d.tripId)
     // Arrivals get their own row, apart from the same line leaving
     const key = `${d.route?.routeId}|${d.headsign}|${d.terminates ? 'arr' : 'dep'}`
@@ -46,13 +56,13 @@ export default function LineBoard({ departures, stationPath }: { departures: Dep
   return (
     <ul className="divide-y divide-separator">
       {rows.map(([key, list]) => (
-        <BoardRow key={key} list={list} now={now} stationPath={stationPath} />
+        <BoardRow key={key} list={list} fixed={!!reference} now={now} stationPath={stationPath} />
       ))}
     </ul>
   )
 }
 
-function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; stationPath: string }) {
+function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: Date; stationPath: string; fixed: boolean }) {
   const t = useT()
   const d = list[0]
   const shown = list.slice(0, 4)
@@ -95,7 +105,7 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
         <div className="-mr-1 flex shrink-0 items-center">
           {shown.map((n, i) => (
             <div key={n.tripId} ref={(el) => void (el ? boxes.current.set(n.tripId, el) : boxes.current.delete(n.tripId))} className={i === 3 ? 'hidden sm:block' : ''}>
-              <Countdown d={n} now={now} small={i > 0} />
+              <Countdown d={n} now={now} small={i > 0} fixed={fixed} />
             </div>
           ))}
           {/* Empty columns when a line has fewer coming, so the big times stay lined up */}
@@ -110,17 +120,19 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
 }
 
 /** Minutes / seconds until a departure, negative seconds just after it leaves; the live mark in its own corner */
-function Countdown({ d, now, small = false }: { d: Departure; now: Date; small?: boolean }) {
+function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now: Date; small?: boolean; fixed?: boolean }) {
   const t = useT()
   const seconds = (new Date(d.terminates ? d.arrival : d.departure).getTime() - now.getTime()) / 1000
   const left = seconds < 0
   const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
   // An hour or more away: the clock time reads better than "74 min"
   const far = seconds >= 60 * 60
-  const { value, unit } = left
+  const { value, unit } = left && fixed
+    ? { value: `-${Math.ceil(-seconds / 60)}`, unit: 'unit.min' as const }
+    : left
     ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
     : far
-      ? { value: formatTime(new Date(Date.now() + seconds * 1000)), unit: null }
+      ? { value: formatTime(new Date(new Date(d.terminates ? d.arrival : d.departure))), unit: null }
       : countdown(seconds)
   return (
     <div className={`relative text-right ${small ? 'w-9 pr-1.5 text-secondary' : 'w-11 pr-2.5 text-label'} ${left ? 'opacity-45' : ''}`}>

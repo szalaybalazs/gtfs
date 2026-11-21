@@ -32,7 +32,10 @@ export default function Departures({
   includePast = false,
   highlightTrip,
   board,
+  reference,
 }: {
+  /** Count from this time instead of now (a chosen time, or when you arrive on a trip): planning a transfer */
+  reference?: Date | null
   /** Replaces the row list (e.g. the per-line board), keeping the toolbar, loading and error states */
   board?: ReactNode
   // includePast also means "not live": departed rows stay (faded) instead of collapsing away
@@ -54,7 +57,9 @@ export default function Departures({
   empty?: string
 }) {
   const t = useT()
-  const now = useNow(1_000)
+  const live = useNow(1_000)
+  // With a chosen time, every countdown runs from it, and nothing lingers or collapses (nothing is "leaving")
+  const now = reference ?? live
   // Rows shown while still to come; only those may linger after leaving (one that had already
   // gone when it loaded never appears)
   const shownUpcoming = useRef(new Set<string>())
@@ -114,7 +119,7 @@ export default function Departures({
               if (seen.current.size > 0 && !seen.current.has(key) && !entered.current.has(key))
                 entered.current.set(key, firstSeen !== -1 && upcoming.indexOf(d) < firstSeen ? 'top' : 'bottom')
               const enter = entered.current.get(key)
-              return <DepartureRow key={key} departure={d} now={now} mine={d.tripId === highlightTrip} autoHide={!includePast} enter={enter} />
+              return <DepartureRow key={key} departure={d} now={now} fixed={!!reference} mine={d.tripId === highlightTrip} autoHide={!includePast} enter={enter} />
             })}
           </ul>
         )}
@@ -132,6 +137,7 @@ export function DepartureRow({
   mine,
   autoHide = true,
   enter,
+  fixed = false,
 }: {
   departure: Departure
   now: Date
@@ -139,6 +145,8 @@ export function DepartureRow({
   autoHide?: boolean
   /** Just added to the list: slide in from this side (transform + opacity only, so it runs on the GPU) */
   enter?: 'top' | 'bottom'
+  /** `now` is a chosen time, not the clock: earlier rows read "N min before" */
+  fixed?: boolean
 }) {
   const qc = useQueryClient()
   const t = useT()
@@ -152,7 +160,9 @@ export function DepartureRow({
   // Only when showing "Now": with a chosen time or your trip, nothing vanishes
   const collapsing = autoHide && seconds < -LINGER_S && seconds >= -60
   const left = seconds < -60
-  const { value, unit } = left
+  const { value, unit } = fixed && seconds < 0
+    ? { value: String(Math.ceil(-seconds / 60)), unit: 'unit.minBefore' as const }
+    : left
     ? { value: String(Math.round(-seconds / 60)), unit: 'unit.minAgo' as const }
     : justLeft
       ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
