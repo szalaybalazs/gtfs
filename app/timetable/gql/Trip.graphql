@@ -1,0 +1,17 @@
+query Trip($id: ID!, $serviceDate: String) {
+  trip(id: $id, serviceDate: $serviceDate) {
+    tripId
+    serviceDate
+    headsign
+    route { routeId shortName color textColor type }
+    stops {
+      stopSequence
+      arrival
+      departure
+      arrivalDelay
+      departureDelay
+      realtime
+      stop { stopId name station { stationId } }
+    }
+  }
+}

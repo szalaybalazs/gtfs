@@ -143,6 +143,39 @@ struct StationTarget: Hashable {
     var lines: [String] = []
     /// Count from this time instead of now.
     var reference: Date? = nil
+    /// The trip you arrived on, marked "Your trip".
+    var trip: String? = nil
+}
+
+/// A departure's trip. `from` is the stop you came from; the route and headsign are what the
+/// tapped row already knew, shown while the trip loads.
+struct TripTarget: Hashable {
+    let tripId: String
+    let serviceDate: String
+    var from: String? = nil
+    var route: LineRef? = nil
+    var headsign: String? = nil
+}
+
+struct TripStop: Identifiable, Hashable {
+    let stopSequence: Int
+    let stopId: String
+    let stationId: String?
+    let name: String
+    let arrival: Date
+    let departure: Date
+    let arrivalDelay: Int?
+    let departureDelay: Int?
+    let realtime: Bool
+    var id: Int { stopSequence }
+}
+
+struct Trip: Hashable {
+    let tripId: String
+    let serviceDate: String
+    let headsign: String?
+    let route: LineRef?
+    let stops: [TripStop]
 }
 
 enum TimeFormat {

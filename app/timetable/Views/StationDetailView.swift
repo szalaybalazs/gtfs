@@ -67,29 +67,23 @@ struct StationDetailView: View {
     }
 
     var body: some View {
-        List {
-            if let message = stationModel.state.errorMessage, station == nil {
-                ErrorView(message: message) { retry += 1 }
-            } else if let station {
-                header(station)
-                departuresSection
-                platformsSection
-            } else {
-                ProgressView().frame(maxWidth: .infinity)
-            }
-        }
-        .navigationTitle(fromPlatform?.name ?? station?.name ?? "")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if target.from == nil && !multi {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Picker("View", selection: Bindable(settings).departuresView) {
-                        ForEach(DeparturesView.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
-                    }
-                    .pickerStyle(.menu)
+        ScrollView {
+            VStack(spacing: 24) {
+                if let message = stationModel.state.errorMessage, station == nil {
+                    ErrorView(message: message) { retry += 1 }
+                } else if let station {
+                    header(station)
+                    departuresSection
+                    platformsSection
+                } else {
+                    ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
                 }
             }
+            .padding(16)
         }
+        .background(Theme.canvas)
+        .navigationTitle(fromPlatform?.name ?? station?.name ?? "")
+        .navigationBarTitleDisplayMode(.inline)
         .task(id: "\(target.stationId)|\(retry)") { await stationModel.load(id: target.stationId) }
         // Re-runs (and cancels the old refresh loop) whenever what is asked for changes
         .task(id: request) {
@@ -103,48 +97,88 @@ struct StationDetailView: View {
 
     @ViewBuilder
     private func header(_ station: Station) -> some View {
-        Section {
+        Card {
             VStack(alignment: .leading, spacing: 8) {
                 if let platform = fromPlatform {
+                    Text(platform.name ?? station.name).font(.system(size: 22, weight: .bold))
                     if !platform.headsigns.isEmpty {
-                        Text("→ " + platform.headsigns.joined(separator: ", ")).font(.subheadline).foregroundStyle(.secondary)
+                        Text("towards " + platform.headsigns.joined(separator: " / ")).font(.system(size: 15)).foregroundStyle(Theme.secondary)
                     }
                     LineBadges(lines: platform.routes.filter { !multi || target.lines.contains($0.routeId) })
                 } else {
-                    Text(multi ? "Selected lines" : "\(platforms.count) \(platforms.count == 1 ? "stop" : "stops") here").font(.subheadline).foregroundStyle(.secondary)
+                    Text(station.name).font(.system(size: 22, weight: .bold))
+                    Text(multi ? "Selected lines" : "\(platforms.count) \(platforms.count == 1 ? "stop" : "stops") here")
+                        .font(.system(size: 15)).foregroundStyle(Theme.secondary)
                     LineBadges(lines: multi ? station.routes.filter { target.lines.contains($0.routeId) } : station.routes)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+        }
+    }
+
+    private var departuresSection: some View {
+        VStack(spacing: 0) {
+            SectionTitle(title: "Departures") {
+                if target.from == nil && !multi { viewSwitch }
+            }
+            Card {
+                timeControls
+                Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
+                if !departuresModel.loaded, departuresModel.state.errorMessage == nil {
+                    ProgressView().frame(maxWidth: .infinity).padding(24)
+                } else if let message = departuresModel.state.errorMessage, departuresModel.departures.isEmpty {
+                    ErrorView(message: message) { await departuresModel.load(request) }
+                } else {
+                    // A second-resolution clock drives the countdowns; a chosen time stays fixed
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        departureRows(now: reference ?? context.date)
+                    }
                 }
             }
         }
     }
 
-    private var departuresSection: some View {
-        Section {
-            timeControls
-            if !departuresModel.loaded, departuresModel.state.errorMessage == nil {
-                ProgressView().frame(maxWidth: .infinity)
-            } else if let message = departuresModel.state.errorMessage, departuresModel.departures.isEmpty {
-                ErrorView(message: message) { await departuresModel.load(request) }
-            } else {
-                // A second-resolution clock drives the countdowns; a chosen time stays fixed
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    departureRows(now: reference ?? context.date)
+    /// Two plain icons by the heading; the chosen view is accent-coloured with a dot under it that slides across.
+    private var viewSwitch: some View {
+        let isBoard = settings.departuresView == .lines
+        return HStack(spacing: 4) {
+            ForEach(DeparturesView.allCases) { v in
+                Button {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { settings.departuresView = v }
+                } label: {
+                    Image(systemName: v.symbol)
+                        .font(.system(size: 17))
+                        .foregroundStyle((v == .lines) == isBoard ? Theme.accent : Theme.secondary.opacity(0.7))
+                        .frame(width: 32, height: 32)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(v.title)
             }
-        } header: {
-            Text("Departures")
+        }
+        .overlay(alignment: .bottomLeading) {
+            Circle().fill(Theme.accent).frame(width: 4, height: 4)
+                .offset(x: 14 + (isBoard ? 0 : 36), y: 2)
         }
     }
 
     @ViewBuilder
     private var timeControls: some View {
-        Toggle("Choose a time", isOn: $chooseTime.animation())
-        if chooseTime {
-            DatePicker("Time", selection: $picked, displayedComponents: [.date, .hourAndMinute])
-                .environment(\.timeZone, TimeFormat.budapest)
-        }
-        if !terminus {
-            Toggle("Show arrivals", isOn: $showArrivals)
+        VStack(spacing: 0) {
+            Toggle("Choose a time", isOn: $chooseTime.animation())
+                .font(.system(size: 15))
+                .padding(.horizontal, 16).padding(.vertical, 8)
+            if chooseTime {
+                DatePicker("Time", selection: $picked, displayedComponents: [.date, .hourAndMinute])
+                    .font(.system(size: 15))
+                    .environment(\.timeZone, TimeFormat.budapest)
+                    .padding(.horizontal, 16).padding(.vertical, 4)
+            }
+            if !terminus {
+                Toggle("Show arrivals", isOn: $showArrivals)
+                    .font(.system(size: 15))
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+            }
         }
     }
 
@@ -154,24 +188,34 @@ struct StationDetailView: View {
         let all = distinctDepartures()
         let visible = tracker.visible(all, now: now, reference: reference)
         if visible.isEmpty {
-            Text("No departures").foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .center)
+            Text("No departures").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
         } else if board {
-            ForEach(LineBoardGrouping.rows(visible), id: \.key) { row in
+            let rows = LineBoardGrouping.rows(visible)
+            RowList(data: rows, id: \.key) { row in
                 NavigationLink(value: StationTarget(
                     stationId: target.stationId, from: row.list[0].stopId,
                     lines: row.list[0].route.map { [$0.routeId] } ?? [], reference: reference
                 )) {
                     LineBoardRow(list: row.list, now: now, fixed: fixed)
                 }
+                .buttonStyle(RowButtonStyle())
             }
         } else {
             // Rows still counting down after leaving don't use up a slot
             let leaving = fixed ? 0 : visible.filter { $0.time < now }.count
-            ForEach(visible.prefix(shown + leaving)) { d in
-                DepartureRow(departure: d, now: now, fixed: fixed)
+            RowList(data: Array(visible.prefix(shown + leaving)), id: \.id) { d in
+                NavigationLink(value: TripTarget(tripId: d.tripId, serviceDate: d.serviceDate, from: d.stopId, route: d.route, headsign: d.headsign)) {
+                    DepartureRow(departure: d, now: now, fixed: fixed, mine: d.tripId == target.trip)
+                }
+                .buttonStyle(RowButtonStyle())
             }
             if all.count >= shown {
-                Button("Show more") { more += 1 }
+                Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
+                Button { more += 1 } label: {
+                    Text("Show more").font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                }
+                .buttonStyle(RowButtonStyle())
             }
         }
     }
@@ -188,10 +232,14 @@ struct StationDetailView: View {
     @ViewBuilder
     private var platformsSection: some View {
         if !platforms.isEmpty {
-            Section("Stops here") {
-                ForEach(platforms) { platform in
-                    NavigationLink(value: StationTarget(stationId: target.stationId, from: platform.stopId, lines: target.lines, reference: reference)) {
-                        PlatformRow(platform: platform, highlighted: platform.stopId == target.from)
+            VStack(spacing: 0) {
+                SectionTitle("Stops here")
+                Card {
+                    RowList(data: platforms, id: \.stopId) { platform in
+                        NavigationLink(value: StationTarget(stationId: target.stationId, from: platform.stopId, lines: target.lines, reference: reference)) {
+                            PlatformRow(platform: platform, highlighted: platform.stopId == target.from)
+                        }
+                        .buttonStyle(RowButtonStyle())
                     }
                 }
             }
@@ -204,18 +252,16 @@ struct PlatformRow: View {
     var highlighted = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(platform.headsigns.isEmpty ? "Terminus" : "→ " + platform.headsigns.prefix(3).joined(separator: ", "))
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(2)
-                if let code = platform.code, code != platform.stopId {
-                    Text(code).font(.caption).foregroundStyle(.secondary)
-                }
-                if highlighted { Spacer(); Image(systemName: "checkmark").foregroundStyle(Color.accentColor) }
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(platform.headsigns.isEmpty ? "Terminus · arrivals only" : "towards " + platform.headsigns.joined(separator: " / "))
+                    .font(.system(size: 15, weight: highlighted ? .bold : .medium)).lineLimit(2)
+                LineBadges(lines: platform.routes)
             }
-            LineBadges(lines: platform.routes)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Chevron()
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }

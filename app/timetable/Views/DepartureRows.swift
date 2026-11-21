@@ -6,102 +6,133 @@
 //
 
 import SwiftUI
+import Flow
 
-/// Width of the countdown columns, so every row lines up.
-private enum Column {
-    static let big: CGFloat = 46
-    static let small: CGFloat = 38
-}
-
-/// The number (and unit under it) for one departure.
-struct CountdownView: View {
-    let departure: Departure
-    let now: Date
-    var small = false
-    var fixed = false
-    var board = false
-
-    var body: some View {
-        let seconds = departure.time.timeIntervalSince(now)
-        let text = Countdown.text(seconds: seconds, at: departure.time, fixed: fixed, board: board)
-        let gone = seconds < 0
-        let live = RealtimeStatus(realtime: departure.realtime, delay: departure.delay) != .scheduled
-        VStack(alignment: .trailing, spacing: 0) {
-            Text(text.value)
-                .font(.system(size: text.unit == nil ? (small ? 12 : 15) : (small ? 16 : 24), weight: .bold))
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-            HStack(spacing: 2) {
-                if live && !gone { Image(systemName: "dot.radiowaves.up.forward").font(.system(size: small ? 8 : 9)) }
-                Text(text.unit ?? " ")
-            }
-            .font(.system(size: small ? 10 : 11, weight: .medium))
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-        }
-        .foregroundStyle(small || gone ? Color.secondary : Color.primary)
-        .opacity(gone ? 0.45 : 1)
-        .frame(width: small ? Column.small : Column.big, alignment: .trailing)
-    }
-}
-
+/// "ARRIVES" tag on a trip that ends here.
 private struct ArrivesTag: View {
     var body: some View {
         Text("ARRIVES")
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 5)
-            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 5))
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(Theme.secondary)
+            .padding(.horizontal, 6)
+            .frame(height: 18)
+            .background(Theme.fill, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 }
 
-/// One departure in time order: badge, destination, marks and exact time, countdown.
+private func isLive(_ d: Departure) -> Bool {
+    RealtimeStatus(realtime: d.realtime, delay: d.delay) != .scheduled
+}
+
+/// One departure in time order: badge, destination, marks and exact time, big countdown, chevron.
 struct DepartureRow: View {
     let departure: Departure
     let now: Date
     var fixed = false
+    /// The trip you arrived on: marked "Your trip" and tinted.
+    var mine = false
 
     var body: some View {
         let d = departure
         let status = RealtimeStatus(realtime: d.realtime, delay: d.delay)
         let seconds = d.time.timeIntervalSince(now)
-        HStack(spacing: 10) {
+        // Just departed: -1, -2... in plain text, faded
+        let justLeft = seconds < 0 && seconds >= -60
+        let left = seconds < -60
+        let count: CountdownText = fixed && seconds < 0
+            ? CountdownText(value: String(Int((-seconds / 60).rounded(.up))), unit: "min before")
+            : left ? CountdownText(value: String(Int((-seconds / 60).rounded())), unit: "min ago")
+            : justLeft ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: "sec")
+            : Countdown.upcoming(seconds)
+        HStack(spacing: 12) {
             if let route = d.route { LineBadge(line: route) }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(d.headsign ?? "—").font(.body.weight(.medium)).lineLimit(2)
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 0) {
+                if mine {
+                    Text("YOUR TRIP").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.accent)
+                }
+                Text(d.headsign ?? "—")
+                    .font(.system(size: 17, weight: .medium))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                HFlow(itemSpacing: 6, rowSpacing: 0) {
                     if d.terminates { ArrivesTag() }
                     if d.frontDoor { MarkerIcon(marker: .frontDoor) }
                     if d.onRequest { MarkerIcon(marker: .demand) }
                     if d.wheelchairAccessible { MarkerIcon(marker: .lowFloor) }
                     if d.bikesAllowed { MarkerIcon(marker: .bikes) }
-                    if (status == .late || status == .early), let delay = d.delay {
+                    if status == .late || status == .early, let delay = d.delay {
                         Text(TimeFormat.clock(d.time.addingTimeInterval(-Double(delay))))
-                            .strikethrough().foregroundStyle(.secondary)
+                            .strikethrough().foregroundStyle(Theme.secondary)
                     }
                     HStack(spacing: 2) {
                         Text(TimeFormat.clock(d.time))
-                        if status != .scheduled { Image(systemName: "dot.radiowaves.up.forward").font(.caption2) }
+                        if status != .scheduled { LiveIcon(size: 14) }
                     }
-                    .foregroundStyle(statusColor(status))
+                    .foregroundStyle(Theme.color(status))
                 }
-                .font(.subheadline.monospacedDigit())
+                .font(.system(size: 15).monospacedDigit())
+                .padding(.top, 2)
             }
-            Spacer(minLength: 4)
-            CountdownView(departure: d, now: now, fixed: fixed)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // Countdown stays plain (black, grey once gone); colour lives on the time line. Live mark in its own corner.
+            VStack(alignment: .trailing, spacing: 0) {
+                Text(count.value).font(.system(size: 24, weight: .bold)).monospacedDigit().lineLimit(1)
+                Text(count.unit ?? " ").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.secondary).lineLimit(1)
+            }
+            .foregroundStyle(left ? Theme.secondary : Color.primary)
+            .padding(.trailing, 14)
+            .frame(minWidth: 56, alignment: .trailing)
+            .overlay(alignment: .topTrailing) {
+                if status != .scheduled && !justLeft && !left {
+                    LiveIcon(size: 12).foregroundStyle(Theme.secondary)
+                }
+            }
+            Chevron()
         }
-        .opacity(seconds < 0 && !fixed ? 0.45 : 1)
-        .padding(.vertical, 2)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .opacity(left || justLeft ? 0.45 : 1)
+        .background(mine ? Theme.accent.opacity(0.1) : Color.clear)
     }
+}
 
-    private func statusColor(_ s: RealtimeStatus) -> Color {
-        switch s {
-        case .scheduled: return .primary
-        case .onTime: return .green
-        case .early: return .purple
-        case .late: return .red
+/// One countdown column of the Lines board. Fixed width, so every row lines up; nothing may overflow it:
+/// minutes / half minutes / seconds under an hour, the clock time (smaller) from an hour either way,
+/// and the live mark on the unit line, never over the digits.
+struct BoardCountdown: View {
+    let departure: Departure
+    let now: Date
+    var small = false
+    var fixed = false
+
+    var body: some View {
+        let d = departure
+        let seconds = d.time.timeIntervalSince(now)
+        let left = seconds < 0
+        let clock = abs(seconds) >= 3600
+        let text: CountdownText = clock
+            ? CountdownText(value: TimeFormat.clock(d.time), unit: nil)
+            : left && fixed ? CountdownText(value: "-\(Int((-seconds / 60).rounded(.up)))", unit: "min")
+            : left ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: "sec")
+            : Countdown.upcoming(seconds)
+        let size: CGFloat = clock ? (small ? 12 : 15) : (small ? 16 : 24)
+        VStack(alignment: .trailing, spacing: 0) {
+            // Same height for clock times and countdowns, so the unit lines stay level
+            Text(text.value)
+                .font(.system(size: size, weight: .bold)).monospacedDigit()
+                .lineLimit(1)
+                .frame(height: small ? 16 : 24, alignment: .bottomTrailing)
+            HStack(spacing: 2) {
+                if isLive(d) && !left { LiveIcon(size: small ? 10 : 12) }
+                Text(text.unit ?? " ")
+            }
+            .font(.system(size: small ? 10 : 11, weight: .medium))
+            .foregroundStyle(Theme.secondary)
+            .lineLimit(1)
         }
+        .foregroundStyle(small ? Theme.secondary : Color.primary)
+        .opacity(left ? 0.45 : 1)
+        .frame(width: small ? 36 : 44, alignment: .trailing)
     }
 }
 
@@ -119,22 +150,28 @@ struct LineBoardRow: View {
         HStack(spacing: 10) {
             if let route = d.route { LineBadge(line: route) }
             VStack(alignment: .leading, spacing: 2) {
-                Text(d.headsign ?? "—").font(.body.weight(.medium)).lineLimit(2)
+                Text(d.headsign ?? "—")
+                    .font(.system(size: 17, weight: .medium))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 if d.terminates { ArrivesTag() }
             }
-            Spacer(minLength: 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 6) {
                 ForEach(Array(shown.enumerated()), id: \.element.tripId) { i, dep in
-                    CountdownView(departure: dep, now: now, small: i > 0, fixed: fixed, board: true)
+                    BoardCountdown(departure: dep, now: now, small: i > 0, fixed: fixed)
                 }
                 // Empty columns when a line has fewer coming, so the big times stay lined up
                 ForEach(0..<(columns - shown.count), id: \.self) { _ in
-                    Color.clear.frame(width: Column.small, height: 1)
+                    Color.clear.frame(width: 36, height: 1)
                 }
             }
+            .padding(.trailing, -4)
             .animation(.easeOut(duration: 0.4), value: shown.map(\.tripId))
+            Chevron()
         }
-        .padding(.vertical, 2)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 

@@ -15,13 +15,7 @@ struct RouteListItem: View {
         NavigationLink(destination: RouteDetailsView(id: route.routeId, shortName: route.shortName)){
             HStack(alignment: .center) {
                 HStack(alignment: .center) {
-                    Text(route.shortName ?? "")
-                        .padding(.vertical, 3)
-                        .padding(.horizontal, 6)
-                        .background(Color(hex: route.color ?? "#000000"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color(hex: route.textColor ?? "#ffffff"))
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    LineBadge(line: LineRef(routeId: route.routeId, shortName: route.shortName, color: route.color, textColor: route.textColor, type: nil))
                 }
                 
                 Text(route.desc ?? route.longName ??  "")

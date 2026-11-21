@@ -31,6 +31,7 @@ extension NearbyStationsQuery.Data.StationsByRadius.Route: RouteRefLike {}
 extension NearbyStationsQuery.Data.StationsByRadius.Stop.Route: RouteRefLike {}
 extension StationsQuery.Data.Stations.Datum.Route: RouteRefLike {}
 extension StationsQuery.Data.Stations.Datum.Stop.Route: RouteRefLike {}
+extension TripQuery.Data.Trip.Route: RouteRefLike {}
 
 enum APIDate {
     private static let withFraction: ISO8601DateFormatter = {
@@ -91,5 +92,19 @@ extension Station {
                       Platform(stopId: p.stopId, name: p.name, code: p.code, lat: p.lat, lon: p.lon,
                                headsigns: p.headsigns, routes: p.routes.map(\.line))
                   })
+    }
+}
+
+extension Trip {
+    init(_ t: TripQuery.Data.Trip) {
+        self.init(
+            tripId: t.tripId, serviceDate: t.serviceDate, headsign: t.headsign, route: t.route?.line,
+            stops: t.stops.compactMap { s in
+                guard let arrival = APIDate.parse(s.arrival), let departure = APIDate.parse(s.departure) else { return nil }
+                return TripStop(
+                    stopSequence: s.stopSequence, stopId: s.stop.stopId, stationId: s.stop.station?.stationId,
+                    name: s.stop.name ?? s.stop.stopId, arrival: arrival, departure: departure,
+                    arrivalDelay: s.arrivalDelay, departureDelay: s.departureDelay, realtime: s.realtime)
+            })
     }
 }
