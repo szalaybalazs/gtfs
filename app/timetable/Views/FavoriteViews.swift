@@ -70,7 +70,7 @@ private struct LineTimesRow: View {
                                 LineBadge(line: g.route, fit: true)
                                 // One-line times with the live mark after them; full colour
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    ForEach(Array(g.times.prefix(4).enumerated()), id: \.element.id) { _, d in
+                                    ForEach(Array(g.times.enumerated()), id: \.element.id) { _, d in
                                         ShortTime(departure: d, now: context.date)
                                     }
                                 }
