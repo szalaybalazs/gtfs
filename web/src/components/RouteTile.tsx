@@ -72,7 +72,7 @@ export default function RouteTile({
       }}
       // Same proportions as the badge (2:1, 5/24 radius), just larger
       className={`relative flex aspect-[2/1] items-center justify-center rounded-[10px] px-1 text-lg font-bold select-none [-webkit-touch-callout:none] active:opacity-70 ${
-        compact ? 'h-10' : 'w-full'
+        compact ? 'h-14 text-2xl' : 'w-full'
       } ${selected ? 'ring-[3px] ring-accent ring-offset-2 ring-offset-canvas' : ''} ${selecting && !selected ? 'opacity-60' : ''}`}
       style={{ backgroundColor: hex(route.color, '#000000'), color: hex(route.textColor, '#ffffff') }}
     >

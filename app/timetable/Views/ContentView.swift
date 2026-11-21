@@ -29,8 +29,6 @@ struct ContentView: View {
         TabView(selection: selection) {
             NavigationStack(path: $paths[0]) { HomeView() }
                 .tabItem { Label { Text("Home") } icon: { Image(tab == 0 ? "tab_home_solid" : "tab_home") } }.tag(0)
-            NavigationStack(path: $paths[4]) { NearbyDeparturesView() }
-                .tabItem { Label { Text("Nearby") } icon: { Image(systemName: tab == 4 ? "location.fill" : "location") } }.tag(4)
             NavigationStack(path: $paths[1]) { StationsView() }
                 .tabItem { Label { Text("Stops") } icon: { Image(tab == 1 ? "tab_pin_solid" : "tab_pin") } }.tag(1)
             NavigationStack(path: $paths[2]) {
@@ -42,6 +40,8 @@ struct ContentView: View {
             .tabItem { Label { Text("Routes") } icon: { Image(tab == 2 ? "tab_routes_solid" : "tab_routes") } }.tag(2)
             NavigationStack(path: $paths[3]) { MapView() }
                 .tabItem { Label { Text("Map") } icon: { Image(tab == 3 ? "tab_map_solid" : "tab_map") } }.tag(3)
+            NavigationStack(path: $paths[4]) { NearbyDeparturesView() }
+                .tabItem { Label { Text("Nearby") } icon: { Image(systemName: tab == 4 ? "location.fill" : "location") } }.tag(4)
         }
         .environment(\.tabReselect, reselect)
         .environment(settings)

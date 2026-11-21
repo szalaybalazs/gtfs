@@ -40,7 +40,7 @@ private struct MapCardSheet<Card: View>: ViewModifier {
     let card: (MapSelection) -> Card
     @State private var path = NavigationPath()
     @State private var detent: PresentationDetent = Self.small
-    private static var small: PresentationDetent { .height(250) }
+    private static var small: PresentationDetent { .height(190) }
 
     func body(content: Content) -> some View {
         content.sheet(isPresented: Binding(get: { selection != nil }, set: { if !$0 { selection = nil } })) {

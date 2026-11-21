@@ -49,7 +49,7 @@ struct NearbyDeparturesView: View {
             VStack(spacing: 0) {
                 switch here.phase {
                 case .locating, .loading:
-                    ProgressView().padding(40)
+                    Card { SkeletonDepartureRows(count: 6) }
                 case .noLocation:
                     message(tr("Location is off. Allow it in Settings to see what leaves near you."))
                 case .failed:
@@ -58,7 +58,7 @@ struct NearbyDeparturesView: View {
                     if here.stopIds.isEmpty {
                         message(tr("No stops with departures within \(Int(NearbyDeparturesModel.hereMetres)) m."))
                     } else if !departures.loaded {
-                        ProgressView().padding(40)
+                        Card { SkeletonDepartureRows(count: 6) }
                     } else {
                         TimelineView(.periodic(from: .now, by: 1)) { context in
                             let list = departures.departures.filter { $0.time >= context.date.addingTimeInterval(-10) }.prefix(25)

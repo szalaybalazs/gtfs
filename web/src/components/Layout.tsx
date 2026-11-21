@@ -23,10 +23,10 @@ const LINKS: { to: string; label: MessageKey; icon: ReactNode }[] = [
 /** The five tabs along the bottom on phones. `also` are other paths that belong to the same tab. */
 const TABS: { to: string; label: MessageKey; icon: ReactNode; also?: string[] }[] = [
   { to: '/', label: 'nav.home', icon: <HomeIcon className="h-6 w-6" /> },
-  { to: '/departures', label: 'tab.nearby', icon: <LocationIcon className="h-6 w-6" /> },
   { to: '/stops', label: 'tab.stops', icon: <PinIcon className="h-6 w-6" />, also: ['/stations', '/nearby'] },
   { to: '/routes', label: 'nav.routes', icon: <BusIcon className="h-6 w-6" />, also: ['/lines'] },
   { to: '/map', label: 'nav.map', icon: <MapIcon className="h-6 w-6" /> },
+  { to: '/departures', label: 'tab.nearby', icon: <LocationIcon className="h-6 w-6" /> },
 ]
 
 export const TOP_LEVEL = new Set(LINKS.map((l) => l.to))

@@ -34,15 +34,15 @@ struct RouteTile: View {
     var compact = false
 
     var body: some View {
-        // The shape decides the size (full cell width, 2:1, or 80x40 compact); the label only sits on it
+        // The shape decides the size (full cell width, 2:1, or 112x56 compact); the label only sits on it
         RoundedRectangle(cornerRadius: 10, style: .continuous)
             .fill(Color(hex: line.color ?? "#000000"))
             .aspectRatio(2, contentMode: .fit)
-            .frame(width: compact ? 80 : nil)
+            .frame(width: compact ? 112 : nil)
             .frame(maxWidth: compact ? nil : .infinity, maxHeight: compact ? nil : .infinity)
             .overlay {
                 Text(line.shortName ?? line.routeId)
-                    .font(.system(size: 18, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
+                    .font(.system(size: compact ? 24 : 18, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
                     .foregroundStyle(Color(hex: line.textColor ?? "#ffffff"))
                     .padding(.horizontal, 4)
             }
