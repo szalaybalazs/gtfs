@@ -2,20 +2,21 @@
 //  L10n.swift
 //  timetable
 //
-//  Language choice (System / Magyar / English) and lookup of strings that are not SwiftUI literals.
+//  Language choice (System / Magyar / English / Português) and lookup of strings that are not SwiftUI literals.
 //  Strings live in Localizable.xcstrings (en = development language, hu from web/src/lib/i18n.ts).
 //
 
 import Foundation
 
 enum AppLanguage: String, CaseIterable, Identifiable {
-    case auto, hu, en
+    case auto, hu, en, pt
     var id: String { rawValue }
     var title: String {
         switch self {
         case .auto: return tr("System")
         case .hu: return "Magyar"
         case .en: return "English"
+        case .pt: return "Português"
         }
     }
 }
@@ -29,9 +30,9 @@ enum L10n {
 
     /// The language code in use: the picked one, else the device's if we have it, else English.
     static var code: String {
-        if language != .auto { return language.rawValue }
+        if language != .auto { return language == .pt ? "pt-PT" : language.rawValue }
         let preferred = Bundle.main.preferredLocalizations.first ?? "en"
-        return preferred.hasPrefix("hu") ? "hu" : "en"
+        return preferred.hasPrefix("hu") ? "hu" : preferred.hasPrefix("pt") ? "pt-PT" : "en"
     }
 
     static var locale: Locale { Locale(identifier: code) }
@@ -40,7 +41,9 @@ enum L10n {
     private static let huBundle = Bundle.main.path(forResource: "hu", ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
     private static let enBundle = Bundle.main.path(forResource: "en", ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
 
-    static var bundle: Bundle { code == "hu" ? huBundle : enBundle }
+    private static let ptBundle = Bundle.main.path(forResource: "pt-PT", ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
+
+    static var bundle: Bundle { code == "hu" ? huBundle : code == "pt-PT" ? ptBundle : enBundle }
 }
 
 /// A localised string for non-literal uses (view models, computed text), in the chosen language.

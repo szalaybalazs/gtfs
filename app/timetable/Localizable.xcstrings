@@ -15,6 +15,12 @@
             "state" : "translated",
             "value" : "még %lld folyamatban"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mais %lld em curso"
+          }
         }
       }
     },
@@ -26,6 +32,12 @@
             "state" : "translated",
             "value" : "%lld tervezett"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld planeadas"
+          }
         }
       }
     },
@@ -33,6 +45,12 @@
       "extractionState" : "manual",
       "localizations" : {
         "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-%lld s"
+          }
+        },
+        "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "-%lld s"
@@ -48,6 +66,12 @@
             "state" : "translated",
             "value" : "Akadálymentes"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acessível"
+          }
         }
       }
     },
@@ -58,6 +82,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kezdete: %@"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a partir de %@"
           }
         }
       }
@@ -70,6 +100,12 @@
             "state" : "translated",
             "value" : "Nincs részletes leírás."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem detalhes."
+          }
         }
       }
     },
@@ -80,6 +116,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nincs forgalmi változás."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem alterações de serviço."
           }
         }
       }
@@ -92,6 +134,12 @@
             "state" : "translated",
             "value" : "Folyamatban"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em curso"
+          }
         }
       }
     },
@@ -102,6 +150,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "visszavonásig"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "em curso"
           }
         }
       }
@@ -114,6 +168,12 @@
             "state" : "translated",
             "value" : "Megnyitás böngészőben"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir no navegador"
+          }
         }
       }
     },
@@ -124,6 +184,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tervezett"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planeadas"
           }
         }
       }
@@ -136,6 +202,12 @@
             "state" : "translated",
             "value" : "Összes"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver tudo"
+          }
         }
       }
     },
@@ -146,6 +218,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Forgalmi változások"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterações de serviço"
           }
         }
       }
@@ -158,6 +236,12 @@
             "state" : "translated",
             "value" : "%@ óta"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desde %@"
+          }
         }
       }
     },
@@ -168,6 +252,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ma"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hoje"
           }
         }
       }
@@ -180,6 +270,12 @@
             "state" : "translated",
             "value" : "holnap"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "amanhã"
+          }
         }
       }
     },
@@ -190,6 +286,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@-ig"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "até %@"
           }
         }
       }
@@ -244,6 +346,24 @@
               }
             }
           }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld linha"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld linhas"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -258,6 +378,12 @@
             "state" : "translated",
             "value" : "%lld perc · %lld megálló"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min · %lld paragens"
+          }
         }
       }
     },
@@ -268,6 +394,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld percet siet"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min adiantado"
           }
         }
       }
@@ -280,6 +412,12 @@
             "state" : "translated",
             "value" : "%lld percet késik"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min atrasado"
+          }
         }
       }
     },
@@ -290,6 +428,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld peron · %lld vonal"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld plataformas · %lld linhas"
           }
         }
       }
@@ -332,6 +476,24 @@
               }
             }
           }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paragem aqui"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paragens aqui"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -342,6 +504,12 @@
       "extractionState" : "manual",
       "localizations" : {
         "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s"
+          }
+        },
+        "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld s"
@@ -360,6 +528,12 @@
             "state" : "translated",
             "value" : "⋯ Korábbiak"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⋯ Anteriores"
+          }
         }
       }
     },
@@ -370,6 +544,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Köszönetnyilvánítás"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agradecimentos"
           }
         }
       }
@@ -382,6 +562,12 @@
             "state" : "translated",
             "value" : "Hozzáadás"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar"
+          }
         }
       }
     },
@@ -392,6 +578,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hozzáadás a kedvencekhez"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar aos favoritos"
           }
         }
       }
@@ -434,6 +626,24 @@
               }
             }
           }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favorito adicionado."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favoritos adicionados."
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -444,6 +654,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Szolgáltató"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operador"
           }
         }
       }
@@ -456,6 +672,12 @@
             "state" : "translated",
             "value" : "Mind"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas"
+          }
         }
       }
     },
@@ -465,6 +687,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Megjelenés"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aspeto"
           }
         }
       }
@@ -477,6 +705,12 @@
             "state" : "translated",
             "value" : "Érkezők"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chegadas"
+          }
         }
       }
     },
@@ -487,6 +721,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ÉRKEZIK"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CHEGADA"
           }
         }
       }
@@ -499,6 +739,12 @@
             "state" : "translated",
             "value" : "Legjobb találatok"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melhores resultados"
+          }
         }
       }
     },
@@ -509,6 +755,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kerékpár szállítható"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bicicletas permitidas"
           }
         }
       }
@@ -521,6 +773,12 @@
             "state" : "translated",
             "value" : "Hajó"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barco"
+          }
         }
       }
     },
@@ -531,6 +789,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Busz"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autocarro"
           }
         }
       }
@@ -543,6 +807,12 @@
             "state" : "translated",
             "value" : "Kapcsold ki, ami nem érdekel: eltűnik az indulásokból és a vonalakról."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha os marcadores a mostrar nas partidas e linhas."
+          }
         }
       }
     },
@@ -553,6 +823,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Körjárat"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha circular"
           }
         }
       }
@@ -565,6 +841,12 @@
             "state" : "translated",
             "value" : "Bezárás"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechar"
+          }
         }
       }
     },
@@ -574,6 +856,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nincs megálló a közeledben, a végállomást mutatjuk · %@"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal mais próximo da linha, a %@"
           }
         }
       }
@@ -616,6 +904,24 @@
               }
             }
           }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favorito copiado."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld favoritos copiados."
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -626,6 +932,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Másolás JSON-ként"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar como JSON"
           }
         }
       }
@@ -638,6 +950,12 @@
             "state" : "translated",
             "value" : "Nem sikerült betölteni"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível carregar"
+          }
         }
       }
     },
@@ -647,6 +965,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sötét"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escuro"
           }
         }
       }
@@ -659,6 +983,12 @@
             "state" : "translated",
             "value" : "Nap"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dia"
+          }
         }
       }
     },
@@ -669,6 +999,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Igényvezérelt közlekedés"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transporte a pedido (paragem mediante pedido)"
           }
         }
       }
@@ -681,6 +1017,12 @@
             "state" : "translated",
             "value" : "Indulások"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partidas"
+          }
         }
       }
     },
@@ -691,6 +1033,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Indulások →"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partidas →"
           }
         }
       }
@@ -703,6 +1051,12 @@
             "state" : "translated",
             "value" : "Irány"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentido"
+          }
         }
       }
     },
@@ -713,6 +1067,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Üzemzavar"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perturbação"
           }
         }
       }
@@ -725,11 +1085,24 @@
             "state" : "translated",
             "value" : "Kész"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concluído"
+          }
         }
       }
     },
     "EVENT" : {
-
+      "localizations" : {
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EVENTO"
+          }
+        }
+      }
     },
     "Favorite" : {
       "extractionState" : "manual",
@@ -738,6 +1111,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kedvenc"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorito"
           }
         }
       }
@@ -750,6 +1129,12 @@
             "state" : "translated",
             "value" : "Kedvencek"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoritos"
+          }
         }
       }
     },
@@ -760,6 +1145,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Helyzeted meghatározása…"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A obter a sua localização…"
           }
         }
       }
@@ -772,6 +1163,12 @@
             "state" : "translated",
             "value" : "%@ után"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A partir de %@"
+          }
         }
       }
     },
@@ -782,6 +1179,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Első ajtós felszállási rend"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrada pela porta da frente"
           }
         }
       }
@@ -794,6 +1197,12 @@
             "state" : "translated",
             "value" : "Kezdőlap"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Início"
+          }
         }
       }
     },
@@ -804,6 +1213,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Csak a járat"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apenas a linha"
           }
         }
       }
@@ -816,6 +1231,12 @@
             "state" : "translated",
             "value" : "Nyelv"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idioma"
+          }
         }
       }
     },
@@ -825,6 +1246,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Világos"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claro"
           }
         }
       }
@@ -837,6 +1264,12 @@
             "state" : "translated",
             "value" : "Járatok"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linhas"
+          }
         }
       }
     },
@@ -847,6 +1280,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Járatok megállókból"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linhas a partir de paragens"
           }
         }
       }
@@ -865,6 +1304,12 @@
             "state" : "translated",
             "value" : "Vonalak"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linhas"
+          }
         }
       }
     },
@@ -875,6 +1320,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ÉLŐ"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EM DIRETO"
           }
         }
       }
@@ -887,6 +1338,12 @@
             "state" : "translated",
             "value" : "Helymeghatározás kikapcsolva"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Localização desativada"
+          }
         }
       }
     },
@@ -897,6 +1354,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Térkép"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa"
           }
         }
       }
@@ -909,6 +1372,12 @@
             "state" : "translated",
             "value" : "Térképrétegek"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camadas do mapa"
+          }
         }
       }
     },
@@ -919,6 +1388,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jelölések"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcadores"
           }
         }
       }
@@ -953,6 +1428,12 @@
             "state" : "translated",
             "value" : "perce"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min atrás"
+          }
         }
       }
     },
@@ -963,6 +1444,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "perccel előtte"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min antes"
           }
         }
       }
@@ -975,6 +1462,12 @@
             "state" : "translated",
             "value" : "Mynaui ikonok"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ícones Mynaui"
+          }
         }
       }
     },
@@ -986,6 +1479,12 @@
             "state" : "translated",
             "value" : "Közeli megállók"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragens próximas"
+          }
         }
       }
     },
@@ -996,6 +1495,12 @@
             "state" : "translated",
             "value" : "Legközelebbi megálló"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragem mais próxima"
+          }
         }
       }
     },
@@ -1005,6 +1510,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Legközelebbi megálló · %@"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragem mais próxima nesta linha, a %@"
           }
         }
       }
@@ -1017,6 +1528,12 @@
             "state" : "translated",
             "value" : "Hírek"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notícias"
+          }
         }
       }
     },
@@ -1027,6 +1544,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Éjszakai"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noturno"
           }
         }
       }
@@ -1039,6 +1562,12 @@
             "state" : "translated",
             "value" : "Nincs indulás"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem partidas"
+          }
         }
       }
     },
@@ -1049,6 +1578,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nincs esemény"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem eventos"
           }
         }
       }
@@ -1061,6 +1596,12 @@
             "state" : "translated",
             "value" : "Nincs megálló %lld m-en belül."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem paragens num raio de %lld m."
+          }
         }
       }
     },
@@ -1071,6 +1612,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nincs ilyen járat"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha inexistente"
           }
         }
       }
@@ -1083,6 +1630,12 @@
             "state" : "translated",
             "value" : "Nincs új hozzáadnivaló"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada de novo: esses favoritos já estão guardados."
+          }
         }
       }
     },
@@ -1093,6 +1646,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Most"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora"
           }
         }
       }
@@ -1108,6 +1667,12 @@
             "state" : "translated",
             "value" : "Időben"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A horas"
+          }
         }
       }
     },
@@ -1118,6 +1683,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Járat megnyitása →"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir viagem →"
           }
         }
       }
@@ -1130,6 +1701,12 @@
             "state" : "translated",
             "value" : "Egyéb"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outros"
+          }
         }
       }
     },
@@ -1140,6 +1717,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Elmúlt járat"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viagem anterior"
           }
         }
       }
@@ -1152,6 +1735,12 @@
             "state" : "translated",
             "value" : "Elmúlt járat, véget ért: %@"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viagem anterior, terminou %@"
+          }
         }
       }
     },
@@ -1162,6 +1751,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "JSON beillesztése"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colar JSON"
           }
         }
       }
@@ -1174,6 +1769,12 @@
             "state" : "translated",
             "value" : "Keresési sugár"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raio"
+          }
         }
       }
     },
@@ -1184,6 +1785,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pótlóbusz"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autocarro de substituição"
           }
         }
       }
@@ -1196,6 +1803,12 @@
             "state" : "translated",
             "value" : "Pótlóbuszok"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autocarros de substituição"
+          }
         }
       }
     },
@@ -1206,6 +1819,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Újra"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentar novamente"
           }
         }
       }
@@ -1218,6 +1837,12 @@
             "state" : "translated",
             "value" : "A járat nem található."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha não encontrada."
+          }
         }
       }
     },
@@ -1228,6 +1853,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Járatok"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linhas"
           }
         }
       }
@@ -1240,6 +1871,12 @@
             "state" : "translated",
             "value" : "Ugyanaz a formátum, mint a webes alkalmazásban: másold ki ott, illeszd be itt (vagy fordítva). A meglévő kedvencek megmaradnak."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O mesmo formato da aplicação web: copie lá e cole aqui (ou vice-versa). Os favoritos existentes são mantidos."
+          }
         }
       }
     },
@@ -1250,6 +1887,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mentve"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardado"
           }
         }
       }
@@ -1262,6 +1905,12 @@
             "state" : "translated",
             "value" : "Menetrend szerint"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programado"
+          }
         }
       }
     },
@@ -1272,6 +1921,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Járat keresése"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesquisar linhas"
           }
         }
       }
@@ -1284,6 +1939,12 @@
             "state" : "translated",
             "value" : "Megálló keresése"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pesquisar paragens"
+          }
         }
       }
     },
@@ -1294,6 +1955,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "s"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "seg"
           }
         }
       }
@@ -1306,6 +1973,12 @@
             "state" : "translated",
             "value" : "Kiválasztott járatok"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linhas selecionadas"
+          }
         }
       }
     },
@@ -1316,6 +1989,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beállítások"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definições"
           }
         }
       }
@@ -1328,6 +2007,12 @@
             "state" : "translated",
             "value" : "Mutasd"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar"
+          }
         }
       }
     },
@@ -1338,6 +2023,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Indulások ettől"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar partidas a partir de"
           }
         }
       }
@@ -1350,6 +2041,12 @@
             "state" : "translated",
             "value" : "Továbbiak"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar mais"
+          }
         }
       }
     },
@@ -1360,6 +2057,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saját helyzet mutatása"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar a minha localização"
           }
         }
       }
@@ -1372,6 +2075,12 @@
             "state" : "translated",
             "value" : "Megálló"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragem"
+          }
         }
       }
     },
@@ -1382,6 +2091,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Megállócsoport nézete"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista de grupo de paragens"
           }
         }
       }
@@ -1394,6 +2109,12 @@
             "state" : "translated",
             "value" : "A megálló nem található."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragem não encontrada."
+          }
         }
       }
     },
@@ -1404,6 +2125,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Megállók"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragens"
           }
         }
       }
@@ -1416,6 +2143,12 @@
             "state" : "translated",
             "value" : "Megállóhelyek itt"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paragens aqui"
+          }
         }
       }
     },
@@ -1427,6 +2160,12 @@
             "state" : "translated",
             "value" : "Irányváltás"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter sentido"
+          }
         }
       }
     },
@@ -1437,6 +2176,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rendszer"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistema"
           }
         }
       }
@@ -1452,6 +2197,12 @@
             "state" : "translated",
             "value" : "Nyomj a csillagra egy járatnál vagy megállónál, hogy kitűzd a kezdőlapra a kedvenceid közé."
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na estrela numa linha ou paragem para a fixar aqui."
+          }
         }
       }
     },
@@ -1462,6 +2213,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Koppints a Helyzetem használata gombra az újrapróbáláshoz."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque em Usar a minha localização para tentar novamente."
           }
         }
       }
@@ -1474,6 +2231,12 @@
             "state" : "translated",
             "value" : "Végállomás · csak leszállás"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal · apenas chegadas"
+          }
         }
       }
     },
@@ -1484,6 +2247,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A vágólapon nincs kedvencek JSON."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A área de transferência não contém JSON de favoritos."
           }
         }
       }
@@ -1496,6 +2265,12 @@
             "state" : "translated",
             "value" : "Az egész megálló"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toda a paragem"
+          }
         }
       }
     },
@@ -1506,6 +2281,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ezek a járatok innen"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas linhas a partir daqui"
           }
         }
       }
@@ -1518,6 +2299,12 @@
             "state" : "translated",
             "value" : "Ez a járat ebből a megállóból"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta linha a partir desta paragem"
+          }
         }
       }
     },
@@ -1528,6 +2315,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ez a járat már nem létezik."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta viagem já não está disponível."
           }
         }
       }
@@ -1540,6 +2333,12 @@
             "state" : "translated",
             "value" : "Időrend"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cronologia"
+          }
         }
       }
     },
@@ -1550,6 +2349,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menetrend"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horário"
           }
         }
       }
@@ -1562,6 +2367,12 @@
             "state" : "translated",
             "value" : "ma"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoje"
+          }
         }
       }
     },
@@ -1572,6 +2383,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "holnap"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amanhã"
           }
         }
       }
@@ -1584,6 +2401,12 @@
             "state" : "translated",
             "value" : "Irány"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentido"
+          }
         }
       }
     },
@@ -1594,6 +2417,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ felé"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sentido %@"
           }
         }
       }
@@ -1606,6 +2435,12 @@
             "state" : "translated",
             "value" : "Villamos"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elétrico"
+          }
         }
       }
     },
@@ -1616,6 +2451,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Járat térképe"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa da viagem"
           }
         }
       }
@@ -1628,6 +2469,12 @@
             "state" : "translated",
             "value" : "Trolibusz"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troleicarro"
+          }
         }
       }
     },
@@ -1638,6 +2485,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ismeretlen úti cél"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destino desconhecido"
           }
         }
       }
@@ -1650,6 +2503,12 @@
             "state" : "translated",
             "value" : "Későbbi járat · indul %@"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima · começa %@"
+          }
         }
       }
     },
@@ -1660,6 +2519,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Frissítés"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar"
           }
         }
       }
@@ -1672,6 +2537,12 @@
             "state" : "translated",
             "value" : "frissítve %lld perccel ezelőtt"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "atualizado há %lld min"
+          }
         }
       }
     },
@@ -1682,6 +2553,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "frissítve %lld s ezelőtt"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "atualizado há %lld s"
           }
         }
       }
@@ -1694,6 +2571,12 @@
             "state" : "translated",
             "value" : "Helyzetem használata"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar a minha localização"
+          }
         }
       }
     },
@@ -1704,6 +2587,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jármű"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veículo"
           }
         }
       }
@@ -1716,6 +2605,12 @@
             "state" : "translated",
             "value" : "Járművek"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veículos"
+          }
         }
       }
     },
@@ -1727,6 +2622,12 @@
             "state" : "translated",
             "value" : "Akadálymentes"
           }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acessível a cadeira de rodas"
+          }
         }
       }
     },
@@ -1737,6 +2638,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "EZZEL JÖTTÉL"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A SUA VIAGEM"
           }
         }
       }

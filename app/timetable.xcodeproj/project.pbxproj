@@ -233,6 +233,7 @@
 				en,
 				Base,
 				hu,
+				"pt-PT",
 			);
 			mainGroup = B92D01372D57CE5D00296AF9;
 			minimizedProjectReferenceProxies = 1;
