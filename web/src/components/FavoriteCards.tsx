@@ -40,19 +40,19 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
   const now = useNow(1_000)
   const groups = runs(departures, now, onlyRoute)
   return (
-    <div className="-mx-gutter flex items-center gap-4 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
+    <div className="-mx-gutter flex items-center gap-2.5 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
       {pending || groups.length === 0
         ? fallback.map((r) => (
-            <span key={r.routeId} className="flex shrink-0 items-center gap-1.5">
+            <span key={r.routeId} className="flex shrink-0 items-center gap-1">
               <RouteBadge route={r} fit />
               <span className="text-[15px] text-secondary">{pending ? '…' : '–'}</span>
             </span>
           ))
         : groups.map(({ route, times }) => (
-            <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-1.5">
+            <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-1">
               <RouteBadge route={route} fit />
               {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
-              <span className="flex items-baseline gap-2.5 pr-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
+              <span className="flex items-baseline gap-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
                 {times.slice(0, 4).map((d) => (
                   <ShortTime key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} />
                 ))}
