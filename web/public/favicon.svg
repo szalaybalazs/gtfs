@@ -5,12 +5,12 @@
     <linearGradient id="sr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.8"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
   </defs><rect width="512" height="512" rx="112" fill="url(#bg)"/>
   <g fill="none" stroke-linecap="round">
-    <path d="M178 250 L40 300" stroke="url(#sl)" stroke-width="9"/>
-    <path d="M176 330 L24 395" stroke="url(#sl)" stroke-width="7"/>
-    <path d="M190 400 L70 470" stroke="url(#sl)" stroke-width="5"/>
-    <path d="M334 250 L472 300" stroke="url(#sr)" stroke-width="9"/>
-    <path d="M336 330 L488 395" stroke="url(#sr)" stroke-width="7"/>
-    <path d="M322 400 L442 470" stroke="url(#sr)" stroke-width="5"/>
+    <path d="M178 178 C150 174 128 160 112 140" stroke="url(#sl)" stroke-width="7"/>
+    <path d="M172 228 C140 228 116 220 96 206" stroke="url(#sl)" stroke-width="6"/>
+    <path d="M172 280 C146 284 124 282 104 274" stroke="url(#sl)" stroke-width="5"/>
+    <path d="M334 178 C362 174 384 160 400 140" stroke="url(#sr)" stroke-width="7"/>
+    <path d="M340 228 C372 228 396 220 416 206" stroke="url(#sr)" stroke-width="6"/>
+    <path d="M340 280 C366 284 388 282 408 274" stroke="url(#sr)" stroke-width="5"/>
   </g>
   <circle cx="203.2" cy="296.4" r="48" fill="url(#glow)"/>
   <circle cx="309.1" cy="296.4" r="48" fill="url(#glow)"/>
