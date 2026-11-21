@@ -6,17 +6,14 @@
 //
 
 import SwiftUI
+import CoreLocation
 
-// TODO(match web): web/src/pages/TripPage.tsx was reworked first and iOS has to follow:
-//  - no "towards" label; on time / late / early at the top right of the header card (not a LIVE badge)
-//  - "updated Ns ago" always shown, small, on the bottom line of the header card
-//  - header keeps length, minutes and stop count
-//  - compact stop rows (drop the minutes-until column if it forces names to truncate)
-//  - the vehicle marker on the stop list, placed between the two stops it is between (not always the midpoint)
 struct TripView: View {
     let target: TripTarget
     @State private var model = TripViewModel()
     @State private var retry = 0
+    /// Many stops already behind the vehicle fold into rows; one tap opens them for good.
+    @State private var showAllPassed = false
 
     var body: some View {
         ScrollView {
@@ -53,29 +50,41 @@ struct TripView: View {
         let color = Color(hex: trip.route?.color ?? "#6b7280")
         // Seconds only when the data has them (like the web)
         let hasSeconds = stops.contains { TimeFormat.hasSeconds($0.arrival) || TimeFormat.hasSeconds($0.departure) }
+        // More than 10 greyed-out stops: keep the first and the last two before the vehicle (and the stop you came from), fold the rest
+        let folding = !showAllPassed && started && !finished && nextIndex > 10
+        let fromIndex = stops.firstIndex { $0.stopId == target.from }
+        func isFolded(_ i: Int) -> Bool { folding && i >= 1 && i <= nextIndex - 3 && i != fromIndex }
+        func run(_ i: Int) -> Int { var n = 0; while isFolded(i + n) { n += 1 }; return n }
         return VStack(spacing: 24) {
             header(trip, stops: stops, started: started, finished: finished,
-                   delay: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil)
+                   delay: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil, now: now)
             if let r = trip.route { AlertsSection(routeIds: [r.routeId]) }
             VStack(spacing: 0) {
                 SectionTitle("Stops")
                 Card {
                     VStack(spacing: 0) {
                         ForEach(Array(stops.enumerated()), id: \.element.id) { i, stop in
-                            TripStopRow(
-                                stop: stop, trip: trip, first: i == 0, last: i == stops.count - 1,
-                                passed: nextIndex == -1 || i < nextIndex,
-                                highlighted: stop.stopId == target.from,
-                                color: color, referenceTime: reference?.departure, showSeconds: hasSeconds
-                            )
+                            if isFolded(i) {
+                                if !isFolded(i - 1) {
+                                    FoldRow(count: run(i), color: color, indented: reference != nil) { withAnimation { showAllPassed = true } }
+                                }
+                            } else {
+                                TripStopRow(
+                                    stop: stop, trip: trip, first: i == 0, last: i == stops.count - 1,
+                                    passed: nextIndex == -1 || i < nextIndex,
+                                    highlighted: stop.stopId == target.from,
+                                    color: color, referenceTime: reference?.departure, showSeconds: hasSeconds,
+                                    vehicle: started && !finished && i == nextIndex ? vehicleMark(trip, stops: stops, next: i, now: now, color: color) : nil
+                                )
+                                .zIndex(started && !finished && i == nextIndex ? 1 : 0)
+                            }
                         }
                     }
                     .padding(.vertical, 8)
                 }
             }
             if let v = model.vehicle, v.model != nil || v.plate != nil {
-                TripVehicleCard(vehicle: v,
-                                live: stops.contains { $0.realtime }, now: now)
+                TripVehicleCard(vehicle: v)
             }
             if !model.path.isEmpty || stops.contains(where: { $0.lat != nil }) {
                 VStack(spacing: 0) {
@@ -86,40 +95,47 @@ struct TripView: View {
         }
     }
 
-    private func header(_ trip: Trip, stops: [TripStop], started: Bool, finished: Bool, delay: Int?) -> some View {
+    /// The vehicle as a disc on the line, between the stop it left and the next one by how far along the timetable it is.
+    private func vehicleMark(_ trip: Trip, stops: [TripStop], next: Int, now: Date, color: Color) -> VehicleMark {
+        let leaves = stops[max(next - 1, 0)].departure, arrives = stops[next].arrival
+        let span = arrives.timeIntervalSince(leaves)
+        let progress = span > 0 ? min(1, max(0, now.timeIntervalSince(leaves) / span)) : 0.5
+        return VehicleMark(line: trip.route, color: color, progress: progress)
+    }
+
+    private func header(_ trip: Trip, stops: [TripStop], started: Bool, finished: Bool, delay: Int?, now: Date) -> some View {
         let live = stops.contains { $0.realtime }
         let via = Self.viaStops(stops)
         return Card {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 8) {
+                // Line, destination, and top right: on time / late / early (or Scheduled; or a note for a past or upcoming trip)
+                HStack(alignment: .center, spacing: 8) {
                     if let route = trip.route ?? target.route { LineBadge(line: route) }
-                    Spacer()
-                    if let delay { TripDelayText(minutes: delay) }
-                    if started && !finished {
-                        if live {
-                            Text("LIVE").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.live)
-                                .padding(.horizontal, 10).padding(.vertical, 2)
-                                .background(Theme.live.opacity(0.15), in: Capsule())
-                        } else {
-                            Text("Scheduled").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.secondary)
-                                .padding(.horizontal, 10).padding(.vertical, 2)
-                                .background(Theme.fill, in: Capsule())
-                        }
+                    Text(trip.headsign ?? stops.last?.name ?? "")
+                        .font(.system(size: 20, weight: .bold)).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                    if let last = stops.last, finished {
+                        Text("Past trip").font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                            .accessibilityLabel(tr("Past trip, ended \(TimeFormat.clock(last.arrival))"))
+                    } else if let first = stops.first, !started {
+                        Text(tr("Upcoming · starts \(TimeFormat.clock(first.departure))")).font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                    } else if let delay {
+                        TripDelayText(minutes: delay).font(.system(size: 15))
+                    } else if started && !live {
+                        Text("Scheduled").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.secondary)
+                            .padding(.horizontal, 10).padding(.vertical, 2).background(Theme.fill, in: Capsule())
                     }
                 }
-                Text((trip.headsign ?? stops.last?.name ?? "") )
-                    .font(.system(size: 24, weight: .bold)).padding(.top, 4)
                 if !via.isEmpty {
-                    Text(via.joined(separator: " ▸ ")).font(.system(size: 15)).padding(.top, 4)
+                    Text(via.joined(separator: " ▸ ")).font(.system(size: 15)).foregroundStyle(Theme.secondary).padding(.top, 4)
                 }
-                if let stats = Self.stats(stops) {
+                if let stats = Self.stats(stops, path: model.path) {
                     Text(stats).font(.system(size: 15, weight: .medium)).monospacedDigit().padding(.top, 8)
                 }
-                if let last = stops.last, finished {
-                    Text("Past trip").font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.top, 4)
-                        .accessibilityLabel(tr("Past trip, ended \(TimeFormat.clock(last.arrival))"))
-                } else if let first = stops.first, !started {
-                    Text(tr("Upcoming · starts \(TimeFormat.clock(first.departure))")).font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.top, 4)
+                // Last update: small and quiet
+                if started && !finished, let updated = model.vehicle?.updated {
+                    let age = max(0, Int(now.timeIntervalSince(updated)))
+                    Text(age < 60 ? tr("Updated \(age)s ago") : tr("Updated \(age / 60) min ago"))
+                        .font(.system(size: 12)).foregroundStyle(Theme.secondary).monospacedDigit().padding(.top, 4)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,10 +158,18 @@ struct TripView: View {
         return (0..<n).map { middle[(($0 + 1) * middle.count) / (n + 1)].name }
     }
 
-    static func stats(_ stops: [TripStop]) -> String? {
+    /// "34 min · 12.4 km · 23 stops": the distance follows the route shape when there is one, else straight lines between stops (marked ~).
+    static func stats(_ stops: [TripStop], path: [CLLocationCoordinate2D]) -> String? {
         guard stops.count >= 2, let a = stops.first, let b = stops.last else { return nil }
         let minutes = Int((b.arrival.timeIntervalSince(a.departure) / 60).rounded())
-        return tr("\(minutes) min · \(stops.count) stops")
+        func length(_ pts: [CLLocationCoordinate2D]) -> Double {
+            zip(pts, pts.dropFirst()).reduce(0) { $0 + CLLocation(latitude: $1.0.latitude, longitude: $1.0.longitude).distance(from: CLLocation(latitude: $1.1.latitude, longitude: $1.1.longitude)) }
+        }
+        let stopPoints = stops.compactMap { s in s.lat.flatMap { la in s.lon.map { CLLocationCoordinate2D(latitude: la, longitude: $0) } } }
+        let metres = path.count > 1 ? length(path) : length(stopPoints)
+        guard metres > 0 else { return tr("\(minutes) min · \(stops.count) stops") }
+        let km = (path.count > 1 ? "" : "~") + String(format: "%.1f km", metres / 1000)
+        return tr("\(minutes) min · \(km) · \(stops.count) stops")
     }
 
     private var skeleton: some View {
@@ -174,6 +198,7 @@ private struct TripStopRow: View {
     let color: Color
     let referenceTime: Date?
     var showSeconds = false
+    var vehicle: VehicleMark? = nil
 
     var body: some View {
         let s = stop
@@ -202,6 +227,10 @@ private struct TripStopRow: View {
                         .frame(width: highlighted ? 16 : 10, height: highlighted ? 16 : 10)
                 }
                 .frame(width: 28, height: 48)
+                .overlay(alignment: .top) {
+                    // Above this stop, by how far the vehicle is from the previous one
+                    if let vehicle { vehicle.offset(y: -(1 - vehicle.progress) * 48 - 14) }
+                }
                 .padding(.trailing, 6)
                 Text(s.name).font(.system(size: 17, weight: highlighted ? .bold : .regular)).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 8)
@@ -223,6 +252,49 @@ private struct TripStopRow: View {
             .padding(.trailing, 12)
             .opacity(passed ? 0.45 : 1)
             .background(highlighted ? Theme.accent.opacity(0.08) : Color.clear)
+        }
+        .buttonStyle(RowButtonStyle())
+    }
+}
+
+/// The vehicle on the stop list: its pictogram on a white disc in the line's colour.
+struct VehicleMark: View {
+    let line: LineRef?
+    let color: Color
+    /// 0 = just left the previous stop, 1 = at this one.
+    let progress: Double
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Theme.surface).shadow(color: .black.opacity(0.25), radius: 3, y: 1)
+            if let line { ModeIcon(category: LineCategory.of(line), size: 22, flat: color) }
+        }
+        .frame(width: 28, height: 28)
+        .accessibilityLabel(tr("Vehicle"))
+    }
+}
+
+/// "12 earlier stops": the line runs dashed through it. Tapping opens the stops.
+private struct FoldRow: View {
+    let count: Int
+    let color: Color
+    let indented: Bool
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            HStack(spacing: 0) {
+                if indented { Color.clear.frame(width: 34).padding(.leading, 8) }
+                VStack(spacing: 4) {
+                    ForEach(0..<4, id: \.self) { _ in Rectangle().fill(color.opacity(0.45)).frame(width: 8, height: 6) }
+                }
+                .frame(width: 28, height: 40)
+                .padding(.trailing, 6)
+                Text(tr("\(count) earlier stops")).font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.trailing, 12)
+            .contentShape(Rectangle())
         }
         .buttonStyle(RowButtonStyle())
     }

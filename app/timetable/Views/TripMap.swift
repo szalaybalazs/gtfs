@@ -16,37 +16,29 @@ func vehicleName(_ model: String?) -> String? {
     return clean.isEmpty ? nil : clean
 }
 
+/// The vehicle: what it is, big; its plate and, when accessible, the circled wheelchair under it.
 struct TripVehicleCard: View {
     let vehicle: TripVehicle
-    let live: Bool
-    let now: Foundation.Date
 
     var body: some View {
         VStack(spacing: 0) {
             SectionTitle("Vehicle")
             Card {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        if live { LiveIcon() }
-                        if let age = age, age >= 30 {
-                            Text(age < 60 ? tr("updated \(Int(age)) s ago") : tr("updated \(Int(age / 60)) min ago"))
-                                .foregroundStyle(Theme.secondary)
+                    Text(vehicleName(vehicle.model) ?? vehicle.plate ?? "").font(.system(size: 20, weight: .semibold))
+                    HStack(spacing: 8) {
+                        if vehicle.model != nil, let plate = vehicle.plate { Text(plate) }
+                        if vehicle.wheelchair {
+                            Image(systemName: "figure.roll.circle").font(.system(size: 18)).accessibilityLabel(tr("Accessible"))
                         }
                     }
-                    .font(.system(size: 13, weight: .medium))
-                    Text(vehicleName(vehicle.model) ?? vehicle.plate ?? "").font(.system(size: 20, weight: .semibold))
-                    let sub = [vehicle.model != nil ? vehicle.plate : nil, vehicle.wheelchair ? tr("Accessible") : nil].compactMap { $0 }
-                    if !sub.isEmpty {
-                        Text(sub.joined(separator: " · ")).font(.system(size: 15)).foregroundStyle(Theme.secondary)
-                    }
+                    .font(.system(size: 15)).foregroundStyle(Theme.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
             }
         }
     }
-
-    private var age: TimeInterval? { vehicle.updated.map { now.timeIntervalSince($0) } }
 }
 
 /// "On time" / "3 min late" / "1 min early", for the trip's top card.
