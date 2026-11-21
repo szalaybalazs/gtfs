@@ -15,6 +15,7 @@ import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { recordVisit } from '../lib/usage'
 import { findCachedStation, stationKey } from '../lib/prefetch'
 import { useDepartures, useSteadyLimit } from '../lib/useDepartures'
+import { useDeparturesView } from '../lib/departuresView'
 import type { Departure } from '../lib/api'
 import { useT } from '../lib/i18n'
 
@@ -107,7 +108,11 @@ export default function StationPage() {
   const terminus = !!fromPlatform && (fromPlatform.headsigns ?? []).length === 0 && (fromPlatform.routes ?? []).some(Boolean)
   const arrivals = terminus || params.get('arrivals') === '1'
   // A whole stop group shows a board (one row per line + direction) unless "Time order" is on
-  const board = !from && !multi && params.get('view') !== 'time'
+  const [savedView, saveView] = useDeparturesView()
+  // A ?view= link wins; otherwise the view last picked (remembered across pages and visits)
+  const urlView = params.get('view')
+  const view = urlView === 'time' || urlView === 'timeline' ? 'timeline' : urlView === 'lines' ? 'lines' : savedView
+  const board = !from && !multi && view === 'lines'
   // A single platform always asks for arrivals (we don't know yet if it's a terminus when the request
   // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
   const departures = useDepartures(ids, { perLine: board ? 4 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
@@ -256,16 +261,11 @@ export default function StationPage() {
                               aria-label={label}
                               title={label}
                               aria-pressed={on}
-                              onClick={() =>
-                                setParams(
-                                  (p) => {
-                                    if (v === 'time') p.set('view', 'time')
-                                    else p.delete('view')
-                                    return p
-                                  },
-                                  { replace: true },
-                                )
-                              }
+                              onClick={() => {
+                                saveView(v === 'time' ? 'timeline' : 'lines')
+                                // Drop a ?view= from a link, so the remembered choice applies from now on
+                                if (urlView) setParams((p) => (p.delete('view'), p), { replace: true })
+                              }}
                               className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors active:bg-fill ${on ? 'text-accent' : 'text-secondary/70'}`}
                             >
                               <Icon className="h-5 w-5" />

@@ -159,7 +159,7 @@ const en = {
   'departures.showArrivals': 'Arrivals',
   'departures.timeOrder': 'Time order',
   'departures.viewLines': 'Lines',
-  'departures.viewTime': 'Time',
+  'departures.viewTime': 'Timeline',
   'departures.view': 'View',
   'map.openStop': 'Departures →',
   'stop.lineCount': { one: '1 line', other: '{n} lines' },
