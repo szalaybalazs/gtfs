@@ -17,7 +17,7 @@ const LINKS: { to: string; label: MessageKey; icon: ReactNode }[] = [
   { to: '/settings', label: 'nav.settings', icon: <GearIcon className="h-5 w-5" /> },
 ]
 
-const TOP_LEVEL = new Set(LINKS.map((l) => l.to))
+export const TOP_LEVEL = new Set(LINKS.map((l) => l.to))
 const standalone = () =>
   window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
 
@@ -39,6 +39,7 @@ export default function Layout() {
   // back. Replace-navigations (search typing, filters, time picker) keep the
   // page as is, so inputs keep focus.
   const navType = useNavigationType()
+
   const [page, setPage] = useState({ key: location.key, dir: 'none' as 'none' | 'forward' | 'back' })
   if (navType !== 'REPLACE' && page.key !== location.key) setPage({ key: location.key, dir: navType === 'POP' ? 'back' : 'forward' })
   useLayoutEffect(() => {
