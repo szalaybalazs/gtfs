@@ -113,7 +113,7 @@ struct StationDetailView: View {
         }
         guard let stop = fromPlatform ?? (platforms.count == 1 ? platforms[0] : nil) else { return [] }
         return [Favorite.stop(stop, stationId: station.stationId)] + stop.routes.map {
-            Favorite.lineStop(route: $0, stopId: stop.stopId, stationId: station.stationId, stopName: stop.name ?? stop.stopId, headsign: nil)
+            Favorite.lineStop(route: $0, stopId: stop.stopId, stationId: station.stationId, stopName: stop.name ?? stop.stopId, headsign: stop.headsigns.isEmpty ? nil : stop.headsigns.joined(separator: " / "))
         }
     }
 

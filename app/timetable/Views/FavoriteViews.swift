@@ -134,7 +134,14 @@ struct FavoriteCard: View {
         default:
             let title = fav.kind == .lineStop ? (fav.stopName ?? "") : (fav.name ?? "")
             let towards: String? = {
-                let hs = fav.kind == .lineStop ? (fav.headsign.map { [$0] } ?? []) : (fav.headsigns ?? [])
+                if fav.kind == .lineStop {
+                    // Older ones have no direction saved: take it from the loaded departures of that line
+                    var seen = Set<String>()
+                    let derived = model.departures.compactMap(\.headsign).filter { seen.insert($0).inserted }.joined(separator: " / ")
+                    let h = fav.headsign ?? derived
+                    return h.isEmpty ? nil : "towards " + h
+                }
+                let hs = fav.headsigns ?? []
                 return hs.isEmpty ? nil : "towards " + hs.joined(separator: " / ")
             }()
             let subtitle = towards ?? (fav.kind == .lines ? "\((fav.routes ?? []).count) lines" : nil)
