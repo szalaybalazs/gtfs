@@ -29,8 +29,8 @@
   --color-early: #9333ea;
   --color-realtime: #2563eb;
   /* Service-change cards: soft amber with faint hatching (see .alert-card) */
-  --color-alert: #fff6dc;
-  --color-alert-stripe: rgb(245 176 0 / 0.13);
+  --color-alert: #ffe89a;
+  --color-alert-stripe: rgb(255 255 255 / 0.18);
   --color-alert-text: #3d2e00;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
@@ -49,8 +49,8 @@
     --color-late: #f87171;
   --color-early: #c084fc;
     --color-realtime: #60a5fa;
-    --color-alert: #2c2413;
-    --color-alert-stripe: rgb(255 196 61 / 0.07);
+    --color-alert: #3f3210;
+    --color-alert-stripe: rgb(255 214 90 / 0.04);
     --color-alert-text: #f6e7c3;
     --color-early: #c084fc;
   }
@@ -67,8 +67,8 @@
     --color-live: #4ade80;
     --color-late: #f87171;
     --color-realtime: #60a5fa;
-    --color-alert: #2c2413;
-    --color-alert-stripe: rgb(255 196 61 / 0.07);
+    --color-alert: #3f3210;
+    --color-alert-stripe: rgb(255 214 90 / 0.04);
     --color-alert-text: #f6e7c3;
   --color-early: #c084fc;
     --color-early: #c084fc;
