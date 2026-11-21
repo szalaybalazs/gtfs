@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
 import Alerts from '../components/Alerts'
@@ -76,6 +76,43 @@ export default function TripPage() {
   // Only show seconds when the data has them (realtime predictions, MÁV); plain schedules are all :00
   const hasSeconds = stops.some((x) => new Date(x.arrival).getSeconds() !== 0 || new Date(x.departure).getSeconds() !== 0)
   const vehicleAge = vehicle?.timestamp ? (now.getTime() - new Date(vehicle.timestamp).getTime()) / 60_000 : null
+
+  // Where the vehicle is, in stop units (2.4 = 40 % of the way from stop 2 to stop 3). With a reported position it is snapped onto
+  // the stop-to-stop path and stays put until the next fix (no extrapolation); a small step back is ignored. Without one (metro sends
+  // none) it is spread along the timetable instead.
+  const fixKey = vehicle?.latitude != null && vehicle?.longitude != null ? `${vehicle.latitude},${vehicle.longitude},${vehicle.timestamp}` : null
+  const shownPos = useRef<number | null>(null)
+  const fixPos = useMemo(() => {
+    if (fixKey == null || !vehicle) return null
+    const raw = snapToStops(stops, vehicle.latitude!, vehicle.longitude!)
+    if (raw == null) return null
+    const prev = shownPos.current
+    // Real movement back (more than a stop) is believed; less is noise
+    shownPos.current = prev != null && raw < prev && prev - raw <= 1 ? prev : raw
+    return shownPos.current
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fixKey, stops.length])
+  const live = started && !finished
+  let markIndex = nextIndex
+  let markP = 0
+  if (live && fixPos != null && stops.length > 1) {
+    const k = Math.min(Math.max(Math.floor(fixPos), 0), stops.length - 2)
+    markIndex = k + 1
+    markP = Math.min(1, Math.max(0, fixPos - k))
+  } else if (live && nextIndex > 0) {
+    const left = new Date(stops[nextIndex - 1].departure).getTime()
+    const span = new Date(stops[nextIndex].arrival).getTime() - left
+    markP = span > 0 ? Math.min(1, Math.max(0, (now.getTime() - left) / span)) : 0.5
+  }
+  // How far down each row (0…48 px) the line is faded: exactly up to the vehicle
+  const greyTo = (i: number) => {
+    if (finished) return 48
+    if (!started) return 0
+    if (i < markIndex - 1) return 48
+    if (i === markIndex - 1) return Math.min(48, 24 + 48 * markP)
+    if (i === markIndex) return Math.max(0, 48 * markP - 24)
+    return 0
+  }
 
   // Built once per data change, not on every 1 s tick: the maps re-upload whatever they're given
   const miniLine = useMemo(() => tripPath?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number]), [tripPath])
@@ -190,8 +227,9 @@ export default function TripPage() {
                     stop={s}
                     first={i === 0}
                     last={i === stops.length - 1}
-                    passed={nextIndex === -1 || i < nextIndex}
-                    vehicleBefore={started && !finished && i === nextIndex}
+                    passed={finished || (live && i < markIndex)}
+                    greyTo={greyTo(i)}
+                    vehicleProgress={live && i === markIndex ? markP : null}
                     highlighted={s.stop.stopId === from}
                     color={color}
                     vehicleLabel={route?.shortName ?? ''}
@@ -253,7 +291,8 @@ function TripStopRow({
   first,
   last,
   passed,
-  vehicleBefore,
+  greyTo,
+  vehicleProgress,
   highlighted,
   color,
   vehicleLabel,
@@ -269,7 +308,10 @@ function TripStopRow({
   first: boolean
   last: boolean
   passed: boolean
-  vehicleBefore: boolean
+  /** The line is faded from the top of the row down to here (0…48 px). */
+  greyTo: number
+  /** Set on the stop the vehicle is heading for: how far it is from the previous one (0…1). */
+  vehicleProgress: number | null
   highlighted: boolean
   color: string
   vehicleLabel: string
@@ -287,6 +329,9 @@ function TripStopRow({
   // Minutes to or from the selected stop, always positive; blank on the stop itself
   const relative = referenceTime == null || highlighted ? null : Math.round(Math.abs(main.getTime() - referenceTime) / 60_000)
   const mainParts = formatTimeParts(main)
+  const lineTop = first ? 24 : 0
+  const lineBottom = last ? 24 : 48
+  const cut = Math.min(Math.max(greyTo, lineTop), lineBottom)
   return (
     <li className="relative">
       <Link
@@ -294,37 +339,36 @@ function TripStopRow({
         // (the list itself already starts a minute before, so this trip is in it)
         // The stop group's id (not the stop's), so the page reuses what lists already cached under ['station', groupId]
         to={`/stations/${encodeURIComponent(s.stop.station?.stationId ?? s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(s.arrival ?? s.departure).toISOString())}`}
-        className={`flex items-center pr-3 active:bg-fill ${passed ? 'opacity-45' : ''} ${referenceTime != null ? 'pl-2' : ''}`}
+        className={`flex items-center pr-3 active:bg-fill ${referenceTime != null ? 'pl-2' : ''}`}
       >
         {referenceTime != null && (
-          <span className="w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary" aria-label={relative != null ? t('trip.minutes', { n: relative }) : undefined}>
+          <span className={`w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary ${passed ? 'opacity-45' : ''}`} aria-label={relative != null ? t('trip.minutes', { n: relative }) : undefined}>
             {relative == null ? '' : `${String(relative).padStart(2, ' ')}'`}
           </span>
         )}
         <span className="relative mr-1.5 flex h-12 w-7 shrink-0 justify-center">
-        {vehicleBefore && (
-          // The vehicle: BKK pictogram for its type, in the line's colour, on a white disc
+        {vehicleProgress != null && (
+          // The vehicle: BKK pictogram for its type, in the line's colour, on a white disc, centred on its spot between the two stops
           <span
-            className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-md"
+            className="absolute left-1/2 z-10 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-md"
+            style={{ top: 48 * vehicleProgress - 38 }}
             aria-label={t('trip.vehicleHere')}
             title={vehicleLabel}
           >
             <CategoryIcon category={category} color={color} className="h-6 w-6" />
           </span>
         )}
+          <span className="absolute w-2 opacity-45" style={{ top: lineTop, height: cut - lineTop, backgroundColor: color }} />
+          <span className="absolute w-2" style={{ top: cut, height: lineBottom - cut, backgroundColor: color }} />
           <span
-            className={`absolute w-2 ${first ? 'top-1/2' : 'top-0'} ${last ? 'bottom-1/2' : 'bottom-0'}`}
-            style={{ backgroundColor: color }}
-          />
-          <span
-            className={`relative self-center rounded-full border-2 bg-surface ${highlighted ? 'h-4 w-4' : 'h-2.5 w-2.5'}`}
+            className={`relative self-center rounded-full border-2 bg-surface ${highlighted ? 'h-4 w-4' : 'h-2.5 w-2.5'} ${passed ? 'opacity-45' : ''}`}
             style={{ borderColor: highlighted ? 'var(--color-label)' : color }}
           />
         </span>
-        <span className="mr-2 flex min-w-0 flex-1 items-center gap-1.5">
+        <span className={`mr-2 flex min-w-0 flex-1 items-center gap-1.5 ${passed ? 'opacity-45' : ''}`}>
           <span className={`truncate text-[17px] ${highlighted ? 'font-bold' : ''}`}>{s.stop.name ?? s.stop.stopId}</span>
         </span>
-        <span className={`flex items-baseline gap-1 text-right tabular-nums ${statusColor[status]}`} title={t(statusLabel[status])}>
+        <span className={`flex items-baseline gap-1 text-right tabular-nums ${statusColor[status]} ${passed ? 'opacity-45' : ''}`} title={t(statusLabel[status])}>
           {status === 'late' || status === 'early' ? (
             <span className="text-[12px] text-secondary line-through">{formatTime(new Date(main.getTime() - delay! * 1000))}</span>
           ) : null}
@@ -335,7 +379,7 @@ function TripStopRow({
           </span>
           {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5 self-center" aria-label={t('trip.realtime')} />}
         </span>
-        <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
+        <ChevronIcon className={`h-4 w-4 shrink-0 text-secondary/60 ${passed ? 'opacity-45' : ''}`} />
       </Link>
     </li>
   )
@@ -452,4 +496,30 @@ function tripBounds(stops: TripStop[]): [[number, number], [number, number]] | u
     [Math.min(...lons), Math.min(...lats)],
     [Math.max(...lons), Math.max(...lats)],
   ]
+}
+
+/**
+ * Where a position is along the stops, in stop units: the nearest point on the straight lines between stops (2.4 = 40 % of the
+ * way from the third stop to the fourth). Null when there are no coordinates.
+ */
+function snapToStops(stops: TripStop[], lat: number, lon: number): number | null {
+  const kx = Math.cos((lat * Math.PI) / 180) * 111_320
+  const ky = 110_540
+  let best: { d: number; pos: number } | null = null
+  for (let i = 0; i + 1 < stops.length; i++) {
+    const a = stops[i].stop
+    const b = stops[i + 1].stop
+    if (a.lat == null || a.lon == null || b.lat == null || b.lon == null) continue
+    const ax = (a.lon - lon) * kx
+    const ay = (a.lat - lat) * ky
+    const bx = (b.lon - lon) * kx
+    const by = (b.lat - lat) * ky
+    const dx = bx - ax
+    const dy = by - ay
+    const len2 = dx * dx + dy * dy
+    const t = len2 > 0 ? Math.min(1, Math.max(0, -(ax * dx + ay * dy) / len2)) : 0
+    const d = Math.hypot(ax + dx * t, ay + dy * t)
+    if (!best || d < best.d) best = { d, pos: i + t }
+  }
+  return best ? best.pos : null
 }

@@ -8,6 +8,11 @@
 import SwiftUI
 import CoreLocation
 
+// TODO(match web): the vehicle marker and the line's fade cut must come from the vehicle's reported position, like web/src/pages/TripPage.tsx:
+//  - with a position fix: snap it onto the stop-to-stop path (stop units, 2.4 = 40 % from stop 2 to 3); it stays put until the next fix
+//    (no extrapolation) and a step back of a stop or less is ignored
+//  - without one (metro): spread it along the timetable as now
+//  - greying of stops, the line's fade cut and the marker all come from that one position
 struct TripView: View {
     let target: TripTarget
     @State private var model = TripViewModel()
