@@ -9,6 +9,9 @@ import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { useNow } from '../lib/useTimetable'
 import { BikeIcon, ChevronIcon, LiveIcon, WheelchairIcon } from './Icons'
 import RouteBadge from './RouteBadge'
+
+/** How long a departed row stays (seconds) before it collapses away */
+const LINGER_S = 30
 import { MarkIcon } from './LineMarks'
 
 /**
@@ -48,8 +51,9 @@ export default function Departures({
 }) {
   const t = useT()
   const now = useNow(1_000)
-  // Departed rows linger for 20 s (counting -1, -2…), collapsing from -15 s
-  const kept = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 20_000)
+  // Departed rows linger (counting -1, -2…) and collapse after LINGER_S: BKK often corrects a
+  // "departed" vehicle back to "still at the stop" within ~20 s, so hiding sooner makes rows jump
+  const kept = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - (LINGER_S + 5) * 1000)
   // Rows still counting down after leaving don't use up a slot, so the list stays the same length
   const leaving = kept.filter((d) => new Date(d.departure).getTime() < now.getTime()).length
   const upcoming = show ? kept.slice(0, show + leaving) : kept
@@ -99,7 +103,7 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
   // Just departed: count -1, -2… in plain text, faded; then collapse away
   const justLeft = seconds < 0 && seconds >= -60
   // Only when showing "Now": with a chosen time or your trip, nothing vanishes
-  const collapsing = autoHide && seconds < -15 && seconds >= -60
+  const collapsing = autoHide && seconds < -LINGER_S && seconds >= -60
   const left = seconds < -60
   const { value, unit } = left
     ? { value: String(Math.round(-seconds / 60)), unit: 'unit.minAgo' as const }
