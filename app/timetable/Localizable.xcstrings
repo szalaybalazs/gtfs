@@ -47,13 +47,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "-%lld s"
+            "value" : "-%llds"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "-%lld s"
+            "value" : "-%llds"
           }
         }
       }
@@ -506,13 +506,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld s"
+            "value" : "%llds"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld s"
+            "value" : "%llds"
           }
         }
       }

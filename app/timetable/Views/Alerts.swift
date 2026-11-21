@@ -123,7 +123,8 @@ struct AlertsSection: View {
     @State private var open: ServiceAlert?
 
     var body: some View {
-        Group {
+        // A stack, not a Group: with nothing to show a Group has no view for `.task` to hang on, so alerts would never load
+        VStack(spacing: 8) {
             if !alerts.isEmpty {
                 let (ongoing, planned) = ServiceAlert.split(alerts)
                 let ordered = ongoing + planned
@@ -131,7 +132,7 @@ struct AlertsSection: View {
                 let shownIds = Set(shown.map(\.id))
                 let moreOngoing = ongoing.filter { !shownIds.contains($0.id) }.count
                 let morePlanned = planned.filter { !shownIds.contains($0.id) }.count
-                VStack(spacing: 8) {
+                Group {
                     ForEach(shown) { a in
                         Button { open = a } label: { AlertCard(alert: a) }.buttonStyle(.plain)
                     }
@@ -153,6 +154,8 @@ struct AlertsSection: View {
                 }
             }
         }
+        // Empty, the stack is zero height but the parent's spacing still applies: take it back
+        .padding(.vertical, alerts.isEmpty ? -12 : 0)
         .task(id: routeIds + ["|"] + stopIds) { alerts = await ServiceAlert.fetch(routeIds: routeIds, stopIds: stopIds) }
         .sheet(item: $open) { AlertSheet(alert: $0) }
     }
@@ -176,7 +179,7 @@ struct AlertsListView: View {
                     Text("No service changes.").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
                 }
                 group("Ongoing", ongoing)
-                group("Planned", planned).opacity(0.85)
+                group("Planned", planned)
             }
             .padding(16)
         }

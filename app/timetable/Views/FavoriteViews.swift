@@ -102,6 +102,8 @@ private struct DisruptionTag: View {
                 .padding(.horizontal, 6).frame(height: 20)
                 .background(AlertStyle.background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .fixedSize()
+            } else {
+                Color.clear.frame(width: 0, height: 0) // something for `.task` to hang on
             }
         }
         .task(id: routeIds + stopIds) { active = await Self.isActive(routeIds: routeIds, stopIds: stopIds) }

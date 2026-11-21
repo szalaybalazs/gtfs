@@ -2,17 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDisplayName</key>
-	<string>BudapestGONE</string>
 	<key>APIURL</key>
 	<string>$(API_URL)</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need your location to get the nearest stop</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>We need your location</string>
-	<key>NSLocationUsageDescription</key>
-	<string>We need your location to get the nearest stop</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to get the nearest stop</string>
 </dict>
 </plist>
