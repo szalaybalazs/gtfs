@@ -174,6 +174,18 @@ export default function TransitMap({
 
   const groups = useMemo(() => (stations.data?.stationsByRadius ?? []).filter((s) => s.routes.length > 0), [stations.data])
 
+  // Only the zoom thresholds matter for the icons, not the raw zoom (that would rebuild every icon on each zoom gesture)
+  const stopsZoom = zoom >= STOPS_ZOOM
+  const badgesZoom = zoom >= BADGES_ZOOM
+  // Markers only near the visible area (the query radius reaches well beyond the screen)
+  const cull = useMemo(() => {
+    if (!view) return null
+    const b = view.bounds
+    const padLat = (b.getNorth() - b.getSouth()) * 0.25
+    const padLon = (b.getEast() - b.getWest()) * 0.25
+    return { s: b.getSouth() - padLat, n: b.getNorth() + padLat, w: b.getWest() - padLon, e: b.getEast() + padLon }
+  }, [view])
+
   // Stop markers, and the dashed outline of each stop group when zoomed in
   const { stopMarkers, outlines } = useMemo(() => {
     const markers: HtmlMarker[] = []
@@ -181,15 +193,16 @@ export default function TransitMap({
     if (!enabled) return { stopMarkers: markers, outlines: features }
     for (const station of groups) {
       const stops = (station.stops ?? []).filter((s) => s.lat != null && s.lon != null && (s.routes ?? []).some(Boolean))
-      if (zoom >= STOPS_ZOOM && stops.length > 0) {
+      if (stopsZoom && stops.length > 0) {
         const c = mainCategory(station.routes)
         if (stops.length > 1) {
           const ring = roundedHull(stops.map((s) => [s.lat!, s.lon!]), 25).map(([lat, lon]) => [lon, lat])
           features.push({ type: 'Feature', properties: { color: c.color }, geometry: { type: 'Polygon', coordinates: [ring] } })
         }
         for (const s of stops) {
-          const routes = (s.routes ?? []).filter((r) => r != null)
           const sel = selectedStop === s.stopId
+          if (!sel && cull && (s.lat! < cull.s || s.lat! > cull.n || s.lon! < cull.w || s.lon! > cull.e)) continue
+          const routes = (s.routes ?? []).filter((r) => r != null)
           markers.push({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
@@ -201,18 +214,19 @@ export default function TransitMap({
         }
       } else {
         const sel = selectedStop === station.stationId
+        if (!sel && cull && (station.lat < cull.s || station.lat > cull.n || station.lon < cull.w || station.lon > cull.e)) continue
         markers.push({
           key: `group:${station.stationId}`,
           at: [station.lon, station.lat],
           // First tap shows the card (or highlights it); tapping it again opens the stop
-          ...groupIcon(station, zoom >= BADGES_ZOOM || sel, sel),
+          ...groupIcon(station, badgesZoom || sel, sel),
           z: sel ? 1000 : 0,
           onClick: () => (sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}`) : (setSelectedStop(station.stationId), setSelected(null))),
         })
       }
     }
     return { stopMarkers: markers, outlines: features }
-  }, [enabled, groups, zoom, selectedStop, navigate])
+  }, [enabled, groups, stopsZoom, badgesZoom, cull, selectedStop, navigate])
 
 
   const me = useMemo<HtmlMarker[]>(
@@ -416,7 +430,7 @@ export default function TransitMap({
       {selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
       {selectedStopInfo && !selectedVehicle && (
         // Same bottom card as for a vehicle: name, which way, its lines, and a way in
-        <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
+        <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
           <button type="button" onClick={() => setSelectedStop(null)} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
             <CloseIcon className="h-4 w-4" />
           </button>
@@ -453,7 +467,7 @@ function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }
   const age = v.timestamp ? Math.max(0, Math.round((Date.now() - new Date(v.timestamp).getTime()) / 1000)) : null
   const name = vehicleName(v.vehicleModel)
   return (
-    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
+    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
       <button type="button" onClick={onClose} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
         <CloseIcon className="h-4 w-4" />
       </button>

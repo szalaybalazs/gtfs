@@ -1,28 +1,24 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { StrictMode } from 'react'
+import { StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import './index.css'
 import Layout from './components/Layout'
+import { MapPage, PhonePreviewPage, RouteDetailsPage, StationPage, TripPage, UxMapPage, preloadMapWhenIdle } from './lib/lazyPages'
 import { initLocale } from './lib/i18n'
 import { applyTheme } from './lib/theme'
 import HomePage from './pages/HomePage'
-import MapPage from './pages/MapPage'
 import NearbyPage from './pages/NearbyPage'
-import PhonePreviewPage from './pages/PhonePreviewPage'
-import RouteDetailsPage from './pages/RouteDetailsPage'
 import AlertsPage from './pages/AlertsPage'
 import LinesPage from './pages/LinesPage'
 import RoutesPage from './pages/RoutesPage'
 import SettingsPage from './pages/SettingsPage'
-import StationPage from './pages/StationPage'
 import StopPage from './pages/StopPage'
 import StopsPage from './pages/StopsPage'
-import TripPage from './pages/TripPage'
-import UxMapPage from './pages/UxMapPage'
 
 applyTheme()
 initLocale()
+preloadMapWhenIdle()
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <Suspense fallback={null}>
         <Routes>
           <Route path="/phone" element={<PhonePreviewPage />} />
           <Route path="/ux" element={<UxMapPage />} />
@@ -52,6 +49,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

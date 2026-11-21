@@ -1,8 +1,9 @@
 import { historyIdx, setPageTitle } from '../lib/pageTitles'
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, Suspense, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router'
 import { CATEGORIES } from '../lib/categories'
 import { useT, type MessageKey } from '../lib/i18n'
+import { preloadMap } from '../lib/lazyPages'
 import CategoryIcon from './CategoryIcon'
 import { BusIcon, CloseIcon, GearIcon, HomeIcon, MapIcon, PinIcon } from './Icons'
 
@@ -115,7 +116,9 @@ export default function Layout() {
     <MenuContext.Provider value={() => setOpen(true)}>
       {/* Slide transitions only in the installed app: a browser tab already animates its own back swipe */}
       <div key={page.key} className={!slides ? undefined : page.dir === 'forward' ? 'page-forward' : page.dir === 'back' ? 'page-back' : undefined}>
-        <Outlet />
+        <Suspense fallback={<div className="min-h-dvh bg-canvas" />}>
+          <Outlet />
+        </Suspense>
       </div>
       <div
         className={`fixed inset-0 z-[1100] bg-black/30 transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -150,6 +153,8 @@ export default function Layout() {
                 to={link.to}
                 end={link.to === '/' || link.to === '/routes'}
                 onClick={() => setOpen(false)}
+                onPointerDown={link.to === '/map' ? preloadMap : undefined}
+                onPointerEnter={link.to === '/map' ? preloadMap : undefined}
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[17px] active:bg-fill ${
                     isActive ? 'bg-fill font-semibold text-accent' : ''

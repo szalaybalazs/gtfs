@@ -8,6 +8,9 @@ const apiTarget = process.env.API_PROXY ?? 'https://gtfs.szalay.me/graphql'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: { output: { manualChunks: (id: string) => (id.includes('node_modules/maplibre-gl') ? 'maplibre' : undefined) } },
+  },
   server: {
     // Reachable from other devices on the tailnet (`pnpm dev --host`)
     allowedHosts: ['.ts.net'],
