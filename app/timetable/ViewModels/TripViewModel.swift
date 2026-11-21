@@ -14,6 +14,7 @@ final class TripViewModel {
     private(set) var trip: Trip?
     private(set) var state: LoadState = .idle
     private(set) var loaded = false
+    private(set) var vehicle: TripVehicle?
     private(set) var path: [CLLocationCoordinate2D] = []
     private var pathLoaded = false
 
@@ -40,6 +41,8 @@ final class TripViewModel {
             trip = data.trip.map(Trip.init)
             loaded = true
             state = .idle
+            // Vehicle is separate and non-fatal: the trip shows even if this part fails
+            vehicle = (try? await client.fetch(TripVehicleQuery(id: tripId, serviceDate: .some(serviceDate))))?.trip?.vehicle.map(TripVehicle.init)
             if !pathLoaded {
                 pathLoaded = true
                 if let d = try? await client.fetch(TripPathQuery(id: tripId, serviceDate: .some(serviceDate))),

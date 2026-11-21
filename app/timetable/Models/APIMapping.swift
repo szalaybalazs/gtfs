@@ -106,11 +106,14 @@ extension Trip {
                     name: s.stop.name ?? s.stop.stopId, arrival: arrival, departure: departure,
                     arrivalDelay: s.arrivalDelay, departureDelay: s.departureDelay, realtime: s.realtime,
                     lat: s.stop.lat, lon: s.stop.lon)
-            },
-            vehicle: t.vehicle.map {
-                TripVehicle(latitude: $0.latitude, longitude: $0.longitude, bearing: $0.bearing, label: $0.vehicleLabel,
-                            plate: $0.vehicleLicensePlate, model: $0.vehicleModel, wheelchair: $0.vehicleWheelchairAccessible ?? false,
-                            updated: $0.timestamp.flatMap { APIDate.parse($0) })
             })
+    }
+}
+
+extension TripVehicle {
+    init(_ v: TripVehicleQuery.Data.Trip.Vehicle) {
+        self.init(latitude: v.latitude, longitude: v.longitude, bearing: v.bearing, label: v.vehicleLabel,
+                  plate: v.vehicleLicensePlate, model: v.vehicleModel, wheelchair: false,
+                  updated: v.timestamp.flatMap { APIDate.parse($0) })
     }
 }

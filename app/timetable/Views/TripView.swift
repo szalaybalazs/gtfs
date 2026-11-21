@@ -47,12 +47,12 @@ struct TripView: View {
         let color = Color(hex: trip.route?.color ?? "#6b7280")
         return VStack(spacing: 24) {
             header(trip, stops: stops, started: started, finished: finished)
-            if let v = trip.vehicle, v.model != nil || v.plate != nil {
+            if let v = model.vehicle, v.model != nil || v.plate != nil {
                 TripVehicleCard(vehicle: v, delayMinutes: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil,
                                 live: stops.contains { $0.realtime }, now: now)
             }
             if !model.path.isEmpty || stops.contains(where: { $0.lat != nil }) {
-                TripMiniMap(trip: trip, path: model.path, color: color)
+                TripMiniMap(trip: trip, vehicle: model.vehicle, path: model.path, color: color)
             }
             VStack(spacing: 0) {
                 SectionTitle("Stops")

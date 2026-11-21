@@ -62,6 +62,7 @@ struct TripVehicleCard: View {
 /// The trip drawn on a map: path in the route colour, stops as dots, the vehicle as the line badge.
 struct TripMapContent: MapContent {
     let trip: Trip
+    var vehicle: TripVehicle?
     let path: [CLLocationCoordinate2D]
     let color: Color
     let big: Bool
@@ -84,42 +85,18 @@ struct TripMapContent: MapContent {
                 }
             }
         }
-        if let v = trip.vehicle, let lat = v.latitude, let lon = v.longitude {
+        if let v = vehicle, let lat = v.latitude, let lon = v.longitude {
             Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
-                VehicleMarker(line: trip.route, bearing: v.bearing)
+                VehicleDisc(line: trip.route, bearing: v.bearing)
             }
         }
     }
 }
 
-private struct VehicleMarker: View {
-    let line: LineRef?
-    let bearing: Double?
-
-    var body: some View {
-        let bg = Color(hex: line?.color ?? "#6b7280")
-        let long = (line?.shortName ?? "?").count > 3
-        ZStack {
-            if let bearing {
-                Image(systemName: "arrowtriangle.up.fill").font(.system(size: 9)).foregroundStyle(bg)
-                    .offset(y: -17).rotationEffect(.degrees(bearing))
-            }
-            Text(line?.shortName ?? "?")
-                .font(.system(size: long ? 9 : 10, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
-                .foregroundStyle(Color(hex: line?.textColor ?? "#ffffff"))
-                .frame(width: long ? 34 : 28, height: 15)
-                .background(bg, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(Color.white, lineWidth: 2))
-                .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
-        }
-        .frame(width: 44, height: 44)
-    }
-}
-
-private func tripRegion(_ trip: Trip, path: [CLLocationCoordinate2D]) -> MKCoordinateRegion? {
+private func tripRegion(_ trip: Trip, vehicle: TripVehicle?, path: [CLLocationCoordinate2D]) -> MKCoordinateRegion? {
     var pts = path
     pts += trip.stops.compactMap { s in s.lat.flatMap { la in s.lon.map { CLLocationCoordinate2D(latitude: la, longitude: $0) } } }
-    if let v = trip.vehicle, let la = v.latitude, let lo = v.longitude { pts.append(CLLocationCoordinate2D(latitude: la, longitude: lo)) }
+    if let v = vehicle, let la = v.latitude, let lo = v.longitude { pts.append(CLLocationCoordinate2D(latitude: la, longitude: lo)) }
     guard let first = pts.first else { return nil }
     var minLat = first.latitude, maxLat = minLat, minLon = first.longitude, maxLon = minLon
     for p in pts {
@@ -133,14 +110,15 @@ private func tripRegion(_ trip: Trip, path: [CLLocationCoordinate2D]) -> MKCoord
 
 struct TripMiniMap: View {
     let trip: Trip
+    var vehicle: TripVehicle?
     let path: [CLLocationCoordinate2D]
     let color: Color
     @State private var full = false
 
     var body: some View {
-        if let region = tripRegion(trip, path: path) {
+        if let region = tripRegion(trip, vehicle: vehicle, path: path) {
             Map(initialPosition: .region(region), interactionModes: []) {
-                TripMapContent(trip: trip, path: path, color: color, big: false)
+                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false)
             }
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .frame(height: 180)
@@ -149,7 +127,7 @@ struct TripMiniMap: View {
             .accessibilityLabel(tr("Trip map"))
             .accessibilityAddTraits(.isButton)
             .fullScreenCover(isPresented: $full) {
-                TripFullMap(trip: trip, path: path, color: color, region: region)
+                TripFullMap(trip: trip, vehicle: vehicle, path: path, color: color, region: region)
             }
         }
     }
@@ -157,6 +135,7 @@ struct TripMiniMap: View {
 
 private struct TripFullMap: View {
     let trip: Trip
+    let vehicle: TripVehicle?
     let path: [CLLocationCoordinate2D]
     let color: Color
     let region: MKCoordinateRegion
@@ -164,7 +143,7 @@ private struct TripFullMap: View {
 
     var body: some View {
         Map(initialPosition: .region(region)) {
-            TripMapContent(trip: trip, path: path, color: color, big: true)
+            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true)
         }
         .mapStyle(.standard(pointsOfInterest: .excludingAll))
         .overlay(alignment: .topTrailing) {

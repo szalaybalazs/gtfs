@@ -149,7 +149,7 @@ struct MapView: View {
         if showVehicles {
             ForEach(visibleVehicles) { v in
                 Annotation("", coordinate: model.tracks[v.id]?.position(at: now) ?? v.coordinate) {
-                    vehicleBadge(v, selected: selection == .vehicle(v.id))
+                    VehicleDisc(line: v.route, bearing: v.bearing, selected: selection == .vehicle(v.id), compact: span >= 0.028)
                         .onTapGesture { selection = .vehicle(v.id) }
                 }
             }
@@ -196,26 +196,6 @@ struct MapView: View {
             .frame(width: selected ? 20 : 15, height: selected ? 20 : 15).foregroundStyle(c.tint)
             .padding(5).background(Theme.surface, in: Circle()).overlay(Circle().stroke(selected ? Color.primary : Theme.separator, lineWidth: selected ? 2 : 1))
             .padding(4)
-    }
-
-    /// Selected: a soft halo in the line's own colour and slightly bigger; the white border stays.
-    private func vehicleBadge(_ v: Vehicle, selected: Bool) -> some View {
-        let line = v.route
-        let bg = Color(hex: line?.color ?? "#6b7280")
-        let long = (line?.shortName ?? "?").count > 3
-        return Text(line?.shortName ?? "?")
-            .font(.system(size: long ? 9 : 10, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
-            .foregroundStyle(Color(hex: line?.textColor ?? "#ffffff"))
-            .frame(width: long ? 34 : 28, height: 15)
-            .background(bg, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(Color.white, lineWidth: 2))
-            .background {
-                RoundedRectangle(cornerRadius: 11, style: .continuous).fill(bg.opacity(selected ? 0.25 : 0)).padding(-7)
-            }
-            .shadow(color: .black.opacity(selected ? 0.35 : 0.3), radius: selected ? 3 : 2, y: selected ? 2 : 1)
-            .scaleEffect(selected ? 1.15 : 1)
-            .animation(.spring(response: 0.2, dampingFraction: 0.8), value: selected)
-            .padding(12)
     }
 
     // MARK: Controls
