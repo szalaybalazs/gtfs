@@ -1,3 +1,5 @@
+import { CATEGORIES, categoryOf } from '../lib/categories'
+import CategoryIcon from './CategoryIcon'
 import type { RouteRef } from '../lib/api'
 import { useT } from '../lib/i18n'
 import RouteBadge from './RouteBadge'
@@ -12,12 +14,15 @@ export default function StopInfoCard({
   headsigns,
   routes,
   note,
+  compact,
 }: {
   id?: string | null
   name: string
   headsigns?: string[]
   routes: RouteRef[]
   note?: string
+  /** Many lines (a whole stop group): show the kinds of transport as pictograms instead of every badge */
+  compact?: boolean
 }) {
   const t = useT()
   return (
@@ -32,7 +37,14 @@ export default function StopInfoCard({
       {/* A platform (headsigns given) where lines only arrive: say it's a terminus */}
       {headsigns && headsigns.length === 0 && routes.length > 0 && <p className="mt-1 text-[15px] text-secondary">{t('stop.terminus')}</p>}
       {note && <p className="mt-1 text-[13px] text-secondary">{note}</p>}
-      {routes.length > 0 && (
+      {compact && routes.length > 0 ? (
+        <div className="mt-3 flex items-center gap-1.5">
+          {CATEGORIES.filter((c) => routes.some((r) => categoryOf(r).key === c.key)).map((c) => (
+            <CategoryIcon key={c.key} category={c} className="h-6 w-6" />
+          ))}
+          <span className="ml-1 text-[15px] text-secondary">{t('stop.lineCount', { n: routes.length })}</span>
+        </div>
+      ) : routes.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {routes.map((r) => (
             <RouteBadge key={r.routeId} route={r} />

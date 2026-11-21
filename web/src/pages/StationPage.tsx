@@ -186,6 +186,8 @@ export default function StationPage() {
                 name={station.name}
                 note={t('station.groupNote', { n: platforms.length })}
                 routes={station.routes}
+                // Whole group: kinds of transport as pictograms, not dozens of badges
+                compact
               />
             )}
 
