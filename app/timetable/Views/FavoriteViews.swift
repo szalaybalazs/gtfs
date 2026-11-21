@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
+import TimetableAPI
 
 /// How many upcoming departures a favourite row shows.
 private let maxTimes = 8
 
 /// Upcoming departures in time order, back-to-back ones of the same line merged: [1] 1', 5'  [2] 7'  [1] 10'.
-private func runs(_ departures: [Departure], now: Date, only: Set<String>?) -> [(route: LineRef, times: [Departure])] {
+private func runs(_ departures: [Departure], now: Foundation.Date, only: Set<String>?) -> [(route: LineRef, times: [Departure])] {
     var out: [(route: LineRef, times: [Departure])] = []
     let upcoming = departures
         .filter { d in d.route != nil && (only == nil || only!.contains(d.route!.routeId)) && d.departure >= now.addingTimeInterval(-30) }
@@ -22,6 +23,26 @@ private func runs(_ departures: [Departure], now: Date, only: Set<String>?) -> [
         else { out.append((d.route!, [d])) }
     }
     return out
+}
+
+/// One time on a single line: "10s", "10'", "2½'", "17:23" (an hour or more away), live mark after it when tracked live.
+private struct ShortTime: View {
+    let departure: Departure
+    let now: Foundation.Date
+
+    var body: some View {
+        let s = departure.departure.timeIntervalSince(now)
+        let live = RealtimeStatus(realtime: departure.realtime, delay: departure.delay) != .scheduled
+        let text = s < 0 ? "-\(Int((-s).rounded(.up)))s"
+            : s >= 3600 ? TimeFormat.clock(departure.departure)
+            : s < 60 ? "\(Int(s.rounded()))s"
+            : "\(Countdown.upcoming(s).value)'"
+        HStack(alignment: .top, spacing: 2) {
+            Text(text).font(.system(size: 17, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
+            if live && s >= 0 { LiveIcon(size: 10).foregroundStyle(Theme.secondary).padding(.top, 2) }
+        }
+        .opacity(s < 0 ? 0.45 : 1)
+    }
 }
 
 /// The one favourites layout, in time order. Side-scrollable when it doesn't fit; times coloured by realtime status.
@@ -35,7 +56,7 @@ private struct LineTimesRow: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let groups = runs(departures, now: context.date, only: only)
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
+                HStack(spacing: 10) {
                     if pending || groups.isEmpty {
                         ForEach(fallback, id: \.routeId) { r in
                             HStack(spacing: 6) {
@@ -45,15 +66,14 @@ private struct LineTimesRow: View {
                         }
                     } else {
                         ForEach(Array(groups.enumerated()), id: \.offset) { _, g in
-                            HStack(spacing: 6) {
+                            HStack(spacing: 4) {
                                 LineBadge(line: g.route, fit: true)
-                                // Same countdowns as the Lines board: next one big, the rest small, live mark after the number
-                                HStack(spacing: 12) {
-                                    ForEach(Array(g.times.prefix(4).enumerated()), id: \.element.id) { i, d in
-                                        BoardCountdown(departure: d, now: context.date, small: i > 0)
+                                // One-line times with the live mark after them; full colour
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    ForEach(Array(g.times.prefix(4).enumerated()), id: \.element.id) { _, d in
+                                        ShortTime(departure: d, now: context.date)
                                     }
                                 }
-                                .padding(.trailing, 8)
                             }
                         }
                     }
@@ -65,17 +85,74 @@ private struct LineTimesRow: View {
     }
 }
 
+/// A small hatched amber "Disruption" pill, shown while an alert for these lines / stops is in effect.
+private struct DisruptionTag: View {
+    let routeIds: [String]
+    let stopIds: [String]
+    @State private var active = false
+
+    var body: some View {
+        Group {
+            if active {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle").font(.system(size: 11, weight: .semibold))
+                    Text("Disruption").font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(Color(red: 0.24, green: 0.18, blue: 0))
+                .padding(.horizontal, 6).frame(height: 20)
+                .background {
+                    ZStack {
+                        Color(red: 1, green: 0.945, blue: 0.651)
+                        Hatch().stroke(Color.white.opacity(0.35), lineWidth: 5)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .fixedSize()
+            }
+        }
+        .task(id: routeIds + stopIds) { active = await Self.isActive(routeIds: routeIds, stopIds: stopIds) }
+    }
+
+    /// Started and not yet over; a missing start or end counts as open.
+    static func isActive(routeIds: [String], stopIds: [String]) async -> Bool {
+        guard !routeIds.isEmpty || !stopIds.isEmpty else { return false }
+        guard let data = try? await Network.shared.fetch(AlertsQuery(
+            routeIds: routeIds.isEmpty ? .null : .some(routeIds), stopIds: stopIds.isEmpty ? .null : .some(stopIds), lang: .null)) else { return false }
+        let now = Foundation.Date()
+        return data.alerts.contains { a in
+            let start = a.start.flatMap(APIDate.parse), end = a.end.flatMap(APIDate.parse)
+            return (start == nil || start! <= now) && (end == nil || end! > now)
+        }
+    }
+}
+
+private struct Hatch: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        var x = -rect.height
+        while x < rect.width {
+            p.move(to: CGPoint(x: x, y: rect.height)); p.addLine(to: CGPoint(x: x + rect.height, y: 0))
+            x += 14
+        }
+        return p
+    }
+}
+
 private struct FavoriteCardBody<Content: View>: View {
     let title: String
     let subtitle: String?
     let link: Bool
+    var alertsFor: (routeIds: [String], stopIds: [String])? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1)
+                    HStack(spacing: 8) {
+                        Text(title).font(.system(size: 17, weight: .semibold)).lineLimit(1)
+                        if let alertsFor { DisruptionTag(routeIds: alertsFor.routeIds, stopIds: alertsFor.stopIds) }
+                    }
                     if let subtitle { Text(subtitle).font(.system(size: 13)).foregroundStyle(Theme.secondary).lineLimit(1) }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -140,7 +217,7 @@ struct FavoriteCard: View {
             }()
             let subtitle = towards ?? (fav.kind == .lines ? "\((fav.routes ?? []).count) lines" : nil)
             let fallback = fav.kind == .lineStop ? (fav.route.map { [$0.line] } ?? []) : (fav.routes ?? []).map(\.line)
-            let card = FavoriteCardBody(title: title, subtitle: subtitle, link: link) {
+            let card = FavoriteCardBody(title: title, subtitle: subtitle, link: link, alertsFor: (routeIds ?? [], stopIds)) {
                 LineTimesRow(departures: model.departures, pending: !model.loaded, only: routeIds.map(Set.init), fallback: fallback)
             }
             Group {

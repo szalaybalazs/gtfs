@@ -52,7 +52,10 @@ struct StationDetailView: View {
     private var reference: Foundation.Date? { chooseTime ? Self.minute(picked) : nil }
 
     /// A whole stop group can be a board; one platform or chosen lines is a plain list.
-    private var board: Bool { target.from == nil && !multi && settings.departuresView == .lines }
+    /// A group served by one line always shows the full Timeline (a board would cap it at 4 per line).
+    private var singleLine: Bool { (station?.routes.count ?? 0) <= 1 }
+    private var canBoard: Bool { target.from == nil && !multi && !singleLine }
+    private var board: Bool { canBoard && settings.departuresView == .lines }
     private var shown: Int { (target.from != nil ? 10 : 20) + more * 20 }
 
     private var request: DeparturesRequest {
@@ -153,7 +156,7 @@ struct StationDetailView: View {
     private var departuresSection: some View {
         VStack(spacing: 0) {
             SectionTitle(title: "Departures") {
-                if target.from == nil && !multi { viewSwitch }
+                if canBoard { viewSwitch }
             }
             Card {
                 timeControls

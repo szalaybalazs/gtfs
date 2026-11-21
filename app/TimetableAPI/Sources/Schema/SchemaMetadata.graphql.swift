@@ -20,6 +20,7 @@ public enum SchemaMetadata: ApolloAPI.SchemaMetadata {
 
   public static func objectType(forTypename typename: String) -> ApolloAPI.Object? {
     switch typename {
+    case "Alert": return TimetableAPI.Objects.Alert
     case "Departure": return TimetableAPI.Objects.Departure
     case "Direction": return TimetableAPI.Objects.Direction
     case "Query": return TimetableAPI.Objects.Query
