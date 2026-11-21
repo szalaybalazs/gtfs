@@ -42,5 +42,8 @@ export function useSteadyLimit(show: number, departures: { departure: string }[]
     const id = setInterval(count, 5_000)
     return () => clearInterval(id)
   }, [departures, fixed])
-  return show + 2 + (fixed ? 0 : soon)
+  // Safety net against refetch loops: the limit only moves in steps of 5 and never past twice `show`,
+  // so however the counts move, the query key can only take a few values
+  const wanted = show + 2 + (fixed ? 0 : soon)
+  return Math.min(Math.ceil(wanted / 5) * 5, show * 2)
 }
