@@ -16,6 +16,8 @@ final class NearbyDeparturesModel {
     enum Phase { case locating, noLocation, loading, ready, failed }
     private(set) var phase: Phase = .locating
     private(set) var stopIds: [String] = []
+    /// Platform name by stop id, for "from where" on each row.
+    private(set) var names: [String: String] = [:]
     /// Platforms this close count as "here".
     static let hereMetres = 200.0
 
@@ -27,12 +29,14 @@ final class NearbyDeparturesModel {
         do {
             let data = try await Network.shared.fetch(NearbyStationsQuery(lat: here.latitude, lon: here.longitude, radius: Self.hereMetres + 100))
             let origin = CLLocation(latitude: here.latitude, longitude: here.longitude)
-            stopIds = data.stationsByRadius.map(Station.init).flatMap(\.platforms)
-                .filter { p in
+            let stations = data.stationsByRadius.map(Station.init)
+            let near = stations.flatMap { st in st.platforms.map { (st, $0) } }
+                .filter { _, p in
                     guard let la = p.lat, let lo = p.lon, !p.routes.isEmpty else { return false }
                     return origin.distance(from: CLLocation(latitude: la, longitude: lo)) <= Self.hereMetres
                 }
-                .map(\.stopId)
+            stopIds = near.map { $0.1.stopId }
+            names = Dictionary(near.map { ($0.1.stopId, $0.1.name ?? $0.0.name) }, uniquingKeysWith: { a, _ in a })
             phase = .ready
         } catch {
             phase = .failed
@@ -61,14 +65,21 @@ struct NearbyDeparturesView: View {
                         Card { SkeletonDepartureRows(count: 6) }
                     } else {
                         TimelineView(.periodic(from: .now, by: 1)) { context in
-                            let list = departures.departures.filter { $0.time >= context.date.addingTimeInterval(-10) }.prefix(25)
+                            // A departure that left stays a few seconds (counting -1, -2…), fading, then slides away
+                            let list = Array(departures.departures.filter { $0.time >= context.date.addingTimeInterval(-8) }.prefix(25))
                             Card {
-                                RowList(data: Array(list), id: \.id) { d in
-                                    NavigationLink(value: TripTarget(tripId: d.tripId, serviceDate: d.serviceDate, from: d.stopId, route: d.route, headsign: d.headsign)) {
-                                        DepartureRow(departure: d, now: context.date)
+                                VStack(spacing: 0) {
+                                    ForEach(list) { d in
+                                        NavigationLink(value: TripTarget(tripId: d.tripId, serviceDate: d.serviceDate, from: d.stopId, route: d.route, headsign: d.headsign)) {
+                                            DepartureRow(departure: d, now: context.date, platform: here.names[d.stopId])
+                                        }
+                                        .buttonStyle(RowButtonStyle())
+                                        .opacity(d.time < context.date ? 0.5 : 1)
+                                        .transition(.opacity.combined(with: .move(edge: .leading)))
+                                        if d.id != list.last?.id { Divider().overlay(Theme.separator) }
                                     }
-                                    .buttonStyle(RowButtonStyle())
                                 }
+                                .animation(.easeInOut(duration: 0.45), value: list.map(\.id))
                             }
                         }
                     }

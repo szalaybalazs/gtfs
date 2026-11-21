@@ -31,6 +31,8 @@ struct DepartureRow: View {
     var fixed = false
     /// The trip you arrived on: marked "Your trip" and tinted.
     var mine = false
+    /// Where it leaves from (the platform's name), shown small above the row.
+    var platform: String? = nil
 
     var body: some View {
         let d = departure
@@ -47,6 +49,9 @@ struct DepartureRow: View {
         HStack(spacing: 12) {
             if let route = d.route { LineBadge(line: route) }
             VStack(alignment: .leading, spacing: 0) {
+                if let platform {
+                    Text(platform).font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.secondary).lineLimit(1).padding(.bottom, 1)
+                }
                 if mine {
                     Text("YOUR TRIP").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.accent)
                 }
@@ -76,12 +81,13 @@ struct DepartureRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             // Countdown stays plain (black, grey once gone); colour lives on the time line. Live mark in its own corner.
             VStack(alignment: .trailing, spacing: 0) {
-                Text(count.value).font(.system(size: 24, weight: .bold)).monospacedDigit().lineLimit(1)
-                Text(count.unit ?? " ").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.secondary).lineLimit(1)
+                Text(count.value).font(.system(size: 24, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                Text(count.unit ?? " ").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.secondary).lineLimit(1).minimumScaleFactor(0.7)
             }
             .foregroundStyle(left ? Theme.secondary : Color.primary)
+            // A fixed column: a minus sign or "min ago" must not widen it and squeeze (wrap) the destination
+            .frame(width: 56, alignment: .trailing)
             .padding(.trailing, 14)
-            .frame(minWidth: 56, alignment: .trailing)
             .overlay(alignment: .topTrailing) {
                 if status != .scheduled && !justLeft && !left {
                     LiveIcon(size: 12).foregroundStyle(Theme.secondary)
