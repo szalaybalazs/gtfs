@@ -2,6 +2,8 @@ import { Circle, LetterPCircle, OneCircle, Refresh, Telephone, Wheelchair } from
 import type { ReactNode } from 'react'
 import type { RouteFlags } from '../lib/api'
 import { useT, type MessageKey } from '../lib/i18n'
+import { useShownMarks, type ShownMark } from '../lib/shownMarks'
+import { BikeIcon } from './Icons'
 
 /**
  * BKK's legend markers (Jelmagyarázat), drawn like theirs: a small circled
@@ -55,7 +57,8 @@ export function lineMarks(flags: RouteFlags | null | undefined): Mark[] {
 
 /** A row of a line's marks (nothing when none apply). */
 export function LineMarks({ flags, className = '' }: { flags: RouteFlags | null | undefined; className?: string }) {
-  const marks = lineMarks(flags)
+  const { shows } = useShownMarks()
+  const marks = lineMarks(flags).filter(shows)
   if (marks.length === 0) return null
   return (
     <span className={`inline-flex items-center gap-1 ${className}`}>
@@ -66,19 +69,40 @@ export function LineMarks({ flags, className = '' }: { flags: RouteFlags | null 
   )
 }
 
-/** "Jelmagyarázat": every marker with its meaning. */
+/**
+ * "Jelmagyarázat": every marker with its meaning, each with a switch to show
+ * or hide it on departures and lines (Settings).
+ */
 export function Legend() {
   const t = useT()
+  const { shows, toggle } = useShownMarks()
+  const rows: { key: ShownMark; icon: ReactNode; label: string }[] = [
+    ...MARKS.map(({ mark, label }) => ({ key: mark as ShownMark, icon: <MarkIcon mark={mark} />, label: t(label) })),
+    { key: 'bikes', icon: <BikeIcon className="h-[1.1em] w-[1.1em]" aria-hidden />, label: t('common.bikes') },
+  ]
   return (
-    <ul className="space-y-2.5 rounded-2xl bg-surface p-gutter text-[17px]">
-      {MARKS.map(({ mark, label }) => (
-        <li key={mark} className="flex items-center gap-3">
-          <span className="flex w-6 justify-center text-[20px] text-secondary">
-            <MarkIcon mark={mark} />
-          </span>
-          {t(label)}
-        </li>
-      ))}
+    <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface text-[17px]">
+      {rows.map(({ key, icon, label }) => {
+        const on = shows(key)
+        return (
+          <li key={key}>
+            <label className="flex cursor-pointer items-center gap-3 px-gutter py-row">
+              <span className={`flex w-6 justify-center text-[20px] ${on ? 'text-secondary' : 'text-secondary/40'}`}>{icon}</span>
+              <span className={`flex-1 ${on ? '' : 'text-secondary'}`}>{label}</span>
+              <input type="checkbox" role="switch" checked={on} onChange={() => toggle(key)} className="peer sr-only" />
+              {/* iOS-style switch; the knob moves with a transform */}
+              <span
+                aria-hidden
+                className={`relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-accent ${on ? 'bg-accent' : 'bg-fill'}`}
+              >
+                <span
+                  className={`absolute top-[2px] left-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-[0_2px_4px_rgb(0_0_0/0.2)] transition-transform duration-200 ${on ? 'translate-x-5' : ''}`}
+                />
+              </span>
+            </label>
+          </li>
+        )
+      })}
     </ul>
   )
 }

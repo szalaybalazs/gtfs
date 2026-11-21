@@ -143,6 +143,7 @@ export default function SettingsPage() {
         </section>
         <section>
           <h2 className="px-1 pb-heading text-xl font-bold">{t('legend.title')}</h2>
+          <p className="px-1 pb-heading text-[13px] text-secondary">{t('settings.marksHint')}</p>
           <Legend />
         </section>
       </main>

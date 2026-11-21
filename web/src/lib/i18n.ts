@@ -136,6 +136,7 @@ const en = {
 
   // Alerts
   'legend.title': 'Legend',
+  'settings.marksHint': 'Turn off the markers you don\u2019t care about; they disappear from departures and lines.',
   'legend.frontDoor': 'Front-door boarding',
   'legend.replacement': 'Replacement bus',
   'legend.lowFloor': 'All vehicles low-floor',
@@ -413,6 +414,7 @@ const hu: Record<MessageKey, Message> = {
   'after.showEarlier': 'Korábbi indulások mutatása',
 
   'legend.title': 'Jelmagyarázat',
+  'settings.marksHint': 'Kapcsold ki, ami nem érdekel: eltűnik az indulásokból és a vonalakról.',
   'legend.frontDoor': 'Első ajtós felszállási rend',
   'legend.replacement': 'Pótlóbusz',
   'legend.lowFloor': 'Minden jármű alacsonypadlós',

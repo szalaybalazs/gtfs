@@ -14,6 +14,7 @@ import RouteBadge from './RouteBadge'
 /** How long a departed row stays (seconds) before it collapses away */
 const LINGER_S = 10
 import { MarkIcon } from './LineMarks'
+import { useShownMarks } from '../lib/shownMarks'
 
 /**
  * Departures as tappable rows: line badge, destination, countdown with the
@@ -150,6 +151,7 @@ export function DepartureRow({
 }) {
   const qc = useQueryClient()
   const t = useT()
+  const { shows } = useShownMarks()
   // An arrival (trip ends here) counts down to when it arrives
   const time = new Date(d.terminates ? d.arrival : d.departure)
   const delay = d.departureDelay ?? d.arrivalDelay
@@ -190,10 +192,10 @@ export function DepartureRow({
           {/* Second line: the trip's marks, then the time: scheduled struck through when it differs, the real one coloured + live */}
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[15px] tabular-nums">
             {d.terminates && <span className="rounded-md bg-fill px-1.5 text-[12px] leading-[18px] font-semibold text-secondary uppercase">{t('departures.arrives')}</span>}
-            {d.frontDoor && <MarkIcon mark="frontDoor" className="h-4 w-4 text-secondary" />}
-            {d.onRequest && <MarkIcon mark="demand" className="h-4 w-4 text-secondary" />}
-            {d.wheelchairAccessible === 'AVAILABLE' && <MarkIcon mark="lowFloor" className="h-4 w-4 text-secondary" />}
-            {d.bikesAllowed === 'ALLOWED' && <BikeIcon className="h-4 w-4 text-secondary" aria-label={t('common.bikes')} />}
+            {d.frontDoor && shows('frontDoor') && <MarkIcon mark="frontDoor" className="h-4 w-4 text-secondary" />}
+            {d.onRequest && shows('demand') && <MarkIcon mark="demand" className="h-4 w-4 text-secondary" />}
+            {d.wheelchairAccessible === 'AVAILABLE' && shows('lowFloor') && <MarkIcon mark="lowFloor" className="h-4 w-4 text-secondary" />}
+            {d.bikesAllowed === 'ALLOWED' && shows('bikes') && <BikeIcon className="h-4 w-4 text-secondary" aria-label={t('common.bikes')} />}
             {(status === 'late' || status === 'early') && (
               <span className="text-secondary line-through">{formatTime(new Date(time.getTime() - delay! * 1000))}</span>
             )}
