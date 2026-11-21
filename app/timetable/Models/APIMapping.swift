@@ -25,6 +25,7 @@ extension RouteRefLike {
 }
 
 extension DeparturesQuery.Data.Departure.Route: RouteRefLike {}
+extension AlertsQuery.Data.Alert.Route: RouteRefLike {}
 extension StationQuery.Data.Station.Route: RouteRefLike {}
 extension StationQuery.Data.Station.Stop.Route: RouteRefLike {}
 extension NearbyStationsQuery.Data.StationsByRadius.Route: RouteRefLike {}

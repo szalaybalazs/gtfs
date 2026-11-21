@@ -7,6 +7,28 @@
     " " : {
 
     },
+    "%lld more ongoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "még %lld folyamatban"
+          }
+        }
+      }
+    },
+    "%lld planned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tervezett"
+          }
+        }
+      }
+    },
     "-%llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -25,6 +47,149 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Akadálymentes"
+          }
+        }
+      }
+    },
+    "from %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kezdete: %@"
+          }
+        }
+      }
+    },
+    "No details." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs részletes leírás."
+          }
+        }
+      }
+    },
+    "No service changes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs forgalmi változás."
+          }
+        }
+      }
+    },
+    "Ongoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folyamatban"
+          }
+        }
+      }
+    },
+    "ongoing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visszavonásig"
+          }
+        }
+      }
+    },
+    "Open in browser" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Megnyitás böngészőben"
+          }
+        }
+      }
+    },
+    "Planned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tervezett"
+          }
+        }
+      }
+    },
+    "See all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Összes"
+          }
+        }
+      }
+    },
+    "Service changes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forgalmi változások"
+          }
+        }
+      }
+    },
+    "since %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ óta"
+          }
+        }
+      }
+    },
+    "today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ma"
+          }
+        }
+      }
+    },
+    "tomorrow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "holnap"
+          }
+        }
+      }
+    },
+    "until %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@-ig"
           }
         }
       }

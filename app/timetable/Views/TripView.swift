@@ -50,6 +50,7 @@ struct TripView: View {
         return VStack(spacing: 24) {
             header(trip, stops: stops, started: started, finished: finished,
                    delay: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil)
+            if let r = trip.route { AlertsSection(routeIds: [r.routeId]) }
             VStack(spacing: 0) {
                 SectionTitle("Stops")
                 Card {

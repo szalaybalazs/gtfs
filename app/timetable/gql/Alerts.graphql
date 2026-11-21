@@ -1,7 +1,6 @@
 query Alerts($routeIds: [ID!], $stopIds: [ID!], $lang: String) {
   alerts(routeIds: $routeIds, stopIds: $stopIds, lang: $lang) {
-    id
-    start
-    end
+    id header description url start end effect stopIds
+    routes { routeId shortName color textColor type }
   }
 }

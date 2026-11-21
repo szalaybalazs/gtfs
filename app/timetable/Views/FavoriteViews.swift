@@ -85,7 +85,7 @@ private struct LineTimesRow: View {
     }
 }
 
-/// A small hatched amber "Disruption" pill, shown while an alert for these lines / stops is in effect.
+/// A small yellow "Disruption" pill, shown while an alert for these lines / stops is in effect.
 private struct DisruptionTag: View {
     let routeIds: [String]
     let stopIds: [String]
@@ -98,15 +98,9 @@ private struct DisruptionTag: View {
                     Image(systemName: "exclamationmark.triangle").font(.system(size: 11, weight: .semibold))
                     Text("Disruption").font(.system(size: 12, weight: .semibold))
                 }
-                .foregroundStyle(Color(red: 0.24, green: 0.18, blue: 0))
+                .foregroundStyle(AlertStyle.text)
                 .padding(.horizontal, 6).frame(height: 20)
-                .background {
-                    ZStack {
-                        Color(red: 1, green: 0.945, blue: 0.651)
-                        Hatch().stroke(Color.white.opacity(0.35), lineWidth: 5)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                }
+                .background(AlertStyle.background, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .fixedSize()
             }
         }
@@ -123,18 +117,6 @@ private struct DisruptionTag: View {
             let start = a.start.flatMap(APIDate.parse), end = a.end.flatMap(APIDate.parse)
             return (start == nil || start! <= now) && (end == nil || end! > now)
         }
-    }
-}
-
-private struct Hatch: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        var x = -rect.height
-        while x < rect.width {
-            p.move(to: CGPoint(x: x, y: rect.height)); p.addLine(to: CGPoint(x: x + rect.height, y: 0))
-            x += 14
-        }
-        return p
     }
 }
 

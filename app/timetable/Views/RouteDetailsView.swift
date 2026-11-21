@@ -26,7 +26,7 @@ struct RouteDetailsView: View {
     }
 
     private var request: DeparturesRequest? {
-        model.stop.map { DeparturesRequest(stopIds: [$0.stopId], routeIds: [id], limit: 60 * (1 + more)) }
+        model.stop.map { DeparturesRequest(stopIds: [$0.stopId], routeIds: [id], limit: 60 * (1 + more), hours: min(6, Int((Double(90 * (1 + more)) / 60).rounded(.up)))) }
     }
 
     private var favoriteOptions: [Favorite] {
@@ -47,6 +47,7 @@ struct RouteDetailsView: View {
                     ErrorView(message: message) { await model.load() }
                 } else if let route = model.route {
                     header(route)
+                    AlertsSection(routeIds: [route.line.routeId])
                     if let direction = model.direction, let stop = model.stop {
                         VStack(spacing: 8) {
                             stopPicker(direction, stop: stop)
@@ -152,7 +153,9 @@ struct RouteDetailsView: View {
                 } else {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
                         let end = context.date.addingTimeInterval(Double(90 * (1 + more)) * 60)
-                        let list = departures.departures.filter { $0.route?.routeId == id && $0.time <= end && $0.stopId == stop.stopId }
+                        // Switching stop / direction: keep the previous rows up until the new ones answer (a moment later), so the card doesn't collapse and refill
+                        let current = departures.loadedStopIds == [stop.stopId]
+                        let list = departures.departures.filter { $0.route?.routeId == id && $0.time <= end && (!current || $0.stopId == stop.stopId) }
                         if list.isEmpty {
                             Text("No departures").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
                         } else {
@@ -164,12 +167,14 @@ struct RouteDetailsView: View {
                             }
 
                         }
+                        if 90 * (1 + more) < 360 {
                         Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
                         Button { more += 1 } label: {
                             Text("Show more").font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
                                 .frame(maxWidth: .infinity).padding(.vertical, 12)
                         }
                         .buttonStyle(RowButtonStyle())
+                        }
                     }
                 }
             }

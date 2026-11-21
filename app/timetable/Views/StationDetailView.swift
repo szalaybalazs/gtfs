@@ -67,7 +67,9 @@ struct StationDetailView: View {
             after: earlier ?? reference,
             // A single platform always asks for arrivals (we may not know it's a terminus yet); rows that end here are dropped unless wanted
             arrivals: arrivals || target.from != nil,
-            perLine: board ? 4 : nil
+            perLine: board ? 4 : nil,
+            // "Show more" also looks further ahead (the server's default is 3 hours, its most 6)
+            hours: more > 0 ? min(6, 3 + more) : nil
         )
     }
 
@@ -82,6 +84,8 @@ struct StationDetailView: View {
                     ErrorView(message: message) { retry += 1 }
                 } else if let station {
                     header(station)
+                    AlertsSection(routeIds: multi ? target.lines : (fromPlatform?.routes ?? station.routes).map(\.routeId),
+                                  stopIds: fromPlatform.map { [$0.stopId] } ?? platforms.map(\.stopId))
                     departuresSection
                     platformsSection
                 } else {
@@ -116,7 +120,12 @@ struct StationDetailView: View {
                                    from: fromPlatform?.stopId, name: fromPlatform?.name ?? station.name,
                                    headsigns: fromPlatform?.headsigns ?? [])]
         }
-        guard let stop = fromPlatform ?? (platforms.count == 1 ? platforms[0] : nil) else { return [] }
+        guard let stop = fromPlatform ?? (platforms.count == 1 ? platforms[0] : nil) else {
+            // A whole stop group: save it with all its lines and platforms
+            guard !station.routes.isEmpty else { return [] }
+            return [Favorite.lines(station.routes, stationId: station.stationId, stopIds: platforms.map(\.stopId),
+                                   from: nil, name: station.name, headsigns: [])]
+        }
         return [Favorite.stop(stop, stationId: station.stationId)] + stop.routes.map {
             Favorite.lineStop(route: $0, stopId: stop.stopId, stationId: station.stationId, stopName: stop.name ?? stop.stopId, headsign: stop.headsigns.isEmpty ? nil : stop.headsigns.joined(separator: " / "))
         }
@@ -297,7 +306,8 @@ struct StationDetailView: View {
                 }
                 .buttonStyle(RowButtonStyle())
             }
-            if all.count >= shown {
+            // Always offered (later departures), until it is looking as far ahead as the server allows and has nothing more
+            if all.count >= shown || more < 3 {
                 Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
                 Button { more += 1 } label: {
                     Text("Show more").font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
