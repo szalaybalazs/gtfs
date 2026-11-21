@@ -7,7 +7,7 @@ export default function NearbyPage() {
   return (
     <div className="min-h-dvh">
       <NavBar title={t('nav.nearby')} menu />
-      <main className="mx-auto max-w-2xl px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         <NearbyList />
       </main>
     </div>

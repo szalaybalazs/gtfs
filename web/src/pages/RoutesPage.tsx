@@ -98,7 +98,7 @@ export default function RoutesPage() {
         )}
 
         {favorites.length > 0 && !narrowing && (
-          <section className="px-4 pt-4">
+          <section className="px-gutter pt-4">
             <h2 className="pb-2 text-xl font-bold">{t('common.favourites')}</h2>
             <div className="flex flex-wrap gap-2">
               {favorites.map((route) => (
@@ -109,7 +109,7 @@ export default function RoutesPage() {
         )}
 
         {search.trim() && (
-          <section className="px-4 pt-5">
+          <section className="px-gutter pt-section">
             <h2 className="pb-2 text-xl font-bold">{t('routes.bestMatches')}</h2>
             <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
               {routes.slice(0, 40).map((route) => (
@@ -119,7 +119,7 @@ export default function RoutesPage() {
           </section>
         )}
         {!search.trim() && groups.map(({ category: c, routes: list, replacements }) => (
-          <section key={c.key} className="px-4 pt-5">
+          <section key={c.key} className="px-gutter pt-section">
             <h2 className="flex items-center gap-2 pb-2 text-xl font-bold">
               <CategoryIcon category={c} className="h-7 w-7" />
               {t(`category.${c.key}`)}
@@ -148,7 +148,7 @@ export default function RoutesPage() {
 
         {query.isPending ? (
           // Tile-shaped placeholder: the grid appears in one go when the lines arrive
-          <section className="px-4 pt-5">
+          <section className="px-gutter pt-section">
             <div className="mb-3 h-7 w-32 animate-pulse rounded-md bg-fill" />
             <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
               {Array.from({ length: 24 }, (_, i) => (
@@ -161,13 +161,13 @@ export default function RoutesPage() {
           !query.isError && <p className="p-6 text-center text-secondary">{t('routes.none')}</p>
         )}
         {!selecting && allRoutes.length > 0 && (
-          <p className="px-4 pt-2 pb-6 text-center text-[13px] text-secondary">{t('routes.tip')}</p>
+          <p className="px-gutter pt-2 pb-6 text-center text-[13px] text-secondary">{t('routes.tip')}</p>
         )}
         {selecting && <div className="h-28" />}
       </main>
 
       {selecting && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-separator bg-canvas/95 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-separator bg-canvas/95 px-gutter pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
               {selected.map((r) => (
@@ -183,7 +183,7 @@ export default function RoutesPage() {
               type="button"
               disabled={selected.length < 2}
               onClick={() => navigate(linesUrl(selected.map((r) => r.routeId)))}
-              className="shrink-0 rounded-full bg-accent px-4 py-2 text-[15px] font-semibold text-white disabled:opacity-40"
+              className="shrink-0 rounded-full bg-accent px-gutter py-2 text-[15px] font-semibold text-white disabled:opacity-40"
             >
               {selected.length < 2 ? t('routes.pickOneMore') : t('lines.title')}
             </button>

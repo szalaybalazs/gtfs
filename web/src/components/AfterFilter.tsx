@@ -146,7 +146,7 @@ export function TimeControl() {
               role="dialog"
               aria-modal="true"
               aria-label={t('after.dialog')}
-              className="sheet-up w-full max-w-[320px] rounded-3xl bg-surface p-4 shadow-2xl"
+              className="sheet-up w-full max-w-[320px] rounded-3xl bg-surface p-gutter shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <p className="pb-1 text-center text-[13px] font-semibold text-secondary">{t('after.dialog')}</p>
@@ -249,7 +249,7 @@ export default function AfterFilter({ stopIds, routeIds = null }: { stopIds: str
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-separator px-4 py-2.5 text-[15px]">
+    <div className="flex items-center justify-between gap-3 border-b border-separator px-gutter py-2.5 text-[15px]">
       <TimeControl />
       {!none && (
         <button

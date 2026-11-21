@@ -55,7 +55,7 @@ export default function StationStops({
         </ul>
       </section>
       <section>
-        <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
+        <h2 className="px-1 pb-heading text-xl font-bold">{t('common.map')}</h2>
         <MiniMap
           area
           // A stop group is a neutral grey footprint, not a line colour

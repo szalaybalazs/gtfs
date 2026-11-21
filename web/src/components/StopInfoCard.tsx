@@ -21,7 +21,7 @@ export default function StopInfoCard({
 }) {
   const t = useT()
   return (
-    <section className="rounded-2xl bg-surface p-4">
+    <section className="rounded-2xl bg-surface p-gutter">
       {id && <p className="font-mono text-[13px] font-semibold text-secondary">#{id}</p>}
       <h1 className="text-2xl leading-tight font-bold">{name}</h1>
       {headsigns && headsigns.length > 0 && (

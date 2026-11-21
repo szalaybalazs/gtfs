@@ -41,7 +41,7 @@ export default function StopPicker({
           setQ('')
           setOpen(true)
         }}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-gutter py-row text-left active:bg-fill"
       >
         <span className="w-[4.5rem] shrink-0 text-secondary">{t('picker.from')}</span>
         <span className="min-w-0 flex-1 truncate font-medium">{value.name}</span>
@@ -57,7 +57,7 @@ export default function StopPicker({
             className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-t-3xl bg-canvas pb-[env(safe-area-inset-bottom)] shadow-2xl sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 pb-2">
+            <div className="p-gutter pb-2">
               <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-separator sm:hidden" aria-hidden />
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-xl font-bold">{t('picker.from')}</h2>
@@ -75,7 +75,7 @@ export default function StopPicker({
                 />
               </div>
             </div>
-            <ol className="mx-4 mb-4 overflow-y-auto rounded-2xl bg-surface">
+            <ol className="mx-gutter mb-4 overflow-y-auto rounded-2xl bg-surface">
               {shown.map((s, i) => {
                 const selected = s.stopId === value.stopId
                 return (

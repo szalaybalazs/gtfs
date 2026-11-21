@@ -42,7 +42,7 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
   const [mode] = useTimeMode()
   const groups = runs(departures, now, onlyRoute)
   return (
-    <div className="-mx-4 flex items-center gap-4 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none]">
+    <div className="-mx-gutter flex items-center gap-4 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
       {pending || groups.length === 0
         ? fallback.map((r) => (
             <span key={r.routeId} className="flex shrink-0 items-center gap-1.5">
@@ -75,7 +75,7 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
 
 function Card({ title, subtitle, to, link, children }: { title: string; subtitle?: string | null; to: string; link: boolean; children: React.ReactNode }) {
   const body = (
-    <div className="px-4 py-3">
+    <div className="px-gutter py-row">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-semibold">{title}</p>
@@ -150,7 +150,7 @@ export function LinesCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { 
 export function FavoritePreview({ fav }: { fav: FavoriteDraft | Favorite }) {
   if (fav.kind === 'line')
     return (
-      <div className="px-4 py-3">
+      <div className="px-gutter py-row">
         <RouteBadge route={fav.route} />
       </div>
     )

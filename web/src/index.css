@@ -1,6 +1,22 @@
 @import "tailwindcss";
 
 @theme {
+  /*
+   * Spacing roles. Use these (px-gutter, py-row, space-y-section, pb-heading, mx-inset…)
+   * instead of raw numbers for layout, so every page shares one rhythm:
+   *   gutter  16px  page edges, card padding
+   *   row     12px  vertical padding of list rows
+   *   section 24px  between sections of a page
+   *   heading  8px  section title → its content
+   *   inset    8px  how far a grouping tint bleeds past the content line; small inner gaps
+   * Small in-component gaps (between a badge and a label…) can stay as Tailwind numbers.
+   */
+  --spacing-gutter: 1rem;
+  --spacing-row: 0.75rem;
+  --spacing-section: 1.5rem;
+  --spacing-heading: 0.5rem;
+  --spacing-inset: 0.5rem;
+
   --color-canvas: #f2f2f7;
   --color-surface: #ffffff;
   --color-separator: rgb(60 60 67 / 0.18);

@@ -65,9 +65,9 @@ export default function SettingsPage() {
   return (
     <div className="min-h-dvh">
       <NavBar title={t('nav.settings')} menu />
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         <section>
-          <h2 className="px-1 pb-2 text-xl font-bold">{t('settings.appearance')}</h2>
+          <h2 className="px-1 pb-heading text-xl font-bold">{t('settings.appearance')}</h2>
           <Choice
             label={t('settings.theme')}
             value={theme}
@@ -80,7 +80,7 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="px-1 pb-2 text-xl font-bold">{t('settings.language')}</h2>
+          <h2 className="px-1 pb-heading text-xl font-bold">{t('settings.language')}</h2>
           {/* A dropdown row: current language on the right, the list opens below it */}
           <div className="flex items-center justify-between rounded-2xl bg-surface py-1 pr-1 pl-4">
             <span className="text-[17px]">{t('settings.language')}</span>
@@ -100,7 +100,7 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="px-1 pb-2 text-xl font-bold">{t('nav.nearby')}</h2>
+          <h2 className="px-1 pb-heading text-xl font-bold">{t('nav.nearby')}</h2>
           {/* How far "Nearby stops" looks; wider helps where stops are sparse */}
           <div className="flex items-center justify-between rounded-2xl bg-surface py-1 pr-1 pl-4">
             <span className="text-[17px]">{t('settings.radius')}</span>
@@ -120,8 +120,8 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="px-1 pb-2 text-xl font-bold">{t('settings.favourites')}</h2>
-          <div className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3">
+          <h2 className="px-1 pb-heading text-xl font-bold">{t('settings.favourites')}</h2>
+          <div className="flex items-center justify-between rounded-2xl bg-surface px-gutter py-row">
             <span>
               {t('settings.favouriteCount', { n: favorites.length })}
               <span className="block text-[13px] text-secondary">{t('settings.storedLocally')}</span>
@@ -138,11 +138,11 @@ export default function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="px-1 pb-2 text-xl font-bold">{t('settings.about')}</h2>
-          <p className="rounded-2xl bg-surface p-4 text-[15px] text-secondary">{t('settings.aboutText')}</p>
+          <h2 className="px-1 pb-heading text-xl font-bold">{t('settings.about')}</h2>
+          <p className="rounded-2xl bg-surface p-gutter text-[15px] text-secondary">{t('settings.aboutText')}</p>
         </section>
         <section>
-          <h2 className="px-1 pb-2 text-xl font-bold">{t('legend.title')}</h2>
+          <h2 className="px-1 pb-heading text-xl font-bold">{t('legend.title')}</h2>
           <Legend />
         </section>
       </main>

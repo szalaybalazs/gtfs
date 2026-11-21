@@ -30,7 +30,7 @@ export default function FavoriteSheet({ options, onClose }: { options: FavoriteD
         role="dialog"
         aria-modal="true"
         aria-label={t('fav.add')}
-        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-canvas p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl sm:rounded-3xl"
+        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-canvas p-gutter pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-separator sm:hidden" aria-hidden />
@@ -51,7 +51,7 @@ export default function FavoriteSheet({ options, onClose }: { options: FavoriteD
                   aria-pressed={saved}
                   className={`w-full overflow-hidden rounded-2xl bg-surface text-left ring-2 transition-shadow ${saved ? 'ring-accent' : 'ring-transparent'}`}
                 >
-                  <div className="flex items-center justify-between px-4 pt-3 text-[13px] font-semibold text-secondary uppercase">
+                  <div className="flex items-center justify-between px-gutter pt-3 text-[13px] font-semibold text-secondary uppercase">
                     {t(TITLES[option.kind])}
                     <span className={`flex items-center gap-1 normal-case ${saved ? 'text-accent' : ''}`}>
                       <StarIcon filled={saved} className="h-4 w-4" />

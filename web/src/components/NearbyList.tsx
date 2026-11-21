@@ -48,7 +48,7 @@ export default function NearbyList({ limit }: { limit?: number }) {
       <button
         type="button"
         onClick={location.request}
-        className="flex w-full items-center gap-2 border-b border-separator px-4 py-2.5 text-left text-[15px] active:bg-fill"
+        className="flex w-full items-center gap-2 border-b border-separator px-gutter py-2.5 text-left text-[15px] active:bg-fill"
       >
         <LocationIcon filled={!!location.coords} className={`h-5 w-5 text-accent ${location.loading ? 'animate-pulse' : ''}`} />
         <span className="flex-1 text-secondary">
@@ -66,7 +66,7 @@ export default function NearbyList({ limit }: { limit?: number }) {
               <Link
                 to={`/stations/${encodeURIComponent(station.stationId)}/lines`}
                 onPointerDown={() => void prefetchStation(qc, station.stationId)}
-                className="flex items-center gap-3 px-4 py-3 active:bg-fill"
+                className="flex items-center gap-3 px-gutter py-row active:bg-fill"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[17px] font-semibold">

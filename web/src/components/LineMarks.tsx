@@ -70,7 +70,7 @@ export function LineMarks({ flags, className = '' }: { flags: RouteFlags | null 
 export function Legend() {
   const t = useT()
   return (
-    <ul className="space-y-2.5 rounded-2xl bg-surface p-4 text-[17px]">
+    <ul className="space-y-2.5 rounded-2xl bg-surface p-gutter text-[17px]">
       {MARKS.map(({ mark, label }) => (
         <li key={mark} className="flex items-center gap-3">
           <span className="flex w-6 justify-center text-[20px] text-secondary">

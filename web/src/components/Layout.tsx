@@ -128,7 +128,7 @@ export default function Layout() {
         }`}
       >
         {/* Tall header pushes the links down into easy thumb reach; icon is a placeholder until we have a logo */}
-        <div className="relative flex min-h-[22dvh] flex-col justify-end px-4 pb-4">
+        <div className="relative flex min-h-[22dvh] flex-col justify-end px-gutter pb-4">
           <button
             type="button"
             onClick={() => setOpen(false)}

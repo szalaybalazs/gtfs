@@ -87,7 +87,7 @@ export default function StopPage() {
           )
         }
       />
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isPending && <div className="h-24 animate-pulse rounded-2xl bg-surface" />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
@@ -109,7 +109,7 @@ export default function StopPage() {
               />
               <Link
                 to={`/stations/${encodeURIComponent(stopId)}?from=${encodeURIComponent(stopId)}`}
-                className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 active:bg-fill"
+                className="flex items-center justify-between rounded-2xl bg-surface px-gutter py-row active:bg-fill"
               >
                 <span className="text-secondary">
                   {t.rich('stop.everythingAt', { name: <span className="font-medium text-label">{stop.name}</span> })}

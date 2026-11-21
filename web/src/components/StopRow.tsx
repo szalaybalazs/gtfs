@@ -23,7 +23,7 @@ export default function StopRow({
   return (
     <li className="border-b border-separator last:border-b-0">
       {onSelect ? (
-        <button type="button" onClick={onSelect} aria-pressed={highlighted} className={`flex w-full items-center gap-3 px-4 py-3 text-left active:bg-fill`}>
+        <button type="button" onClick={onSelect} aria-pressed={highlighted} className="flex w-full items-center gap-3 px-gutter py-row text-left active:bg-fill">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-semibold">
             {stop.name ?? stop.stopId}
@@ -47,7 +47,7 @@ export default function StopRow({
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </button>
       ) : (
-        <Link to={`/stops/${encodeURIComponent(stop.stopId)}`} className={`flex w-full items-center gap-3 px-4 py-3 text-left active:bg-fill`}>
+        <Link to={`/stops/${encodeURIComponent(stop.stopId)}`} className="flex w-full items-center gap-3 px-gutter py-row text-left active:bg-fill">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-semibold">
             {stop.name ?? stop.stopId}

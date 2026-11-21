@@ -19,7 +19,7 @@ export default function AlertsPage() {
   return (
     <div className="min-h-dvh">
       <NavBar back={{ label: t('common.back') }} title={t('alerts.title')} />
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isPending && (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
@@ -30,7 +30,7 @@ export default function AlertsPage() {
         {query.isSuccess && ongoing.length + planned.length === 0 && <p className="p-6 text-center text-secondary">{t('alerts.none')}</p>}
         {ongoing.length > 0 && (
           <section>
-            <h2 className="flex items-baseline gap-2 px-1 pb-2 text-xl font-bold">
+            <h2 className="flex items-baseline gap-2 px-1 pb-heading text-xl font-bold">
               {t('alerts.sectionOngoing')}
               <span className="text-[15px] font-normal text-secondary">{ongoing.length}</span>
             </h2>
@@ -43,7 +43,7 @@ export default function AlertsPage() {
         )}
         {planned.length > 0 && (
           <section>
-            <h2 className="flex items-baseline gap-2 px-1 pb-2 text-xl font-bold">
+            <h2 className="flex items-baseline gap-2 px-1 pb-heading text-xl font-bold">
               {t('alerts.sectionPlanned')}
               <span className="text-[15px] font-normal text-secondary">{planned.length}</span>
             </h2>

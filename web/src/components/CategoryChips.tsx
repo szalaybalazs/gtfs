@@ -48,7 +48,8 @@ export default function CategoryChips({
   const types = CATEGORIES.filter((c) => c.key === keep || routes.some((r) => groupOf(r) === c.key))
 
   return (
-    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2.5 [scrollbar-width:none]">
+    // Wrap onto more lines rather than scrolling sideways, so every type is visible at once
+    <div className="flex flex-wrap gap-2 pb-2.5">
       <button
         type="button"
         onClick={() => onChange(null)}

@@ -49,8 +49,8 @@ export default function Menu<T extends string>({
       </button>
       {open && (
         <div role="menu" className="absolute top-full right-0 z-[1200] mt-1 w-64 overflow-hidden rounded-2xl bg-surface shadow-xl ring-1 ring-separator">
-          <p className="px-4 pt-3 text-[12px] font-semibold text-secondary uppercase">{label}</p>
-          {hint && <p className="px-4 pb-1 text-[13px] text-secondary">{hint}</p>}
+          <p className="px-gutter pt-3 text-[12px] font-semibold text-secondary uppercase">{label}</p>
+          {hint && <p className="px-gutter pb-1 text-[13px] text-secondary">{hint}</p>}
           {options.map((o) => (
             <button
               key={o.value}
@@ -61,7 +61,7 @@ export default function Menu<T extends string>({
                 onChange(o.value)
                 setOpen(false)
               }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left active:bg-fill"
+              className="flex w-full items-center gap-3 px-gutter py-2.5 text-left active:bg-fill"
             >
               <span className="min-w-0 flex-1">
                 <span className="block text-[17px] font-medium">{o.title}</span>

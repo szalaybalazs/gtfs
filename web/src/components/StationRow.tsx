@@ -26,7 +26,7 @@ export default function StationRow({ station, distance }: { station: Station; di
   const platforms = stops.length > 1
   return (
     <li className="border-b border-separator last:border-b-0">
-      <Link to={`/stations/${encodeURIComponent(station.stationId)}`} onPointerDown={prefetch} className="flex items-center gap-3 px-4 py-3 active:bg-fill">
+      <Link to={`/stations/${encodeURIComponent(station.stationId)}`} onPointerDown={prefetch} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-semibold">
             {station.name}
@@ -54,13 +54,13 @@ export default function StationRow({ station, distance }: { station: Station; di
       {/* Platforms in a tinted block under the group (the background groups them, no indent or tree lines) */}
       {platforms && (
         // Grid: the block's content lines up with the group row (16 px edges); its tint bleeds 8 px past that
-        <ul className="mx-2 mb-2 divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
+        <ul className="mx-inset mb-inset divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
           {stops.map((stop) => (
             <li key={stop.stopId}>
               <Link
                 to={`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(stop.stopId)}`}
                 onPointerDown={prefetch}
-                className="flex items-center gap-3 px-2 py-2.5 active:bg-fill"
+                className="flex items-center gap-3 px-inset py-2.5 active:bg-fill"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-medium">

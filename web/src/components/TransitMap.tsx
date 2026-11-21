@@ -418,7 +418,7 @@ function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }
   const age = v.timestamp ? Math.max(0, Math.round((Date.now() - new Date(v.timestamp).getTime()) / 1000)) : null
   const name = vehicleName(v.vehicleModel)
   return (
-    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-4 pr-12 shadow-xl">
+    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
       <button type="button" onClick={onClose} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
         <CloseIcon className="h-4 w-4" />
       </button>

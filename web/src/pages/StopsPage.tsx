@@ -74,7 +74,7 @@ export default function StopsPage() {
           />
         </div>
       </NavBar>
-      <main className="mx-auto max-w-2xl px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isError && (
           <p className="p-6 text-center text-secondary">
             {t('nearby.loadError')}{' '}

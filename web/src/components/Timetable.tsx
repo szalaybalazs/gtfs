@@ -92,7 +92,7 @@ export default function Timetable({ lines }: { lines: Line[] }) {
       ) : (
         days.map(({ day, label, hours }) => (
           <div key={day}>
-            <h3 className="px-1 pb-2 text-xl font-bold">{label}</h3>
+            <h3 className="px-1 pb-heading text-xl font-bold">{label}</h3>
             <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
               {hours.map(([hour, list]) => (
                 <li key={hour} className="flex">

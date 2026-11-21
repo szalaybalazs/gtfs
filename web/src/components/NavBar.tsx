@@ -25,7 +25,7 @@ export default function NavBar({
   const { pathname } = useLocation()
   return (
     <header className="sticky top-0 z-10 border-b border-separator bg-canvas/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-      <div className="mx-auto max-w-2xl px-4">
+      <div className="mx-auto max-w-2xl px-gutter">
         <div className="flex h-11 items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center">
             {/* Top-level pages: the menu. Deeper pages: Back (the menu is one tap away via Home) */}

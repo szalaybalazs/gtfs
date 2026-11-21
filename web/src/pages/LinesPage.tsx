@@ -56,8 +56,8 @@ export default function LinesPage() {
   return (
     <div className="min-h-dvh">
       <NavBar title={t('lines.title')} back={{ label: t('nav.routes') }} />
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
-        <div className="flex flex-wrap gap-1.5 rounded-2xl bg-surface p-4">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+        <div className="flex flex-wrap gap-1.5 rounded-2xl bg-surface p-gutter">
           {routes.map((r) => (
             <RouteBadge key={r.routeId} route={r} fit />
           ))}
@@ -92,11 +92,11 @@ function Section({ title, items, showLines }: { title: string; items: SharedStat
   const t = useT()
   return (
     <section>
-      <h2 className="px-1 pb-2 text-xl font-bold">{title}</h2>
+      <h2 className="px-1 pb-heading text-xl font-bold">{title}</h2>
       <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
         {items.map(({ station, routes, distance }) => (
           <li key={station.stationId}>
-            <Link to={stationLinesUrl(station.stationId, routes.map((r) => r.routeId))} className="flex items-center gap-3 px-4 py-3 active:bg-fill">
+            <Link to={stationLinesUrl(station.stationId, routes.map((r) => r.routeId))} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[17px] font-semibold">
                   {station.name}

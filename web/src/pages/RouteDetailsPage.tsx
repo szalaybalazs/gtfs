@@ -163,7 +163,7 @@ export default function RouteDetailsPage() {
         }
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {routeQuery.isError && (
           <p className="p-6 text-center text-secondary">
             {t('route.loadError')}{' '}
@@ -178,7 +178,7 @@ export default function RouteDetailsPage() {
 
         {route && direction && stop && (
           <section className="space-y-2">
-            <div className="rounded-2xl bg-surface p-4">
+            <div className="rounded-2xl bg-surface p-gutter">
               <h1 className="text-2xl leading-tight font-bold">{route.desc ?? route.longName}</h1>
               {/* BKK legend marks for the line: low-floor, circular, on request, front door, replacement */}
               <LineMarks flags={route.flags} className="mt-1.5 text-[18px] text-secondary" />
@@ -209,7 +209,7 @@ export default function RouteDetailsPage() {
               type="button"
               disabled={!otherDirection}
               onClick={() => otherDirection && changeDirection(otherDirection.directionId)}
-              className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill disabled:active:bg-surface"
+              className="flex w-full items-center gap-3 rounded-2xl bg-surface px-gutter py-row text-left active:bg-fill disabled:active:bg-surface"
             >
               <span className="w-[4.5rem] shrink-0 text-secondary">{t('route.towards')}</span>
               <span className="min-w-0 flex-1 truncate font-medium">{direction.headsign}</span>

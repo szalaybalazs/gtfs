@@ -102,7 +102,7 @@ export default function TripPage() {
     <div className="min-h-dvh">
       <NavBar back={{ label: t('common.back') }} />
 
-      <main className="mx-auto max-w-2xl space-y-4 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isPending && <TripSkeleton preview={preview} />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
@@ -118,7 +118,7 @@ export default function TripPage() {
           <>
             {route && <Alerts routeIds={[route.routeId]} />}
 
-            <section className="rounded-2xl bg-surface p-4">
+            <section className="rounded-2xl bg-surface p-gutter">
               <div className="flex items-center gap-2">
                 {route && <RouteBadge route={route} />}
                 {t('trip.towards') && <span className="text-secondary">{t('trip.towards')}</span>}
@@ -157,7 +157,7 @@ export default function TripPage() {
             </section>
 
             <section>
-              <h2 className="px-1 pb-2 text-xl font-bold">{t('common.stops')}</h2>
+              <h2 className="px-1 pb-heading text-xl font-bold">{t('common.stops')}</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
                 {stops.map((s, i) => (
                   <TripStopRow
@@ -181,9 +181,9 @@ export default function TripPage() {
 
             {vehicle && (vehicle.vehicleModel || vehicle.vehicleLicensePlate) && (
               <section>
-                <h2 className="px-1 pb-2 text-xl font-bold">{t('trip.vehicle')}</h2>
+                <h2 className="px-1 pb-heading text-xl font-bold">{t('trip.vehicle')}</h2>
                 {/* What it is, big; its plate / fleet number under it. (BKK's "label" is the destination, so it isn't shown.) */}
-                <div className="rounded-2xl bg-surface p-4">
+                <div className="rounded-2xl bg-surface p-gutter">
                   <p className="text-[20px] leading-snug font-semibold">{vehicleName(vehicle.vehicleModel) ?? vehicle.vehicleLicensePlate}</p>
                   <p className="mt-0.5 text-[15px] text-secondary">
                     {[vehicle.vehicleModel ? vehicle.vehicleLicensePlate : null, vehicle.vehicleWheelchairAccessible ? t('common.wheelchair') : null]
@@ -195,7 +195,7 @@ export default function TripPage() {
             )}
 
             <section>
-              <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
+              <h2 className="px-1 pb-heading text-xl font-bold">{t('common.map')}</h2>
               <MiniMap
                 color={color}
                 line={miniLine}
@@ -388,7 +388,7 @@ function TripSkeleton({ preview }: { preview: TripPreview | null }) {
   const t = useT()
   return (
     <>
-      <section className="rounded-2xl bg-surface p-4">
+      <section className="rounded-2xl bg-surface p-gutter">
         <div className="flex h-7 items-center gap-2">
           {preview?.route ? <RouteBadge route={preview.route} /> : <span className="h-6 w-12 animate-pulse rounded-md bg-fill" />}
         </div>
@@ -404,7 +404,7 @@ function TripSkeleton({ preview }: { preview: TripPreview | null }) {
         <div className="mx-1 mb-2 h-6 w-24 animate-pulse rounded bg-fill" />
         <ol className="overflow-hidden rounded-2xl bg-surface py-2">
           {Array.from({ length: 8 }, (_, i) => (
-            <li key={i} className="flex h-12 items-center gap-3 px-4">
+            <li key={i} className="flex h-12 items-center gap-3 px-gutter">
               <span className="h-2.5 w-2.5 rounded-full bg-fill" />
               <span className="h-4 flex-1 animate-pulse rounded bg-fill" style={{ maxWidth: `${55 + ((i * 37) % 35)}%` }} />
               <span className="h-4 w-12 animate-pulse rounded bg-fill" />

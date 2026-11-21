@@ -71,7 +71,7 @@ export function AlertCard({ alert: a, onOpen }: { alert: Alert; onOpen: () => vo
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-full items-start gap-3 rounded-2xl bg-[#fff4cc] px-4 py-3 text-left text-black active:opacity-80 dark:bg-[#3a3214] dark:text-[#fff4cc]"
+      className="flex w-full items-start gap-3 rounded-2xl bg-[#fff4cc] px-gutter py-row text-left text-black active:opacity-80 dark:bg-[#3a3214] dark:text-[#fff4cc]"
     >
       <span className="mt-0.5 text-lg leading-none" aria-hidden>
         ⚠︎
@@ -129,7 +129,7 @@ export default function Alerts({ routeIds, stopIds = [] }: { routeIds: string[];
         <button
           type="button"
           onClick={() => navigate(alertsUrl(routeIds, stopIds))}
-          className="flex w-full items-center gap-3 rounded-2xl bg-[#fff4cc]/60 px-4 py-3 text-left text-black active:opacity-80 dark:bg-[#3a3214]/60 dark:text-[#fff4cc]"
+          className="flex w-full items-center gap-3 rounded-2xl bg-[#fff4cc]/60 px-gutter py-row text-left text-black active:opacity-80 dark:bg-[#3a3214]/60 dark:text-[#fff4cc]"
         >
           <span className="min-w-0 flex-1 text-[15px] font-semibold">
             {[moreOngoing > 0 && t('alerts.moreOngoing', { n: moreOngoing }), morePlanned > 0 && t('alerts.morePlanned', { n: morePlanned })]
@@ -171,7 +171,7 @@ function AlertSheet({ alert: a, onClose }: { alert: Alert; onClose: () => void }
         className="sheet-up flex h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-canvas shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-3 border-b border-separator px-4 pt-3 pb-3">
+        <div className="flex items-start gap-3 border-b border-separator px-gutter pt-3 pb-3">
           <div className="min-w-0 flex-1">
             <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-separator" aria-hidden />
             {a.routes.length > 0 && (
@@ -195,13 +195,13 @@ function AlertSheet({ alert: a, onClose }: { alert: Alert; onClose: () => void }
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="border-t border-separator px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] text-center text-[15px] font-medium text-accent"
+              className="border-t border-separator px-gutter py-row pb-[calc(env(safe-area-inset-bottom)+0.75rem)] text-center text-[15px] font-medium text-accent"
             >
               {t('alerts.openInBrowser')}
             </a>
           </>
         ) : (
-          <p className="overflow-y-auto px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-[15px] leading-relaxed whitespace-pre-line">
+          <p className="overflow-y-auto px-gutter py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-[15px] leading-relaxed whitespace-pre-line">
             {a.description ?? t('alerts.noDetails')}
           </p>
         )}

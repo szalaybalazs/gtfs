@@ -13,9 +13,9 @@ export default function HomePage() {
   return (
     <div className="min-h-dvh">
       <NavBar title={t('nav.home')} menu trailing={<TimeModeMenu />} />
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {favorites.length === 0 && (
-          <p className="rounded-2xl bg-surface p-4 text-secondary">
+          <p className="rounded-2xl bg-surface p-gutter text-secondary">
             {t('home.empty')}{' '}
             <Link to="/routes" className="font-medium text-accent">
               {t('home.browseLines')}
@@ -25,7 +25,7 @@ export default function HomePage() {
 
         {lines.length > 0 && (
           <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">{t('home.lines')}</h2>
+            <h2 className="px-1 pb-heading text-xl font-bold">{t('home.lines')}</h2>
             <div className="flex flex-wrap gap-2">
               {lines.map((f) => (
                 <RouteTile key={f.id} route={f.route} compact />
@@ -36,7 +36,7 @@ export default function HomePage() {
 
         {(lineStops.length > 0 || multiLines.length > 0) && (
           <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">{t('home.linesFromStops')}</h2>
+            <h2 className="px-1 pb-heading text-xl font-bold">{t('home.linesFromStops')}</h2>
             <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
               {lineStops.map((f) => (
                 <li key={f.id}>
@@ -54,7 +54,7 @@ export default function HomePage() {
 
         {stops.length > 0 && (
           <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">{t('home.stops')}</h2>
+            <h2 className="px-1 pb-heading text-xl font-bold">{t('home.stops')}</h2>
             <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
               {stops.map((f) => (
                 <li key={f.id}>

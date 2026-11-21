@@ -124,11 +124,11 @@ export default function StationPage() {
           </>
         }
       />
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl space-y-section px-gutter pt-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isPending && (
           // Shaped like the page: info card, then the departures card
           <>
-            <div className="rounded-2xl bg-surface p-4">
+            <div className="rounded-2xl bg-surface p-gutter">
               <div className="h-7 w-2/3 animate-pulse rounded-md bg-fill" />
               <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-fill" />
               <div className="mt-3 flex gap-1.5">
@@ -137,7 +137,7 @@ export default function StationPage() {
                 ))}
               </div>
             </div>
-            <div className="space-y-2 rounded-2xl bg-surface p-4">
+            <div className="space-y-2 rounded-2xl bg-surface p-gutter">
               {[0, 1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-12 animate-pulse rounded-lg bg-fill" />
               ))}

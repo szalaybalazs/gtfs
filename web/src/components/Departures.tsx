@@ -61,12 +61,12 @@ export default function Departures({
 
   return (
     <section>
-      {title === undefined && <h2 className="flex items-center gap-2 px-1 pb-2 text-xl font-bold">{t('departures.title')}</h2>}
-      {title && <h2 className="flex items-center gap-2 px-1 pb-2 text-xl font-bold">{title}</h2>}
+      {title === undefined && <h2 className="flex items-center gap-2 px-1 pb-heading text-xl font-bold">{t('departures.title')}</h2>}
+      {title && <h2 className="flex items-center gap-2 px-1 pb-heading text-xl font-bold">{title}</h2>}
       <div className="overflow-hidden rounded-2xl bg-surface">
         {toolbar}
         {isPending ? (
-          <div className="space-y-3 p-4">
+          <div className="space-y-3 p-gutter">
             {Array.from({ length: 3 }, (_, i) => (
               <div key={i} className="h-12 animate-pulse rounded-lg bg-fill" />
             ))}
@@ -121,7 +121,7 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
         state={{ route: d.route, headsign: d.headsign } satisfies TripPreview}
         // Start loading the trip as the finger goes down; the click lands ~150 ms later
         onPointerDown={() => void prefetchTrip(qc, d.tripId, d.serviceDate)}
-        className={`flex items-center gap-3 px-4 py-3 active:bg-fill ${left || justLeft ? 'opacity-45' : ''} ${mine ? 'bg-accent/10' : ''}`}
+        className={`flex items-center gap-3 px-gutter py-row active:bg-fill ${left || justLeft ? 'opacity-45' : ''} ${mine ? 'bg-accent/10' : ''}`}
       >
         {d.route && <RouteBadge route={d.route} />}
         <div className="min-w-0 flex-1">

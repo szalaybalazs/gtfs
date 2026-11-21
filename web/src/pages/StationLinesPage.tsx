@@ -66,7 +66,7 @@ export default function StationLinesPage() {
         {types.length > 1 && <CategoryChips routes={routes} value={type as never} onChange={(k) => setType(k)} />}
       </NavBar>
 
-      <main className="mx-auto max-w-2xl px-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+      <main className="mx-auto max-w-2xl px-gutter pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         <p className="pt-3 text-[15px] text-secondary">{t('stationLines.pick')}</p>
         {query.isPending && (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 pt-4">
@@ -76,7 +76,7 @@ export default function StationLinesPage() {
           </div>
         )}
         {groups.map(({ category: c, routes: list }) => (
-          <section key={c.key} className="pt-5">
+          <section key={c.key} className="pt-section">
             <h2 className="flex items-center gap-2 pb-2 text-xl font-bold">
               <CategoryIcon category={c} className="h-7 w-7" />
               {t(`category.${c.key}`)}
