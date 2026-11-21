@@ -198,7 +198,7 @@ export default function TransitMap({
             ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true, s.headsigns ?? []) : stopIcon(routes)),
             z: sel ? 1000 : 0,
             onClick: () =>
-              sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`) : setSelectedStop(s.stopId),
+              sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`) : (setSelectedStop(s.stopId), setSelected(null)),
           })
         }
       } else {
@@ -209,7 +209,7 @@ export default function TransitMap({
           // First tap shows the card (or highlights it); tapping it again opens the stop
           ...groupIcon(station, zoom >= BADGES_ZOOM || sel, sel),
           z: sel ? 1000 : 0,
-          onClick: () => (sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}`) : setSelectedStop(station.stationId)),
+          onClick: () => (sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}`) : (setSelectedStop(station.stationId), setSelected(null))),
         })
       }
     }
@@ -292,7 +292,10 @@ export default function TransitMap({
         // First tap: details card. Tap the same vehicle again: open its trip.
         onClick: () => {
           if (selected === v.id && v.trip) navigate(tripUrl(v))
-          else setSelected(v.id)
+          else {
+            setSelected(v.id)
+            setSelectedStop(null)
+          }
         },
       })),
     [vehicles, zoom, selected, navigate, pathsByRoute, trip],
@@ -354,6 +357,24 @@ export default function TransitMap({
   }, [fresh])
   const selectedVehicle = selected ? (fresh ?? (lastSelected?.id === selected ? lastSelected : null)) : null
 
+  // The tapped stop (a whole group when zoomed out, a single platform when zoomed in), for its bottom card
+  const selectedStopInfo = useMemo(() => {
+    if (!selectedStop) return null
+    for (const st of groups) {
+      if (st.stationId === selectedStop)
+        return { name: st.name, towards: [] as string[], routes: st.routes.filter(Boolean), to: `/stations/${encodeURIComponent(st.stationId)}` }
+      const p = st.stops?.find((x) => x.stopId === selectedStop)
+      if (p)
+        return {
+          name: p.name ?? st.name,
+          towards: p.headsigns ?? [],
+          routes: (p.routes ?? []).filter((r): r is NonNullable<typeof r> => !!r),
+          to: `/stations/${encodeURIComponent(st.stationId)}?from=${encodeURIComponent(p.stopId)}`,
+        }
+    }
+    return null
+  }, [selectedStop, groups])
+
   return (
     <div className="relative h-full w-full">
       {/* isolate: markers' z-index stays inside the map, so cards and buttons always draw above them */}
@@ -398,12 +419,31 @@ export default function TransitMap({
         </button>
       )}
       {selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
+      {selectedStopInfo && !selectedVehicle && (
+        // Same bottom card as for a vehicle: name, which way, its lines, and a way in
+        <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-gutter pr-12 shadow-xl">
+          <button type="button" onClick={() => setSelectedStop(null)} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
+            <CloseIcon className="h-4 w-4" />
+          </button>
+          <p className="truncate text-[17px] font-semibold">{selectedStopInfo.name}</p>
+          {selectedStopInfo.towards.length > 0 && <p className="truncate text-[15px] text-secondary">{t('common.towards', { to: selectedStopInfo.towards.join(' / ') })}</p>}
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {selectedStopInfo.routes.slice(0, 12).map((r) => (
+              <RouteBadge key={r.routeId} route={r} />
+            ))}
+            {selectedStopInfo.routes.length > 12 && <span className="text-[13px] text-secondary">+{selectedStopInfo.routes.length - 12}</span>}
+          </div>
+          <Link to={selectedStopInfo.to} className="mt-2 inline-block text-[15px] font-medium text-accent active:opacity-60">
+            {t('map.openStop')}
+          </Link>
+        </div>
+      )}
       <button
         type="button"
         onClick={location.request}
         aria-label={t('map.showMyLocation')}
         className={`absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-accent shadow-lg active:opacity-70 ${
-          selectedVehicle ? 'bottom-[calc(env(safe-area-inset-bottom)+9.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom)+1.5rem)]'
+          selectedVehicle || selectedStopInfo ? 'bottom-[calc(env(safe-area-inset-bottom)+9.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom)+1.5rem)]'
         }`}
       >
         <LocationIcon filled={!!location.coords} className={`h-5 w-5 ${location.loading ? 'animate-pulse' : ''}`} />
