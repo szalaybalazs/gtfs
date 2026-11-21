@@ -26,11 +26,12 @@ export default function LineBoard({ departures, stationPath }: { departures: Dep
   }
   const rows = [...groups.values()]
 
-  const label = (d: Departure) => {
+  // First time: the precise countdown (½ minutes, seconds); later ones: whole minutes
+  const label = (d: Departure, first = false) => {
     const s = (new Date(d.departure).getTime() - now.getTime()) / 1000
     if (s >= 60 * 60) return formatTime(new Date(d.departure))
     if (s < 0) return '0'
-    return countdown(s).value
+    return first ? countdown(s).value : String(Math.round(s / 60))
   }
 
   return (
@@ -48,7 +49,7 @@ export default function LineBoard({ departures, stationPath }: { departures: Dep
               <p className="line-clamp-2 min-w-0 flex-1 text-[17px] leading-snug font-medium">{first.headsign ?? '—'}</p>
               <p className="shrink-0 text-right tabular-nums">
                 <span className={`inline-flex items-center gap-0.5 text-xl font-bold ${status === 'scheduled' ? '' : statusColor[status]}`}>
-                  {label(first)}
+                  {label(first, true)}
                   {status !== 'scheduled' && <LiveIcon className="h-3 w-3" aria-hidden />}
                 </span>
                 {unit && <span className="ml-0.5 text-[13px] text-secondary">{unit}</span>}
