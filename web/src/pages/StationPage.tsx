@@ -291,6 +291,7 @@ export default function StationPage() {
             <StationStops
               id={station.stationId}
               current={from}
+              showTerminus={!!arrivedOn}
               lines={multi ? lineIds : undefined}
               onSelect={(stopId) => {
                 // Opens that stop as a new view (slides in, Back returns). The chosen

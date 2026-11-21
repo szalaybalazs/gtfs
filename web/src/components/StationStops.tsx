@@ -1,4 +1,4 @@
-import { comparePlatforms } from '../lib/categories'
+import { comparePlatforms, isTerminusPlatform } from '../lib/categories'
 import { useQuery } from '@tanstack/react-query'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { useT } from '../lib/i18n'
@@ -15,7 +15,10 @@ export default function StationStops({
   current,
   onSelect,
   lines,
+  showTerminus = false,
 }: {
+  /** Also list arrival-only (terminus) platforms: when you got here on a trip, you may be standing on one */
+  showTerminus?: boolean
   id: string
   current?: string | null
   /** When set, tapping a stop selects it (tap again to clear) instead of opening it. */
@@ -30,7 +33,8 @@ export default function StationStops({
     staleTime: 60 * 60_000,
   })
   const stops = (query.data?.station?.stops ?? []).filter((s) =>
-    (s.routes ?? []).some((r) => r && (!lines?.length || lines.includes(r.routeId))),
+    (s.routes ?? []).some((r) => r && (!lines?.length || lines.includes(r.routeId))) &&
+    (showTerminus || s.stopId === current || !isTerminusPlatform(s)),
   ).sort(comparePlatforms)
   if (stops.length === 0) return null
   return (

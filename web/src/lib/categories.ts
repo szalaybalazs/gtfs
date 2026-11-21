@@ -72,3 +72,7 @@ export function comparePlatforms(a: { routes?: (Lineish | null)[] | null }, b: {
   if (!x || !y) return x ? -1 : y ? 1 : 0
   return compareLines(x, y)
 }
+
+/** A platform where lines only end (no departures): it lists lines but no "towards" directions */
+export const isTerminusPlatform = (s: { headsigns?: string[] | null; routes?: unknown[] | null }) =>
+  (s.headsigns ?? []).length === 0 && (s.routes ?? []).some(Boolean)
