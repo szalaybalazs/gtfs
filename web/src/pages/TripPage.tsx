@@ -55,9 +55,9 @@ export default function TripPage() {
   const started = nextIndex !== 0 && stops.length > 0
   const finished = nextIndex === -1 && stops.length > 0
   const delay = latestDelay(stops, nextIndex)
-  // More than 10 greyed-out stops: fold the oldest, keep the last 3 behind the vehicle (and the stop you came from)
+  // More than 10 greyed-out stops: keep the first stop and the last 2 before the vehicle, fold what is between (unless it hides the stop you came from)
   const fromIndex = stops.findIndex((x) => x.stop.stopId === from)
-  const hiddenPassed = !showAllPassed && started && !finished && nextIndex > 10 && !(fromIndex >= 0 && fromIndex < nextIndex - 3) ? nextIndex - 3 : 0
+  const hiddenPassed = !showAllPassed && started && !finished && nextIndex > 10 && !(fromIndex >= 1 && fromIndex <= nextIndex - 3) ? nextIndex - 3 : 0
   const vehicle = trip?.vehicle
   // Reference for the relative-minutes column: the stop you came from
   const reference = stops.find((x) => x.stop.stopId === from)
@@ -161,14 +161,19 @@ export default function TripPage() {
             <section>
               <h2 className="px-1 pb-heading text-xl font-bold">{t('common.stops')}</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
-                {hiddenPassed > 0 && (
-                  <li>
-                    <button type="button" onClick={() => setShowAllPassed(true)} className="w-full px-gutter py-2 text-left text-[15px] font-medium text-accent active:bg-fill">
-                      {t('trip.earlierStops', { n: hiddenPassed })}
-                    </button>
-                  </li>
-                )}
-                {stops.map((s, i) => (i < hiddenPassed ? null : (
+                {stops.map((s, i) => (i >= 1 && i <= hiddenPassed ? (i === 1 ? <li key="fold">
+                      <button type="button" onClick={() => setShowAllPassed(true)} className={`flex w-full items-center pr-3 text-left active:bg-fill ${referenceTime != null ? 'pl-2' : ''}`}>
+                        {referenceTime != null && <span className="w-[3.5ch] shrink-0" />}
+                        {/* The line, dotted where stops are folded away */}
+                        <span className="relative mr-1.5 flex h-10 w-7 shrink-0 justify-center">
+                          <span
+                            className="absolute top-0 bottom-0 w-2 opacity-45"
+                            style={{ backgroundImage: `radial-gradient(circle at center, ${color} 2px, transparent 2.5px)`, backgroundSize: '8px 8px' }}
+                          />
+                        </span>
+                        <span className="text-[15px] font-medium text-accent">{t('trip.earlierStops', { n: hiddenPassed })}</span>
+                      </button>
+                    </li> : null) : (
                   <TripStopRow
                     key={`${s.stopSequence}`}
                     stop={s}
