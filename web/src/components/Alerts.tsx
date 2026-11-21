@@ -71,7 +71,7 @@ export function AlertCard({ alert: a, onOpen }: { alert: Alert; onOpen: () => vo
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-full items-start gap-3 rounded-2xl bg-[#fff4cc] px-gutter py-row text-left text-black active:opacity-80 dark:bg-[#3a3214] dark:text-[#fff4cc]"
+      className="alert-card flex w-full items-start gap-3 rounded-2xl px-gutter py-row text-left active:opacity-80"
     >
       <span className="mt-0.5 text-lg leading-none" aria-hidden>
         ⚠︎
@@ -129,7 +129,7 @@ export default function Alerts({ routeIds, stopIds = [] }: { routeIds: string[];
         <button
           type="button"
           onClick={() => navigate(alertsUrl(routeIds, stopIds))}
-          className="flex w-full items-center gap-3 rounded-2xl bg-[#fff4cc]/60 px-gutter py-row text-left text-black active:opacity-80 dark:bg-[#3a3214]/60 dark:text-[#fff4cc]"
+          className="alert-card flex w-full items-center gap-3 rounded-2xl px-gutter py-row text-left active:opacity-80"
         >
           <span className="min-w-0 flex-1 text-[15px] font-semibold">
             {[moreOngoing > 0 && t('alerts.moreOngoing', { n: moreOngoing }), morePlanned > 0 && t('alerts.morePlanned', { n: morePlanned })]
