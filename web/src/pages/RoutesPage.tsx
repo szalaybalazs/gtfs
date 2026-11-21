@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { LocationIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import CategoryIcon from '../components/CategoryIcon'
 import CategoryChips from '../components/CategoryChips'
@@ -15,7 +14,6 @@ import { useFavorites } from '../lib/favorites'
 import { useT } from '../lib/i18n'
 import { score } from '../lib/search'
 import { rank } from '../lib/usage'
-import { useGeolocation } from '../lib/useGeolocation'
 
 
 export default function RoutesPage() {
@@ -23,7 +21,6 @@ export default function RoutesPage() {
   const [params, setParams] = useSearchParams()
   const search = params.get('q') ?? ''
   const category = CATEGORIES.find((c) => c.key === params.get('type')) ?? null
-  const location = useGeolocation()
   const { lines: favorites } = useFavorites()
   const navigate = useNavigate()
   // Long-press a line to start picking several, then see their shared stops
@@ -83,19 +80,6 @@ export default function RoutesPage() {
       <NavBar
         title={t('nav.routes')}
         menu
-        leading={
-          <button
-            type="button"
-            onClick={location.request}
-            title={location.error ?? (location.coords ? t('routes.locationEnabled') : t('nearby.useMyLocation'))}
-            className="-ml-2 rounded-md p-2 text-accent active:opacity-50"
-          >
-            <LocationIcon
-              filled={!!location.coords}
-              className={`h-5 w-5 ${location.loading ? 'animate-pulse' : ''} ${location.error ? 'text-secondary' : ''}`}
-            />
-          </button>
-        }
       >
         <div className="pb-2">
           <SearchInput value={search} onChange={(v) => setParam('q', v || null)} />

@@ -4,10 +4,13 @@ import { prefetchStation } from '../lib/prefetch'
 import type { Station } from '../lib/api'
 import { formatDistance } from '../lib/geo'
 import { useT } from '../lib/i18n'
+import { ChevronsRight } from '@mynaui/icons-react'
 import { ChevronIcon } from './Icons'
 import RouteBadge from './RouteBadge'
 import CategoryIcon from './CategoryIcon'
 import { CATEGORIES, categoryOf } from '../lib/categories'
+
+const CHEVRON = 'h-4 w-4 shrink-0 text-secondary/60'
 
 /**
  * A stop group in a list: the group itself (all its lines; opens the whole
@@ -45,17 +48,19 @@ export default function StationRow({ station, distance }: { station: Station; di
             </div>
           )}
         </div>
-        <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
+        {/* » opens the whole group, › (below) one platform: same size and colour, one column */}
+        {platforms ? <ChevronsRight className={CHEVRON} aria-hidden /> : <ChevronIcon className={CHEVRON} />}
       </Link>
       {/* Platforms in a tinted block under the group (the background groups them, no indent or tree lines) */}
       {platforms && (
-        <ul className="mx-3 mb-3 divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
+        // Grid: the block's content lines up with the group row (16 px edges); its tint bleeds 8 px past that
+        <ul className="mx-2 mb-2 divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
           {stops.map((stop) => (
             <li key={stop.stopId}>
               <Link
                 to={`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(stop.stopId)}`}
                 onPointerDown={prefetch}
-                className="flex items-center gap-3 px-3 py-2.5 active:bg-fill"
+                className="flex items-center gap-3 px-2 py-2.5 active:bg-fill"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-medium">
@@ -67,7 +72,7 @@ export default function StationRow({ station, distance }: { station: Station; di
                     ))}
                   </div>
                 </div>
-                <ChevronIcon className="h-3.5 w-3.5 shrink-0 text-secondary/50" />
+                <ChevronIcon className={CHEVRON} />
               </Link>
             </li>
           ))}
