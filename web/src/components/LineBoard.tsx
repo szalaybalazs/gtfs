@@ -55,7 +55,7 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
   const to = `${stationPath}?from=${encodeURIComponent(d.stopId)}${d.route ? `&lines=${encodeURIComponent(d.route.routeId)}` : ''}`
   return (
     <li>
-      <Link to={to} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
+      <Link to={to} className="flex items-center gap-2.5 px-gutter py-row active:bg-fill">
         {d.route && <RouteBadge route={d.route} />}
         <div className="min-w-0 flex-1">
           <p className="line-clamp-2 text-[17px] leading-snug font-medium">{d.headsign ?? '—'}</p>
@@ -78,7 +78,7 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
         {/* The next departure big (as on a departure row), then the following ones smaller to its right:
             one more on narrow screens, up to three when there's room */}
         {/* Kept tight so the next one plus two more fit on a phone */}
-        <div className="-mr-1 flex shrink-0 items-center gap-1">
+        <div className="-mr-1 flex shrink-0 items-center gap-0.5">
           <Countdown d={d} now={now} />
           {list.slice(1, 4).map((n, i) => (
             <Countdown key={n.tripId} d={n} now={now} small className={i === 2 ? 'hidden sm:block' : ''} />
@@ -104,7 +104,7 @@ function Countdown({ d, now, small = false, className = '' }: { d: Departure; no
       ? { value: formatTime(new Date(Date.now() + seconds * 1000)), unit: null }
       : countdown(seconds)
   return (
-    <div className={`relative text-right ${className} ${small ? 'min-w-8 pr-2 text-secondary' : 'min-w-12 pr-3 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`relative text-right ${className} ${small ? 'min-w-6 pr-1.5 text-secondary' : 'min-w-9 pr-2.5 text-label'} ${left ? 'opacity-45' : ''}`}>
       {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
       <p className={`leading-none font-bold tabular-nums ${small ? 'text-[16px]' : 'text-2xl'}`}>{value}</p>
       <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{unit ? t(unit) : '\u00a0'}</p>
