@@ -1,3 +1,4 @@
+import { LineMarks } from '../components/LineMarks'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
@@ -179,6 +180,8 @@ export default function RouteDetailsPage() {
           <section className="space-y-2">
             <div className="rounded-2xl bg-surface p-4">
               <h1 className="text-2xl leading-tight font-bold">{route.desc ?? route.longName}</h1>
+              {/* BKK legend marks for the line: low-floor, circular, on request, front door, replacement */}
+              <LineMarks flags={route.flags} className="mt-1.5 text-[18px] text-secondary" />
               {hint && <p className="mt-1 text-[15px] text-secondary">{hint}</p>}
             </div>
             <div className="flex gap-2">

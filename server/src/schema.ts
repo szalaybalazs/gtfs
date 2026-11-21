@@ -136,6 +136,10 @@ export const typeDefs = `#graphql
     realtime: Boolean!
     wheelchairAccessible: WheelchairBoarding!
     bikesAllowed: BikesAllowed!
+    "Board by the front door only on this trip (BKK's [Elsőajtós])"
+    frontDoor: Boolean!
+    "Stops here only on request (call ahead / signal the driver)"
+    onRequest: Boolean!
   }
 
   type TripStop {
@@ -189,6 +193,21 @@ export const typeDefs = `#graphql
     stops: [Stop]!
     closestStop(lat: Float, lon: Float): Stop
     directions: [Direction!]
+    "Legend markers (from the nightly import; all false until it has run)"
+    flags: RouteFlags!
+  }
+
+  type RouteFlags {
+    "Every vehicle is low-floor"
+    lowFloor: Boolean!
+    "Ends where it starts (körjárat)"
+    circular: Boolean!
+    "Some stops are on request only (igényvezérelt)"
+    demandResponsive: Boolean!
+    "Some trips board by the front door only"
+    frontDoor: Boolean!
+    "Replacement bus (pótlóbusz) for a tram or metro line"
+    replacement: Boolean!
   }
 
   type Direction {

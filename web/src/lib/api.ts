@@ -24,7 +24,10 @@ export type RouteType =
   | 'TROLLEYBUS'
   | 'MONORAIL'
 
+export type RouteFlags = { lowFloor: boolean; circular: boolean; demandResponsive: boolean; frontDoor: boolean; replacement: boolean }
+
 export type RouteSummary = {
+  flags?: RouteFlags | null
   routeId: string
   shortName: string | null
   longName: string | null
@@ -52,6 +55,7 @@ export const ROUTES_QUERY = /* GraphQL */ `
         color
         textColor
         type
+        flags { lowFloor circular demandResponsive frontDoor replacement }
       }
     }
   }
@@ -79,6 +83,7 @@ export const ROUTE_QUERY = /* GraphQL */ `
       color
       textColor
       type
+      flags { lowFloor circular demandResponsive frontDoor replacement }
       directions {
         headsign
         directionId
@@ -224,6 +229,10 @@ export type RouteRef = Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 't
 const ROUTE_REF = 'routeId shortName color textColor type'
 
 export type Departure = {
+  /** Board by the front door only (BKK's [Elsőajtós]) */
+  frontDoor?: boolean
+  /** Stops here only on request */
+  onRequest?: boolean
   tripId: string
   serviceDate: string
   stopId: string
@@ -245,7 +254,7 @@ export const DEPARTURES_QUERY = /* GraphQL */ `
   query Departures($stopIds: [ID!]!, $routeIds: [ID!], $limit: Int, $hours: Int, $after: DateTime) {
     departures(stopIds: $stopIds, routeIds: $routeIds, limit: $limit, hours: $hours, after: $after) {
       tripId serviceDate stopId headsign arrival departure arrivalDelay departureDelay
-      realtime wheelchairAccessible bikesAllowed
+      realtime wheelchairAccessible bikesAllowed frontDoor onRequest
       route { ${ROUTE_REF} }
     }
   }

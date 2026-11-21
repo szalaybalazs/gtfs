@@ -114,7 +114,7 @@ const formatTrip = (t: any) => {
     ...t,
     serviceId: t.service_id,
     tripId: t.trip_id,
-    headsign: t.trip_headsign,
+    headsign: cleanHeadsign(t.trip_headsign),
     directionId: t.direction_id,
     blockId: t.block_id,
     shapeId: t.shape_id,
@@ -266,6 +266,20 @@ const activeVariant = (id: string): string => {
   });
 };
 
+/** Legend markers per route_id, from the import's route_flags table (empty if it predates it) */
+const routeFlagsIndex = (): Map<string, any> =>
+  memo("routeFlags", () => {
+    try {
+      return new Map((db.query("SELECT * FROM route_flags").all() as any[]).map((r) => [String(r.route_id), r]));
+    } catch {
+      return new Map();
+    }
+  });
+
+/** "Hűvösvölgy [Elsőajtós]" -> "Hűvösvölgy": the marker becomes a flag, not part of the name */
+const FRONT_DOOR = /\s*\[Elsőajtós\]/i;
+const cleanHeadsign = (h: string | null | undefined) => (h ? h.replace(FRONT_DOOR, "").trim() : h);
+
 /** Distinct routes serving any of the stops, in the feed's sort order */
 const routesAtStops = (ids: string[]): any[] =>
   ids.length === 0
@@ -313,6 +327,19 @@ export const resolvers = {
     },
   },
   Route: {
+    // Any variant of the line counts (e.g. a temporary 61 that's front-door only)
+    flags: (parent: any) => {
+      const index = routeFlagsIndex();
+      const rows = routeVariants(parent.route_id).map((id) => index.get(id)).filter(Boolean);
+      const any = (k: string) => rows.some((r: any) => !!r[k]);
+      return {
+        lowFloor: rows.length > 0 && rows.every((r: any) => !!r.low_floor),
+        circular: any("circular"),
+        demandResponsive: any("demand"),
+        frontDoor: any("front_door"),
+        replacement: /^(VP|MP)/i.test(String(parent.route_id)),
+      };
+    },
     agency: async (parent: any) => {
       return formatAgency(
         db
@@ -422,7 +449,7 @@ export const resolvers = {
       return res.map((r: any) => {
         return {
           directionId: r.direction_id,
-          headsign: r.trip_headsign ?? "",
+          headsign: cleanHeadsign(r.trip_headsign) ?? "",
           stops: db
             .query(
               `
@@ -468,7 +495,9 @@ export const resolvers = {
           `
         )
         .all(parent.stop_id)
-        .map((r: any) => r.headsign)),
+        .map((r: any) => cleanHeadsign(r.headsign))
+        // "X" and "X [Elsőajtós]" are the same direction
+        .filter((h: any, i: number, all: any[]) => all.indexOf(h) === i)),
     // Distinct lines only (was: every stop time at the stop), cached per timetable
     routes: (parent: any) => memo(`routes:${parent.stop_id}`, () => routesAtStops([parent.stop_id])),
     trips: async (parent: any) => {
@@ -828,7 +857,9 @@ export const resolvers = {
           serviceDate: r.date,
           stopId: r.stop_id,
           route: routeById(r.route_id),
-          headsign: r.trip_headsign,
+          headsign: cleanHeadsign(r.trip_headsign),
+          frontDoor: FRONT_DOOR.test(r.stop_headsign ?? "") || FRONT_DOOR.test(r.trip_headsign ?? ""),
+          onRequest: r.pickup_type === 2 || r.pickup_type === 3,
           stopSequence: r.stop_sequence,
           arrival: arrival.at,
           departure: departure.at,
@@ -878,7 +909,7 @@ export const resolvers = {
       return {
         tripId: trip.trip_id,
         serviceDate: date,
-        headsign: trip.trip_headsign,
+        headsign: cleanHeadsign(trip.trip_headsign),
         directionId: trip.direction_id,
         shapeId: trip.shape_id,
         route: formatRoute(db.query("SELECT * FROM routes WHERE route_id = ?").get(trip.route_id)),
@@ -1045,7 +1076,7 @@ export const resolvers = {
         return {
           ...snakeToCamel(s),
           serviceDate: s.date,
-          headsign: s.trip_headsign,
+          headsign: cleanHeadsign(s.trip_headsign),
           isNext: index === nextIndex,
           isPast: index < nextIndex,
           wheelchairAccessible:

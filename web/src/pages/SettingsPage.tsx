@@ -1,3 +1,4 @@
+import { Legend } from '../components/LineMarks'
 import { useState } from 'react'
 import NavBar from '../components/NavBar'
 import { useFavorites } from '../lib/favorites'
@@ -102,6 +103,10 @@ export default function SettingsPage() {
         <section>
           <h2 className="px-1 pb-2 text-xl font-bold">{t('settings.about')}</h2>
           <p className="rounded-2xl bg-surface p-4 text-[15px] text-secondary">{t('settings.aboutText')}</p>
+        </section>
+        <section>
+          <h2 className="px-1 pb-2 text-xl font-bold">{t('legend.title')}</h2>
+          <Legend />
         </section>
       </main>
     </div>

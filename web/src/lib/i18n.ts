@@ -134,6 +134,12 @@ const en = {
   'after.showEarlier': 'Show earlier departures',
 
   // Alerts
+  'legend.title': 'Legend',
+  'legend.frontDoor': 'Front-door boarding',
+  'legend.replacement': 'Replacement bus',
+  'legend.lowFloor': 'All vehicles low-floor',
+  'legend.demand': 'Demand-responsive (stops on request)',
+  'legend.circular': 'Circular line',
   'alerts.today': 'today',
   'alerts.tomorrow': 'tomorrow',
   'alerts.from': 'from {when}',
@@ -284,7 +290,7 @@ const hu: Record<MessageKey, Message> = {
   'nav.home': 'Kezdőlap',
   'nav.routes': 'Járatok',
   'nav.allStops': 'Összes megálló',
-  'nav.nearby': 'Közelben',
+  'nav.nearby': 'Közeli megállók',
   'nav.map': 'Térkép',
   'nav.settings': 'Beállítások',
   'nav.mainMenu': 'Főmenü',
@@ -353,13 +359,13 @@ const hu: Record<MessageKey, Message> = {
   'settings.aboutText':
     'Menetrendek a BKK, a MÁV és a Volán GTFS-adataiból, ahol elérhető, valós idejű adatokkal. Térképadatok © az OpenStreetMap közreműködői.',
 
-  'home.empty': 'Koppints a csillagra egy járatnál vagy megállónál, és ide kerül.',
+  'home.empty': 'Nyomj a csillagra egy járatnál vagy megállónál, hogy kitűzd a kezdőlapra a kedvenceid közé.',
   'home.browseLines': 'Járatok böngészése',
   'home.lines': 'Járatok',
   'home.linesFromStops': 'Járatok megállókból',
   'home.stops': 'Megállók',
-  'home.nearbyStops': 'Megállók a közelben',
-  'home.seeAll': 'Összes',
+  'home.nearbyStops': 'Közeli megállók',
+  'home.seeAll': 'Összes megálló',
 
   'timeMode.label': 'Időpontok',
   'timeMode.hint': 'Egy 5 perc múlva induló járat:',
@@ -381,6 +387,12 @@ const hu: Record<MessageKey, Message> = {
   'after.earlier': 'Korábbiak',
   'after.showEarlier': 'Korábbi indulások mutatása',
 
+  'legend.title': 'Jelmagyarázat',
+  'legend.frontDoor': 'Első ajtós felszállási rend',
+  'legend.replacement': 'Pótlóbusz',
+  'legend.lowFloor': 'Minden jármű alacsonypadlós',
+  'legend.demand': 'Igényvezérelt közlekedés',
+  'legend.circular': 'Körjárat',
   'alerts.today': 'ma',
   'alerts.tomorrow': 'holnap',
   'alerts.from': 'kezdete: {when}',
@@ -413,8 +425,8 @@ const hu: Record<MessageKey, Message> = {
   'fav.lineCount': '{n} járat',
 
   'nearby.iphoneHint':
-    'iPhone-on ellenőrizd mindkettőt: Beállítások → Adatvédelem és biztonság → Helymeghatározás → Safari-webhelyek (Az app használata közben), valamint Beállítások → Appok → Safari → Helyzet (Kérdezzen vagy Engedélyezés). Utána koppints a Helyzetem gombra.',
-  'nearby.tryAgain': 'Koppints a Helyzetem gombra az újrapróbáláshoz.',
+    'iPhone-on ellenőrizd mindkettőt: Beállítások → Adatvédelem és biztonság → Helymeghatározás → Safari-webhelyek (Az app használata közben), valamint Beállítások → Appok → Safari → Helyzet (Kérdezzen vagy Engedélyezés). Utána koppints a Frissítés gombra.',
+  'nearby.tryAgain': 'Koppints a Frissítés gombra az újrapróbáláshoz.',
   'nearby.finding': 'Helyzeted meghatározása…',
   'nearby.loadingStops': 'Megállók betöltése…',
   'nearby.loadError': 'Nem sikerült betölteni a megállókat.',
@@ -422,7 +434,7 @@ const hu: Record<MessageKey, Message> = {
   'nearby.using': 'A helyzeted alapján',
   'nearby.off': 'Helymeghatározás kikapcsolva',
   'nearby.update': 'Frissítés',
-  'nearby.useMyLocation': 'Helyzetem',
+  'nearby.useMyLocation': 'Frissítés',
 
   'stations.stopsHere': 'Megállóhelyek itt',
   'stations.showAll': 'Összes',
