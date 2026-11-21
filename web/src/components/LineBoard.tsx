@@ -75,11 +75,12 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
             </span>
           </p>
         </div>
-        {/* The following departures, small, then the next one big (as on a departure row) */}
-        {list.slice(1).map((n) => (
-          <Countdown key={n.tripId} d={n} now={now} small />
-        ))}
+        {/* The next departure big (as on a departure row), then the following ones smaller to its right:
+            one more on narrow screens, up to three when there's room */}
         <Countdown d={d} now={now} />
+        {list.slice(1, 4).map((n, i) => (
+          <Countdown key={n.tripId} d={n} now={now} small className={i === 1 ? 'hidden min-[400px]:block' : i === 2 ? 'hidden sm:block' : ''} />
+        ))}
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
     </li>
@@ -87,17 +88,23 @@ function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; st
 }
 
 /** Minutes / seconds until a departure, negative seconds just after it leaves; the live mark in its own corner */
-function Countdown({ d, now, small = false }: { d: Departure; now: Date; small?: boolean }) {
+function Countdown({ d, now, small = false, className = '' }: { d: Departure; now: Date; small?: boolean; className?: string }) {
   const t = useT()
   const seconds = (new Date(d.terminates ? d.arrival : d.departure).getTime() - now.getTime()) / 1000
   const left = seconds < 0
   const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
-  const { value, unit } = left ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const } : countdown(seconds)
+  // An hour or more away: the clock time reads better than "74 min"
+  const far = seconds >= 60 * 60
+  const { value, unit } = left
+    ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
+    : far
+      ? { value: formatTime(new Date(Date.now() + seconds * 1000)), unit: null }
+      : countdown(seconds)
   return (
-    <div className={`relative text-right ${small ? 'min-w-9 pr-2.5 text-secondary' : 'min-w-14 pr-3.5 text-label'} ${left ? 'opacity-45' : ''}`}>
+    <div className={`relative text-right ${className} ${small ? 'min-w-9 pr-2.5 text-secondary' : 'min-w-14 pr-3.5 text-label'} ${left ? 'opacity-45' : ''}`}>
       {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
       <p className={`leading-none font-bold tabular-nums ${small ? 'text-[17px]' : 'text-2xl'}`}>{value}</p>
-      <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{t(unit)}</p>
+      <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{unit ? t(unit) : '\u00a0'}</p>
     </div>
   )
 }

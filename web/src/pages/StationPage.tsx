@@ -110,7 +110,7 @@ export default function StationPage() {
   const board = !from && !multi && params.get('view') !== 'time'
   // A single platform always asks for arrivals (we don't know yet if it's a terminus when the request
   // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
-  const departures = useDepartures(ids, { perLine: board ? 3 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
+  const departures = useDepartures(ids, { perLine: board ? 4 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
   const shownDepartures = useMemo(
     () => (departures.data?.departures ?? []).filter((d) => arrivals || !d.terminates),
     [departures.data, arrivals],
@@ -221,7 +221,7 @@ export default function StationPage() {
                               { replace: true },
                             )
                           }
-                          className={`rounded-full px-2.5 py-0.5 text-[13px] font-medium ${!board ? 'bg-accent text-white' : 'bg-fill'}`}
+                          className={`rounded-full px-2.5 py-0.5 text-[13px] font-medium whitespace-nowrap ${!board ? 'bg-accent text-white' : 'bg-fill'}`}
                         >
                           {t('departures.timeOrder')}
                         </button>
