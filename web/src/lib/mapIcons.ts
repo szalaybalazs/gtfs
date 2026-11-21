@@ -95,7 +95,7 @@ export function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom
   const size = label.length > 3 ? 34 : 28
   const arrow =
     bearing != null
-      ? `<div style="position:absolute;inset:-7px;transform:rotate(${Math.round(bearing)}deg)"><div style="margin:0 auto;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid ${bg}"></div></div>`
+      ? `<div style="position:absolute;inset:-7px;transform:rotate(${Math.round(bearing)}deg)"><div style="margin:0 auto;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid #fff;filter:drop-shadow(0 0 1px rgb(0 0 0/.55))"></div></div>`
       : ''
   return {
     html:
