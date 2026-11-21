@@ -146,9 +146,8 @@ export default function Alerts({ routeIds, stopIds = [] }: { routeIds: string[];
 }
 
 /**
- * The change itself, in a sheet from the bottom: BKK's page for it in an
- * embedded browser view, with the alert text above it (and a way out to the
- * real browser if the page won't load inside the app).
+ * The change itself, in a sheet from the bottom: its lines, title, period and
+ * full text, with a link out to BKK's official page for it.
  */
 function AlertSheet({ alert: a, onClose }: { alert: Alert; onClose: () => void }) {
   const t = useT()
@@ -188,23 +187,15 @@ function AlertSheet({ alert: a, onClose }: { alert: Alert; onClose: () => void }
             <CloseIcon className="h-5 w-5" />
           </button>
         </div>
-        {url ? (
-          <>
-            <iframe src={url} title={a.header} className="min-h-0 w-full flex-1 bg-white" referrerPolicy="no-referrer" />
-            <a
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="border-t border-separator px-gutter py-row pb-[calc(env(safe-area-inset-bottom)+0.75rem)] text-center text-[15px] font-medium text-accent"
-            >
-              {t('alerts.openInBrowser')}
+        {/* A plain page like the app's: the notice's own text, and a link to BKK's official page */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-gutter py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <p className="text-[15px] leading-relaxed whitespace-pre-line">{a.description ?? t('alerts.noDetails')}</p>
+          {url && (
+            <a href={url} target="_blank" rel="noreferrer" className="mt-4 inline-block text-[15px] font-medium text-accent">
+              {t('alerts.openInBrowser')} ↗
             </a>
-          </>
-        ) : (
-          <p className="overflow-y-auto px-gutter py-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-[15px] leading-relaxed whitespace-pre-line">
-            {a.description ?? t('alerts.noDetails')}
-          </p>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
