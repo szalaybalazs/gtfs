@@ -4,10 +4,11 @@ import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
 import { countdown } from '../lib/countdown'
 import { useT } from '../lib/i18n'
+import { formatTime } from '../lib/time'
 import { prefetchTrip, type TripPreview } from '../lib/prefetch'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { useNow } from '../lib/useTimetable'
-import { BikeIcon, ChevronIcon, LiveIcon, WheelchairIcon } from './Icons'
+import { BikeIcon, ChevronIcon, LiveIcon } from './Icons'
 import RouteBadge from './RouteBadge'
 
 /** How long a departed row stays (seconds) before it collapses away */
@@ -98,7 +99,8 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
   const qc = useQueryClient()
   const t = useT()
   const time = new Date(d.departure)
-  const status = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay)
+  const delay = d.departureDelay ?? d.arrivalDelay
+  const status = realtimeStatus(d.realtime, delay)
   const seconds = (time.getTime() - now.getTime()) / 1000
   // Just departed: count -1, -2… in plain text, faded; then collapse away
   const justLeft = seconds < 0 && seconds >= -60
@@ -125,25 +127,27 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
         <div className="min-w-0 flex-1">
           {/* Accessibility/bike icons trail the destination inline, so row heights stay even */}
           {mine && <p className="text-[12px] font-semibold text-accent uppercase">{t('departures.yourTrip')}</p>}
-          <p className="line-clamp-2 text-[17px] leading-snug font-medium">
-            {d.headsign ?? '—'}
-            {d.wheelchairAccessible === 'AVAILABLE' && (
-              <WheelchairIcon className="ml-1.5 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label={t('common.wheelchair')} />
+          <p className="line-clamp-2 text-[17px] leading-snug font-medium">{d.headsign ?? '—'}</p>
+          {/* Second line: the trip's marks, then the time: scheduled struck through when it differs, the real one coloured + live */}
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[15px] tabular-nums">
+            {d.frontDoor && <MarkIcon mark="frontDoor" className="h-4 w-4 text-secondary" />}
+            {d.onRequest && <MarkIcon mark="demand" className="h-4 w-4 text-secondary" />}
+            {d.wheelchairAccessible === 'AVAILABLE' && <MarkIcon mark="lowFloor" className="h-4 w-4 text-secondary" />}
+            {d.bikesAllowed === 'ALLOWED' && <BikeIcon className="h-4 w-4 text-secondary" aria-label={t('common.bikes')} />}
+            {(status === 'late' || status === 'early') && (
+              <span className="text-secondary line-through">{formatTime(new Date(time.getTime() - delay! * 1000))}</span>
             )}
-            {d.bikesAllowed === 'ALLOWED' && (
-              <BikeIcon className="ml-1 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label={t('common.bikes')} />
-            )}
-            {/* BKK legend marks for this trip: ① front door only, ☎ stops on request */}
-            {d.frontDoor && <MarkIcon mark="frontDoor" className="ml-1.5 h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" />}
-            {d.onRequest && <MarkIcon mark="demand" className="ml-1 h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" />}
+            <span className={`flex items-center gap-0.5 ${statusColor[status]}`} title={t(statusLabel[status])}>
+              {formatTime(time)}
+              {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5" aria-label={t(statusLabel[status])} />}
+            </span>
           </p>
         </div>
-        {/* Countdown only: colour says live/on time (green), early (purple), late (red) */}
-        {/* Live icon sits in its own gutter so the number and unit share a right edge */}
-        <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : justLeft ? 'text-label' : statusColor[status]}`} title={t(statusLabel[status])}>
-          {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3" aria-label={t(statusLabel[status])} />}
+        {/* Countdown stays plain (black, grey once gone); colour lives on the time line. Live mark in its own gutter. */}
+        <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : 'text-label'}`}>
+          {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3 text-secondary" aria-hidden />}
           <p className="text-2xl leading-none font-bold tabular-nums">{value}</p>
-          <p className={`text-[11px] font-medium ${status === 'scheduled' ? 'text-secondary' : ''}`}>{t(unit)}</p>
+          <p className="text-[11px] font-medium text-secondary">{t(unit)}</p>
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
