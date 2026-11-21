@@ -141,7 +141,16 @@ struct TripView: View {
                         Text("Past trip").font(.system(size: 13)).foregroundStyle(Theme.secondary)
                             .accessibilityLabel(tr("Past trip, ended \(TimeFormat.clock(last.arrival))"))
                     } else if let first = stops.first, !started {
-                        Text(tr("Upcoming · starts \(TimeFormat.clock(first.departure))")).font(.system(size: 13)).foregroundStyle(Theme.secondary)
+                        // Scheduled, not running yet: when it leaves, on two lines so it never wraps oddly
+                        TimelineView(.periodic(from: .now, by: 15)) { ctx in
+                            let secs = first.departure.timeIntervalSince(ctx.date)
+                            VStack(alignment: .trailing, spacing: 0) {
+                                Text("Scheduled").font(.system(size: 13, weight: .medium))
+                                Text(secs < 3600 ? tr("departing in \(max(1, Int((secs / 60).rounded(.up)))) min") : tr("departing at \(TimeFormat.clock(first.departure))"))
+                                    .font(.system(size: 13))
+                            }
+                            .foregroundStyle(Theme.secondary).lineLimit(1).fixedSize()
+                        }
                     } else if let delay {
                         TripDelayText(minutes: delay).font(.system(size: 15))
                     } else if started && !live {

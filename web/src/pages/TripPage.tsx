@@ -177,9 +177,19 @@ export default function TripPage() {
                 {route && <RouteBadge route={route} />}
                 <h1 className="min-w-0 flex-1 text-xl leading-tight font-bold">{t('trip.headsign', { to: trip.headsign ?? stops.at(-1)?.stop.name ?? '' })}</h1>
                 {/* Top right: on time / late / early while it runs (the page being live is obvious); "scheduled" when there is no realtime */}
-                {(finished || !started) && (
-                  <span className="shrink-0 text-[13px] text-secondary">
-                    {finished ? t('trip.past') : t('trip.upcoming', { time: formatTime(new Date(stops[0].departure)) })}
+                {finished && <span className="shrink-0 text-[13px] text-secondary">{t('trip.past')}</span>}
+                {!finished && !started && (
+                  // Scheduled, not running yet: when it leaves, on two lines so it never wraps oddly
+                  <span className="shrink-0 text-right text-[13px] leading-tight whitespace-nowrap text-secondary">
+                    <span className="block font-medium">{t('trip.scheduled')}</span>
+                    <span className="block">
+                      {(() => {
+                        const secs = (new Date(stops[0].departure).getTime() - now.getTime()) / 1000
+                        return secs < 3600
+                          ? t('trip.departingIn', { n: Math.max(1, Math.ceil(secs / 60)) })
+                          : t('trip.departingAt', { time: formatTime(new Date(stops[0].departure)) })
+                      })()}
+                    </span>
                   </span>
                 )}
                 {started && !finished && (
