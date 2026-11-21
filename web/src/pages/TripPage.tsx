@@ -122,7 +122,8 @@ export default function TripPage() {
               <div className="flex items-center gap-2">
                 {route && <RouteBadge route={route} />}
                 {t('trip.towards') && <span className="text-secondary">{t('trip.towards')}</span>}
-                {stops.some((x) => x.realtime) ? (
+                {/* Live / Scheduled only while it's running; a past or future trip has its own note bottom right */}
+                {!started || finished ? null : stops.some((x) => x.realtime) ? (
                   <span className="ml-auto flex items-center gap-1.5 rounded-full bg-live/15 px-2.5 py-0.5 text-[13px] font-semibold text-live">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-75" />
