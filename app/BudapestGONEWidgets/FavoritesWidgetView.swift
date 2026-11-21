@@ -17,16 +17,16 @@ private struct LineRow: Identifiable {
 }
 
 /// Rows in order of their next departure, each with its next `times` departures still to come at `now`.
-/// By line: one row per line. By time: one departure per row.
-private func rows(_ departures: [Departure], now: Date, lines: Int, times: Int, grouping: FavGrouping = .line) -> [LineRow] {
+/// By line: one row per line. By route: one per line and destination. By time: one departure per row.
+private func rows(_ departures: [Departure], now: Date, lines: Int, times: Int, grouping: DepartureGrouping = .byLine) -> [LineRow] {
     let upcoming = departures.filter { $0.departure >= now && $0.route != nil }.sorted { $0.departure < $1.departure }
-    if grouping == .time {
+    if grouping == .byTime {
         return upcoming.prefix(lines).map { LineRow(line: $0.route!, headsign: $0.headsign, times: [$0]) }
     }
     var order: [String] = []
     var groups: [String: [Departure]] = [:]
     for d in upcoming {
-        let key = d.route!.routeId
+        let key = grouping == .byRoute ? "\(d.route!.routeId)|\(d.headsign ?? "")" : d.route!.routeId
         if groups[key] == nil { order.append(key) }
         groups[key, default: []].append(d)
     }
@@ -73,15 +73,13 @@ private struct FavoriteBlock: View {
     let times: Int
     var showHeadsign = false
     var showSubtitle = false
+    var grouping: DepartureGrouping = .byLine
     var style: DepartureTimeStyle = .countdown
 
     var body: some View {
-        // The favourite's own grouping and size (a widget fills its space when it has none). By time says where each is headed
-        // and one time per row makes a plain list, so it gets more rows
-        let grouping = fav.grouping ?? .line
-        let showHeadsign = showHeadsign || grouping == .time
-        let capacity = fav.size.map { min($0.rows, lines) } ?? lines
-        let list = rows(fav.departures, now: now, lines: grouping == .time ? capacity + 2 : capacity, times: times, grouping: grouping)
+        // By route and by time say where each is headed; one time per row makes a plain list, so it gets more rows
+        let showHeadsign = showHeadsign || grouping != .byLine
+        let list = rows(fav.departures, now: now, lines: grouping == .byTime ? lines + 2 : lines, times: times, grouping: grouping)
         VStack(alignment: .leading, spacing: 4) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(fav.title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
@@ -144,7 +142,7 @@ struct FavoritesWidgetView: View {
         let now = entry.date
         switch family {
         case .accessoryInline:
-            if let fav = entry.favorites.first, let row = rows(fav.departures, now: now, lines: 1, times: 2, grouping: fav.grouping ?? .line).first {
+            if let fav = entry.favorites.first, let row = rows(fav.departures, now: now, lines: 1, times: 2, grouping: entry.grouping).first {
                 Text("\(row.line.shortName ?? row.line.routeId) \(row.times.map { timeText($0, now: now, style: entry.timeStyle) }.joined(separator: " · "))")
             } else {
                 Text(entry.noFavorites ? tr("No favourites yet") : tr("No departures"))
@@ -155,7 +153,7 @@ struct FavoritesWidgetView: View {
             } else if let fav = entry.favorites.first {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(fav.title).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                    let list = rows(fav.departures, now: now, lines: 2, times: fav.grouping == .time ? 1 : 3, grouping: fav.grouping ?? .line)
+                    let list = rows(fav.departures, now: now, lines: 2, times: entry.grouping == .byTime ? 1 : 3, grouping: entry.grouping)
                     if list.isEmpty { Text(tr("No departures")).font(.system(size: 12)) }
                     ForEach(list) { row in
                         HStack(spacing: 5) {
@@ -169,28 +167,28 @@ struct FavoritesWidgetView: View {
             }
         case .systemSmall:
             if entry.noFavorites { EmptyState() }
-            else if let fav = entry.favorites.first { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2, style: entry.timeStyle) }
+            else if let fav = entry.favorites.first { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2, grouping: entry.grouping, style: entry.timeStyle) }
         case .systemMedium:
             if entry.noFavorites { EmptyState() }
             else if entry.favorites.count == 1 {
-                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 3, times: 4, showHeadsign: true, showSubtitle: true, style: entry.timeStyle)
+                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 3, times: 4, showHeadsign: true, showSubtitle: true, grouping: entry.grouping, style: entry.timeStyle)
             } else {
                 HStack(alignment: .top, spacing: 14) {
                     ForEach(entry.favorites, id: \.id) { fav in
-                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2, style: entry.timeStyle) }
+                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2, grouping: entry.grouping, style: entry.timeStyle) }
                     }
                 }
             }
         default: // large
             if entry.noFavorites { EmptyState() }
             else if entry.favorites.count == 1 {
-                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 8, times: 4, showHeadsign: true, showSubtitle: true, style: entry.timeStyle)
+                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 8, times: 4, showHeadsign: true, showSubtitle: true, grouping: entry.grouping, style: entry.timeStyle)
             } else {
                 let lines = entry.favorites.count <= 2 ? 4 : 2
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(entry.favorites.enumerated()), id: \.element.id) { i, fav in
                         if i > 0 { Divider() }
-                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: lines, times: 4, showHeadsign: true, style: entry.timeStyle) }
+                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: lines, times: 4, showHeadsign: true, grouping: entry.grouping, style: entry.timeStyle) }
                     }
                     Spacer(minLength: 0)
                 }

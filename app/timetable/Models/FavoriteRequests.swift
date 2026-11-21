@@ -25,9 +25,8 @@ extension Favorite {
 
     /// `longer` asks for more departures (a widget that stays on screen for a while).
     func makeRequest(longer: Bool = false) -> DeparturesRequest {
-        // A bigger favourite lists more departures, so it asks for more
-        let base = kind == .stop ? 40 : kind == .lines ? 30 : longer ? 16 : 8
-        return DeparturesRequest(stopIds: departureStopIds, routeIds: departureRouteIds, limit: max(base, (size?.rows ?? 1) * 8))
+        DeparturesRequest(stopIds: departureStopIds, routeIds: departureRouteIds,
+                          limit: kind == .stop ? 40 : kind == .lines ? 30 : longer ? 16 : 8)
     }
 
     var departuresRequest: DeparturesRequest { makeRequest() }

@@ -24,15 +24,6 @@ struct FavRoute: Codable, Hashable {
     var line: LineRef { LineRef(routeId: routeId, shortName: shortName, color: color, textColor: textColor, type: type) }
 }
 
-/// How a favourite lists its departures: a row per line, or one list in time order.
-enum FavGrouping: String, Codable, CaseIterable { case line, time }
-
-/// How much room a favourite takes: the number of rows it shows.
-enum FavSize: String, Codable, CaseIterable {
-    case small, medium, large
-    var rows: Int { switch self { case .small: return 1; case .medium: return 3; case .large: return 6 } }
-}
-
 /// One favourite. `kind` is "line", "lineStop", "stop" or "lines"; the other fields depend on it
 /// (all optional here, so anything the web wrote decodes).
 struct Favorite: Codable, Hashable, Identifiable {
@@ -50,9 +41,6 @@ struct Favorite: Codable, Hashable, Identifiable {
     var headsigns: [String]?
     var stopIds: [String]?
     var from: String?
-    /// Optional, set in the favourite's sheet; Home cards and widgets both follow them. Unset: a one-row card, and a widget fills its space.
-    var grouping: FavGrouping?
-    var size: FavSize?
 
     /// The id the web derives from the content (so both apps agree on duplicates).
     static func makeId(_ f: Favorite) -> String {
@@ -128,13 +116,6 @@ final class FavoritesStore {
 
     func toggle(_ f: Favorite) {
         if has(f.id) { favorites.removeAll { $0.id == f.id } } else { favorites.append(f) }
-        save()
-    }
-
-    /// Changes a saved favourite in place (grouping, size).
-    func update(_ id: String, _ change: (inout Favorite) -> Void) {
-        guard let i = favorites.firstIndex(where: { $0.id == id }) else { return }
-        change(&favorites[i])
         save()
     }
 
