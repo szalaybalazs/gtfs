@@ -8,6 +8,7 @@
 import Foundation
 import Observation
 import SwiftUI
+import WidgetKit
 
 /// A marker that can be shown or hidden on departures and lines.
 enum Marker: String, CaseIterable, Identifiable {
@@ -69,7 +70,12 @@ final class AppSettings {
     }
 
     var language: AppLanguage {
-        didSet { defaults.set(language.rawValue, forKey: L10n.key) }
+        didSet {
+            defaults.set(language.rawValue, forKey: L10n.key)
+            // The widgets follow the app's language choice through the App Group
+            SharedDefaults.suite.set(language.rawValue, forKey: L10n.key)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
 
     var appearance: AppAppearance {
@@ -88,6 +94,8 @@ final class AppSettings {
         appearance = defaults.string(forKey: "appearance").flatMap(AppAppearance.init(rawValue:)) ?? .auto
         let radius = defaults.integer(forKey: "nearby-radius")
         nearbyRadius = Self.radii.contains(radius) ? radius : 1000
+        // Older versions kept the language only in the app's own defaults: copy it for the widgets
+        if SharedDefaults.suite.string(forKey: L10n.key) == nil { SharedDefaults.suite.set(language.rawValue, forKey: L10n.key) }
     }
 
     func shows(_ marker: Marker) -> Bool { !hiddenMarkers.contains(marker) }

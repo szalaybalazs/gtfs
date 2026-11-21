@@ -44,20 +44,26 @@ final class DeparturesViewModel {
         }
     }
 
+    /// One departures request (also used by the widgets).
+    nonisolated static func fetch(_ r: DeparturesRequest, client: GraphQLClient) async throws -> [Departure] {
+        let data = try await client.fetch(DeparturesQuery(
+            stopIds: r.stopIds,
+            routeIds: r.routeIds.map { .some($0) } ?? .null,
+            limit: .some(r.limit),
+            hours: r.hours.map { .some($0) } ?? .null,
+            after: r.after.map { .some(APIDate.format($0)) } ?? .null,
+            arrivals: .some(r.arrivals),
+            perLine: r.perLine.map { .some($0) } ?? .null
+        ))
+        return data.departures.compactMap(Departure.init)
+    }
+
     func load(_ r: DeparturesRequest) async {
         if !loaded { state = .loading }
         do {
-            let data = try await client.fetch(DeparturesQuery(
-                stopIds: r.stopIds,
-                routeIds: r.routeIds.map { .some($0) } ?? .null,
-                limit: .some(r.limit),
-                hours: r.hours.map { .some($0) } ?? .null,
-                after: r.after.map { .some(APIDate.format($0)) } ?? .null,
-                arrivals: .some(r.arrivals),
-                perLine: r.perLine.map { .some($0) } ?? .null
-            ))
+            let list = try await Self.fetch(r, client: client)
             guard !Task.isCancelled else { return }
-            departures = data.departures.compactMap(Departure.init)
+            departures = list
             loadedStopIds = r.stopIds
             loaded = true
             state = .idle

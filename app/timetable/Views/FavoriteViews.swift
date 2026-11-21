@@ -156,29 +156,10 @@ struct FavoriteCard: View {
     var link = true
     @State private var model = DeparturesViewModel()
 
-    private var stopIds: [String] {
-        switch fav.kind {
-        case .lines: return fav.stopIds ?? []
-        default: return fav.stopId.map { [$0] } ?? []
-        }
-    }
-    private var routeIds: [String]? {
-        switch fav.kind {
-        case .lineStop: return fav.route.map { [$0.routeId] }
-        case .lines: return (fav.routes ?? []).map(\.routeId)
-        default: return nil
-        }
-    }
-    private var request: DeparturesRequest {
-        DeparturesRequest(stopIds: stopIds, routeIds: routeIds, limit: fav.kind == .stop ? 40 : fav.kind == .lines ? 30 : 8)
-    }
-    private var target: StationTarget {
-        switch fav.kind {
-        case .lines: return StationTarget(stationId: fav.stationId ?? "", from: fav.from, lines: routeIds ?? [])
-        case .lineStop: return StationTarget(stationId: fav.stationId ?? "", from: fav.stopId, lines: routeIds ?? [])
-        default: return StationTarget(stationId: fav.stationId ?? "", from: fav.stopId)
-        }
-    }
+    private var stopIds: [String] { fav.departureStopIds }
+    private var routeIds: [String]? { fav.departureRouteIds }
+    private var request: DeparturesRequest { fav.departuresRequest }
+    private var target: StationTarget { fav.stationTarget }
 
     var body: some View {
         switch fav.kind {

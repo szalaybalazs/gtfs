@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import WidgetKit
 
 /// A route as the web stores it in favourites.
 struct FavRoute: Codable, Hashable {
@@ -75,14 +76,24 @@ struct Favorite: Codable, Hashable, Identifiable {
 @Observable
 final class FavoritesStore {
     static let shared = FavoritesStore()
-    private static let key = "favorites-v2"
+    nonisolated private static let key = "favorites-v2"
 
     private let defaults: UserDefaults
     private(set) var favorites: [Favorite]
 
-    init(defaults: UserDefaults = .standard) {
+    /// Favourites live in the App Group defaults so the widgets can read them. `legacy` is where older versions
+    /// kept them: copied over once, when the group has none yet.
+    init(defaults: UserDefaults = SharedDefaults.suite, legacy: UserDefaults? = .standard) {
         self.defaults = defaults
-        favorites = defaults.string(forKey: Self.key)
+        if let legacy, legacy !== defaults, defaults.string(forKey: Self.key) == nil, let old = legacy.string(forKey: Self.key) {
+            defaults.set(old, forKey: Self.key)
+        }
+        favorites = Self.read(from: defaults)
+    }
+
+    /// The saved favourites, for code that is not on the main actor (the widgets).
+    nonisolated static func read(from defaults: UserDefaults = SharedDefaults.suite) -> [Favorite] {
+        defaults.string(forKey: key)
             .flatMap { $0.data(using: .utf8) }
             .flatMap { try? JSONDecoder().decode([Favorite].self, from: $0) } ?? []
     }
@@ -91,6 +102,8 @@ final class FavoritesStore {
         if let data = try? Self.encoder.encode(favorites), let text = String(data: data, encoding: .utf8) {
             defaults.set(text, forKey: Self.key)
         }
+        WidgetCenter.shared.reloadAllTimelines()
+        WidgetCenter.shared.invalidateConfigurationRecommendations()
     }
 
     private static let encoder: JSONEncoder = {

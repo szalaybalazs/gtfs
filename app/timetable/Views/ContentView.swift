@@ -48,6 +48,13 @@ struct ContentView: View {
         .preferredColorScheme(settings.appearance.scheme)
         .environment(\.locale, settings.language == .auto ? Locale.current : L10n.locale)
         .id(settings.language)
+        .onOpenURL { url in
+            // A widget tapped: open that stop's page on the Home tab
+            guard let target = StationTarget(url: url) else { return }
+            tab = 0
+            paths[0] = NavigationPath()
+            paths[0].append(target)
+        }
     }
 }
 

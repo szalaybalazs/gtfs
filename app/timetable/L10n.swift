@@ -25,7 +25,8 @@ enum L10n {
     static let key = "language"
 
     static var language: AppLanguage {
-        UserDefaults.standard.string(forKey: key).flatMap(AppLanguage.init(rawValue:)) ?? .auto
+        (SharedDefaults.suite.string(forKey: key) ?? UserDefaults.standard.string(forKey: key))
+            .flatMap(AppLanguage.init(rawValue:)) ?? .auto
     }
 
     /// The language code in use: the picked one, else the device's if we have it, else English.
