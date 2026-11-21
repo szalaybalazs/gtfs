@@ -119,6 +119,7 @@ export type HtmlMarker = {
 }
 
 const GLIDE_MS = 1500
+const FADE_MS = 220
 
 /** Distance along `path` of the point on it nearest to `p`, plus how far off the path `p` is (in degrees-ish, lat-scaled). */
 function project(path: LngLat[], p: LngLat) {
@@ -176,7 +177,7 @@ export const tappedMarker = () => Date.now() - lastMarkerTap < 300
 
 /** HTML markers, diffed by key so panning doesn't rebuild them. */
 export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
-  const store = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement; inner: HTMLDivElement; html: string; item: HtmlMarker; at: LngLat; anim?: number }>())
+  const store = useRef(new Map<string, { marker: maplibregl.Marker; el: HTMLDivElement; inner: HTMLDivElement; html: string; item: HtmlMarker; at: LngLat; anim?: number; leaving?: number }>())
 
   useEffect(() => {
     if (!map) return
@@ -189,7 +190,10 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
         el.style.cssText = 'width:0;height:0;overflow:visible;cursor:pointer'
         const inner = document.createElement('div')
         inner.style.position = 'absolute'
+        // Fade and grow in from the pin point; reversed on removal
+        inner.style.cssText += `;opacity:0;scale:.6;transition:opacity ${FADE_MS}ms,scale ${FADE_MS}ms;transform-origin:0 0`
         el.appendChild(inner)
+        requestAnimationFrame(() => requestAnimationFrame(() => ((inner.style.opacity = '1'), (inner.style.scale = '1'))))
         const marker = new maplibregl.Marker({ element: el, anchor: 'top-left' }).setLngLat(item.at).addTo(map)
         entry = { marker, el, inner, html: '', item, at: item.at }
         const e = entry
@@ -199,6 +203,14 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
           e.item.onClick?.()
         })
         store.current.set(item.key, entry)
+      }
+      if (entry.leaving) {
+        // Came back while fading out
+        clearTimeout(entry.leaving)
+        entry.leaving = undefined
+        entry.el.style.pointerEvents = ''
+        entry.inner.style.opacity = '1'
+        entry.inner.style.scale = '1'
       }
       entry.item = item
       const moved = entry.at[0] !== item.at[0] || entry.at[1] !== item.at[1]
@@ -233,10 +245,15 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
       entry.el.style.zIndex = String(item.z ?? 0)
     }
     for (const [key, entry] of store.current) {
-      if (!seen.has(key)) {
+      if (!seen.has(key) && !entry.leaving) {
         if (entry.anim) cancelAnimationFrame(entry.anim)
-        entry.marker.remove()
-        store.current.delete(key)
+        entry.el.style.pointerEvents = 'none'
+        entry.inner.style.opacity = '0'
+        entry.inner.style.scale = '.6'
+        entry.leaving = window.setTimeout(() => {
+          entry.marker.remove()
+          store.current.delete(key)
+        }, FADE_MS)
       }
     }
   }, [map, items])

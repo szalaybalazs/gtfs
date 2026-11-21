@@ -6,9 +6,9 @@ import { Link, useNavigate } from 'react-router'
 import { LayersThree } from '@mynaui/icons-react'
 import { CloseIcon, LocationIcon } from './Icons'
 import RouteBadge from './RouteBadge'
-import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
-import { distance, roundedHull } from '../lib/geo'
-import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, mainCategory, stopIcon, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
+import { gql, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
+import { distance } from '../lib/geo'
+import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, stopIcon, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
 import { formatTime } from '../lib/time'
 import { LIVE_ICON_HTML, statusCss, type RealtimeStatus } from '../lib/realtimeStatus'
 import { categoryOf } from '../lib/categories'
@@ -119,11 +119,11 @@ export default function TransitMap({
         distance(center, { lat: view.bounds.getSouth(), lon: view.bounds.getWest() }),
       )
     : 0
-  const zoomedIn = zoom >= STOPS_ZOOM
-  const radius = Math.min(zoomedIn ? 1200 : 1500, Math.ceil((corner + (zoomedIn ? 400 : 200)) / 100) * 100)
+  // One query for every zoom (stops included), so zooming in never waits on a second fetch
+  const radius = Math.min(1500, Math.ceil((corner + 300) / 100) * 100)
   const stations = useQuery({
-    queryKey: ['mapStations', zoomedIn, center, radius],
-    queryFn: () => gql<NearbyStations>(zoomedIn ? MAP_STOPS_QUERY : MAP_GROUPS_QUERY, { ...center, radius }),
+    queryKey: ['mapStations', center, radius],
+    queryFn: () => gql<NearbyStations>(MAP_STOPS_QUERY, { ...center, radius }),
     enabled,
     staleTime: 60 * 60_000,
     placeholderData: (prev) => prev,
@@ -157,9 +157,21 @@ export default function TransitMap({
     staleTime: 25_000,
     placeholderData: (prev) => prev,
   })
+  // A vehicle never goes back in time: the query is cached per visible area, so panning or zooming back to an
+  // earlier area can hand us older positions. Keep the newest fix we've seen per vehicle.
+  const newest = useRef(new Map<string, VehiclePosition>())
   const vehicles = useMemo(
     () =>
-      (vehicleQuery.data?.vehiclePositions ?? []).filter(
+      (vehicleQuery.data?.vehiclePositions ?? [])
+        .map((v) => {
+          if (!v) return v
+          const ts = (x: VehiclePosition) => Number(x.timestamp) || Date.parse(x.timestamp ?? '') || 0
+          const seen = newest.current.get(v.id)
+          if (seen && ts(seen) > ts(v)) return seen
+          newest.current.set(v.id, v)
+          return v
+        })
+        .filter(
         (v): v is VehiclePosition & { latitude: number; longitude: number } =>
           !!v &&
           v.latitude != null &&
@@ -186,19 +198,13 @@ export default function TransitMap({
     return { s: b.getSouth() - padLat, n: b.getNorth() + padLat, w: b.getWest() - padLon, e: b.getEast() + padLon }
   }, [view])
 
-  // Stop markers, and the dashed outline of each stop group when zoomed in
-  const { stopMarkers, outlines } = useMemo(() => {
+  // Stop groups (big cards) when zoomed out, single stops (small cards with their direction) when zoomed in
+  const stopMarkers = useMemo(() => {
     const markers: HtmlMarker[] = []
-    const features: GeoJSON.Feature[] = []
-    if (!enabled) return { stopMarkers: markers, outlines: features }
+    if (!enabled) return markers
     for (const station of groups) {
       const stops = (station.stops ?? []).filter((s) => s.lat != null && s.lon != null && (s.routes ?? []).some(Boolean))
       if (stopsZoom && stops.length > 0) {
-        const c = mainCategory(station.routes)
-        if (stops.length > 1) {
-          const ring = roundedHull(stops.map((s) => [s.lat!, s.lon!]), 25).map(([lat, lon]) => [lon, lat])
-          features.push({ type: 'Feature', properties: { color: c.color }, geometry: { type: 'Polygon', coordinates: [ring] } })
-        }
         for (const s of stops) {
           const sel = selectedStop === s.stopId
           if (!sel && cull && (s.lat! < cull.s || s.lat! > cull.n || s.lon! < cull.w || s.lon! > cull.e)) continue
@@ -206,7 +212,7 @@ export default function TransitMap({
           markers.push({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
-            ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true, s.headsigns ?? []) : stopIcon(routes)),
+            ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true, s.headsigns ?? []) : stopIcon(routes, s.headsigns ?? [])),
             z: sel ? 1000 : 0,
             onClick: () =>
               sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`) : (setSelectedStop(s.stopId), setSelected(null)),
@@ -225,7 +231,7 @@ export default function TransitMap({
         })
       }
     }
-    return { stopMarkers: markers, outlines: features }
+    return markers
   }, [enabled, groups, stopsZoom, badgesZoom, cull, selectedStop, navigate])
 
 
@@ -245,12 +251,6 @@ export default function TransitMap({
     [location.coords],
   )
 
-  const outlineData = useMemo<GeoJSON.FeatureCollection>(() => ({ type: 'FeatureCollection', features: outlines }), [outlines])
-  useGeoJson(map, 'stop-outlines', outlineData, [
-    // Stop groups as a neutral grey footprint
-    { id: 'stop-outlines-fill', type: 'fill', paint: { 'fill-color': '#8e8e93', 'fill-opacity': 0.1 } },
-    { id: 'stop-outlines-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': '#8e8e93', 'line-width': 1.5, 'line-opacity': 0.5 } },
-  ])
   // Lines layer: every line of the chosen types, under everything else, in its own colour
   const lineTypes = [...new Set(layers.lines.map((k) => ({ metro: 'SUBWAY', tram: 'TRAM', trolley: 'TROLLEYBUS', bus: 'BUS', night: 'BUS', boat: 'FERRY' })[k as string]).filter(Boolean))].sort()
   const linesQuery = useQuery({
