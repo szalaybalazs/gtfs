@@ -24,7 +24,17 @@ const maskCss = (url: string) => {
 }
 
 /** Tiny badges (HTML, for map markers): one row up to four, else two even rows; a grey "…" badge when there are more than fit. */
-function badgesHtml(routes: RouteRef[], max = 8, justify = 'center') {
+/** Variants (56A, 56É…) are left out when the base line (56) is there too. */
+export function baseLines(routes: RouteRef[]): RouteRef[] {
+  const names = new Set(routes.map((r) => r.shortName))
+  return routes.filter((r) => {
+    const m = /^(\d+)\p{L}$/u.exec(r.shortName ?? '')
+    return !(m && names.has(m[1]))
+  })
+}
+
+function badgesHtml(allRoutes: RouteRef[], max = 8, justify = 'center') {
+  const routes = baseLines(allRoutes)
   const shown = routes.slice(0, max)
   const more = routes.length - shown.length
   const badge = (r: RouteRef) =>

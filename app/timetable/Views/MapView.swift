@@ -228,7 +228,14 @@ struct MapView: View {
             .overlay(Circle().stroke(Color.white, lineWidth: 2))
             .overlay(alignment: .top) {
                 // Up to two rows of four badges, then "+N"
-                let shown = Array(m.routes.prefix(8))
+                // Variants (56A, 56É…) are left out when the base line (56) is there too
+                let names = Set(m.routes.compactMap(\.shortName))
+                let base = m.routes.filter { r in
+                    guard let n = r.shortName, let last = n.last, last.isLetter, n.count > 1 else { return true }
+                    let head = String(n.dropLast())
+                    return !(head.allSatisfy(\.isNumber) && names.contains(head))
+                }
+                let shown = Array(base.prefix(8))
                 VStack(spacing: 2) {
                     let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1) // two even rows, or one
                     ForEach(Array(stride(from: 0, to: shown.count, by: perRow)), id: \.self) { start in
@@ -240,7 +247,7 @@ struct MapView: View {
                                     .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
                             }
                             // More lines than fit: a grey badge with an ellipsis instead of a count
-                            if start + perRow >= shown.count && m.routes.count > 8 {
+                            if start + perRow >= shown.count && base.count > 8 {
                                 Text("…").font(.system(size: 10, weight: .bold)).fixedSize().foregroundStyle(.white)
                                     .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
                                     .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
