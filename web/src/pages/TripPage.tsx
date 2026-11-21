@@ -128,6 +128,11 @@ export default function TripPage() {
                 {route && <RouteBadge route={route} />}
                 <h1 className="min-w-0 flex-1 text-xl leading-tight font-bold">{t('trip.headsign', { to: trip.headsign ?? stops.at(-1)?.stop.name ?? '' })}</h1>
                 {/* Top right: on time / late / early while it runs (the page being live is obvious); "scheduled" when there is no realtime */}
+                {(finished || !started) && (
+                  <span className="shrink-0 text-[13px] text-secondary">
+                    {finished ? t('trip.past') : t('trip.upcoming', { time: formatTime(new Date(stops[0].departure)) })}
+                  </span>
+                )}
                 {started && !finished && (
                   <span className="shrink-0 text-[15px]">
                     {delay != null ? (
@@ -145,14 +150,9 @@ export default function TripPage() {
               )}
               {stats(trip, tripPath, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, tripPath, t)}</p>}
               {/* Last update: small and quiet, but always there while the trip runs; a past or future trip gets its own note instead */}
-              {((started && !finished && vehicleAge != null) || finished || !started) && (
+              {started && !finished && vehicleAge != null && (
                 <p className="mt-1 flex items-center text-[12px] text-secondary">
-                  {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
-                  {(finished || !started) && (
-                    <span className="ml-auto text-[13px]">
-                      {finished ? t('trip.past') : t('trip.upcoming', { time: formatTime(new Date(stops[0].departure)) })}
-                    </span>
-                  )}
+                  <UpdatedAgo seconds={vehicleAge * 60} />
                 </p>
               )}
             </section>
