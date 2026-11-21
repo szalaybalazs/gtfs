@@ -788,7 +788,8 @@ export const resolvers = {
         limit = 30,
         hours = 3,
         after,
-      }: { stopIds: string[]; routeIds?: string[]; limit: number; hours: number; after?: Date }
+        arrivals = false,
+      }: { stopIds: string[]; routeIds?: string[]; limit: number; hours: number; after?: Date; arrivals?: boolean }
     ) => {
       // Client-controlled sizes are clamped so one request can't do unbounded work
       stopIds = stopIds.slice(0, 60);
@@ -828,6 +829,7 @@ export const resolvers = {
                 ON cd.date = REPLACE(d.date, '-', '') AND cd.exception_type = 1
             )
             SELECT st.*, t.trip_headsign, t.route_id, t.wheelchair_accessible,
+              NOT EXISTS (SELECT 1 FROM stop_times n WHERE n.trip_id = st.trip_id AND n.stop_sequence > st.stop_sequence) AS terminates,
               t.bikes_allowed, active.date,
               stu.arrival_delay, stu.departure_delay,
               stu.arrival_timestamp, stu.departure_timestamp
@@ -842,14 +844,14 @@ export const resolvers = {
               ${routeFilter}
               -- st.departure_timestamp: GTFS seconds of the scheduled departure
               AND (st.departure_timestamp IS NULL OR st.departure_timestamp BETWEEN active.lo AND active.hi)
-              -- Not the last stop: nothing departs from a trip's terminus
-              AND EXISTS (
+              -- Not the last stop (nothing departs from a trip's terminus), unless arrivals were asked for
+              AND (? OR EXISTS (
                 SELECT 1 FROM stop_times n
                 WHERE n.trip_id = st.trip_id AND n.stop_sequence > st.stop_sequence
-              )
+              ))
           `
         )
-        .all(...windows.flat(), ...stopIds, ...(routeIds ?? []));
+        .all(...windows.flat(), ...stopIds, ...(routeIds ?? []), arrivals ? 1 : 0);
 
       const routes = new Map<string, any>();
       const routeById = (id: string) => {
@@ -876,6 +878,8 @@ export const resolvers = {
           stopId: r.stop_id,
           route: routeById(r.route_id),
           headsign: cleanHeadsign(r.trip_headsign),
+          // Ends here: an arrival, not a departure (only returned with arrivals: true)
+          terminates: !!r.terminates,
           frontDoor: FRONT_DOOR.test(r.stop_headsign ?? "") || FRONT_DOOR.test(r.trip_headsign ?? ""),
           onRequest: r.pickup_type === 2 || r.pickup_type === 3,
           stopSequence: r.stop_sequence,

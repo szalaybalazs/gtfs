@@ -140,6 +140,8 @@ export const typeDefs = `#graphql
     frontDoor: Boolean!
     "Stops here only on request (call ahead / signal the driver)"
     onRequest: Boolean!
+    "The trip ends at this stop: an arrival, not a departure"
+    terminates: Boolean!
   }
 
   type TripStop {
@@ -363,8 +365,8 @@ export const typeDefs = `#graphql
     stationsByRadius(lat: Float!, lon: Float!, radius: Float!): [Station!]!
     "Stop groups served by at least two of the lines (all of them first), nearest first"
     sharedStations(routeIds: [ID!]!, lat: Float, lon: Float): [SharedStation!]!
-    "Next departures from any of the stops, across all routes"
-    departures(stopIds: [ID!]!, routeIds: [ID!], limit: Int, hours: Int, after: DateTime): [Departure!]!
+    "Next departures from any of the stops, across all routes (with arrivals: true, also trips that end there, marked terminates)"
+    departures(stopIds: [ID!]!, routeIds: [ID!], limit: Int, hours: Int, after: DateTime, arrivals: Boolean): [Departure!]!
     trip(id: ID!, serviceDate: String): TripDetails
     "Current and upcoming alerts touching any of these lines or stops (all when both are empty)"
     alerts(routeIds: [ID!], stopIds: [ID!], lang: String): [Alert!]!

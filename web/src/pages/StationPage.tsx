@@ -102,7 +102,10 @@ export default function StationPage() {
   const limit = (from ? 10 : 20) + more * 20
   const [fetched, setFetched] = useState<Departure[] | undefined>()
   const fetchLimit = useSteadyLimit(limit, fetched)
-  const departures = useDepartures(ids, { limit: fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
+  // Arrivals too: always on a terminus platform (nothing departs there), otherwise via the switch
+  const terminus = !!fromPlatform && (fromPlatform.headsigns ?? []).length === 0 && (fromPlatform.routes ?? []).some(Boolean)
+  const arrivals = terminus || params.get('arrivals') === '1'
+  const departures = useDepartures(ids, { limit: fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals })
   useEffect(() => setFetched(departures.data?.departures), [departures.data])
 
   return (
@@ -187,7 +190,33 @@ export default function StationPage() {
 
             <section className="space-y-2">
               <Departures
-                toolbar={<AfterFilter stopIds={ids} routeIds={multi ? lineIds : null} />}
+                toolbar={
+                  <AfterFilter
+                    stopIds={ids}
+                    routeIds={multi ? lineIds : null}
+                    extra={
+                      !terminus && (
+                        <button
+                          type="button"
+                          aria-pressed={arrivals}
+                          onClick={() =>
+                            setParams(
+                              (p) => {
+                                if (arrivals) p.delete('arrivals')
+                                else p.set('arrivals', '1')
+                                return p
+                              },
+                              { replace: true },
+                            )
+                          }
+                          className={`rounded-full px-2.5 py-0.5 text-[13px] font-medium ${arrivals ? 'bg-accent text-white' : 'bg-fill'}`}
+                        >
+                          {t('departures.showArrivals')}
+                        </button>
+                      )
+                    }
+                  />
+                }
                 show={limit}
                 footer={(departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}

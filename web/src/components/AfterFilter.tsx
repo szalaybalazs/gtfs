@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router'
 import { DEPARTURES_QUERY, gql, type Departures } from '../lib/api'
@@ -212,7 +212,16 @@ export function TimeControl() {
 }
 
 /** Header row of a departures card: the time picker (Now / From HH:MM) and "⋯ Earlier". */
-export default function AfterFilter({ stopIds, routeIds = null }: { stopIds: string[]; routeIds?: string[] | null }) {
+export default function AfterFilter({
+  stopIds,
+  routeIds = null,
+  extra,
+}: {
+  stopIds: string[]
+  routeIds?: string[] | null
+  /** More controls next to "Earlier" (e.g. the arrivals switch) */
+  extra?: ReactNode
+}) {
   const t = useT()
   const { after, loadEarlier } = useAfter()
   const [busy, setBusy] = useState(false)
@@ -251,6 +260,8 @@ export default function AfterFilter({ stopIds, routeIds = null }: { stopIds: str
   return (
     <div className="flex items-center justify-between gap-3 border-b border-separator px-gutter py-2.5 text-[15px]">
       <TimeControl />
+      <span className="ml-auto" />
+      {extra}
       {!none && (
         <button
           type="button"

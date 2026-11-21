@@ -230,6 +230,8 @@ export type RouteRef = Pick<RouteSummary, 'routeId' | 'shortName' | 'color' | 't
 const ROUTE_REF = 'routeId shortName color textColor type'
 
 export type Departure = {
+  /** Ends at this stop: an arrival (only with arrivals: true) */
+  terminates?: boolean
   /** Board by the front door only (BKK's [Elsőajtós]) */
   frontDoor?: boolean
   /** Stops here only on request */
@@ -252,10 +254,10 @@ export type Departure = {
 export type Departures = { departures: Departure[] }
 
 export const DEPARTURES_QUERY = /* GraphQL */ `
-  query Departures($stopIds: [ID!]!, $routeIds: [ID!], $limit: Int, $hours: Int, $after: DateTime) {
-    departures(stopIds: $stopIds, routeIds: $routeIds, limit: $limit, hours: $hours, after: $after) {
+  query Departures($stopIds: [ID!]!, $routeIds: [ID!], $limit: Int, $hours: Int, $after: DateTime, $arrivals: Boolean) {
+    departures(stopIds: $stopIds, routeIds: $routeIds, limit: $limit, hours: $hours, after: $after, arrivals: $arrivals) {
       tripId serviceDate stopId headsign arrival departure arrivalDelay departureDelay
-      realtime wheelchairAccessible bikesAllowed frontDoor onRequest
+      realtime wheelchairAccessible bikesAllowed frontDoor onRequest terminates
       route { ${ROUTE_REF} }
     }
   }

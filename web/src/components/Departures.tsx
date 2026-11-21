@@ -122,7 +122,8 @@ export function DepartureRow({
 }) {
   const qc = useQueryClient()
   const t = useT()
-  const time = new Date(d.departure)
+  // An arrival (trip ends here) counts down to when it arrives
+  const time = new Date(d.terminates ? d.arrival : d.departure)
   const delay = d.departureDelay ?? d.arrivalDelay
   const status = realtimeStatus(d.realtime, delay)
   const seconds = (time.getTime() - now.getTime()) / 1000
@@ -158,6 +159,7 @@ export function DepartureRow({
           <p className="line-clamp-2 text-[17px] leading-snug font-medium">{d.headsign ?? '—'}</p>
           {/* Second line: the trip's marks, then the time: scheduled struck through when it differs, the real one coloured + live */}
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[15px] tabular-nums">
+            {d.terminates && <span className="rounded-md bg-fill px-1.5 text-[12px] leading-[18px] font-semibold text-secondary uppercase">{t('departures.arrives')}</span>}
             {d.frontDoor && <MarkIcon mark="frontDoor" className="h-4 w-4 text-secondary" />}
             {d.onRequest && <MarkIcon mark="demand" className="h-4 w-4 text-secondary" />}
             {d.wheelchairAccessible === 'AVAILABLE' && <MarkIcon mark="lowFloor" className="h-4 w-4 text-secondary" />}
