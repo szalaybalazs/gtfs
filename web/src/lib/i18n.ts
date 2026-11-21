@@ -572,7 +572,7 @@ const hu: Record<MessageKey, Message> = {
   'trip.minutes': '{n} perc',
   'trip.vehicleHere': 'Itt jár a jármű',
   'trip.realtime': 'Élő adat',
-  'trip.updatedSecs': 'frissítve {n} s ezelőtt',
+  'trip.updatedSecs': 'frissítve {n}s ezelőtt',
   'trip.updatedMins': 'frissítve {n} perce',
   'trip.onTime': 'Időben',
   'trip.late': '{n} percet késik',

@@ -231,7 +231,7 @@ export const pt: Record<MessageKey, Message> = {
   'trip.minutes': { one: '{n} minuto', other: '{n} minutos' },
   'trip.vehicleHere': 'O veículo está aqui',
   'trip.realtime': 'Tempo real',
-  'trip.updatedSecs': 'atualizado há {n} s',
+  'trip.updatedSecs': 'atualizado há {n}s',
   'trip.updatedMins': 'atualizado há {n} min',
   'trip.onTime': 'A horas',
   'trip.late': '{n} min atrasado',
