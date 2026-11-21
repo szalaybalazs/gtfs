@@ -4,6 +4,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { importGtfs, openDb } from "gtfs";
 import { Resource } from "sst";
+import { buildRouteLines } from "../common/routeLines";
 
 // Builds the static timetable SQLite from the agency GTFS zips and uploads it
 // to S3, where the API picks it up. Runs daily as a Fargate task.
@@ -87,6 +88,15 @@ db.exec(`
   LEFT JOIN marks ON marks.route_id = r.route_id;
   CREATE UNIQUE INDEX idx_route_flags ON route_flags (route_id);
 `);
+// The map's Lines layer, precomputed so the API never rebuilds it from shapes
+const lines = buildRouteLines((sql, ...params) => db.prepare(sql).all(...params) as any[]);
+db.exec("DROP TABLE IF EXISTS route_lines; CREATE TABLE route_lines (type TEXT NOT NULL, feature TEXT NOT NULL)");
+const insertLine = db.prepare("INSERT INTO route_lines (type, feature) VALUES (?, ?)");
+db.transaction(() => {
+  for (const l of lines) insertLine.run(l.type, JSON.stringify(l.feature));
+})();
+console.log(`route_lines: ${lines.length} paths`);
+
 db.pragma("journal_mode = DELETE");
 db.exec("VACUUM");
 db.close();
