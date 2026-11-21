@@ -207,6 +207,7 @@ export type VehiclePosition = {
   vehicleLicensePlate: string | null
   tripStartDate: string | null
   timestamp?: string | null
+  vehicleModel?: string | null
   trip: { tripId: string; headsign: string | null; route: RouteRef | null } | null
 }
 
@@ -219,7 +220,7 @@ export const VEHICLES_QUERY = /* GraphQL */ `
       latitude
       longitude
       bearing
-      vehicleLabel vehicleId vehicleLicensePlate tripStartDate timestamp
+      vehicleLabel vehicleId vehicleLicensePlate vehicleModel tripStartDate timestamp
       trip { tripId headsign route { routeId shortName color textColor type } }
     }
   }
@@ -332,6 +333,7 @@ export type TripDetails = {
       bearing: number | null
       vehicleLabel: string | null
       vehicleLicensePlate: string | null
+      vehicleModel?: string | null
       vehicleWheelchairAccessible: boolean | null
       currentStopSequence: number | null
       timestamp: string | null
@@ -350,7 +352,7 @@ export const TRIP_QUERY = /* GraphQL */ `
         stop { stopId name lat lon station { stationId routes { ${ROUTE_REF} } } }
       }
       vehicle {
-        latitude longitude bearing vehicleLabel vehicleLicensePlate
+        latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel
         vehicleWheelchairAccessible currentStopSequence timestamp
       }
     }

@@ -7,6 +7,7 @@ import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
 import { gql, TRIP_PATH_QUERY, TRIP_QUERY, type TripDetails, type TripPath, type TripStop } from '../lib/api'
 import { tripKey, type TripPreview } from '../lib/prefetch'
+import { vehicleName } from '../lib/vehicle'
 import { distance } from '../lib/geo'
 import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
@@ -101,10 +102,16 @@ export default function TripPage() {
               )}
               {stats(trip, tripPath, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, tripPath, t)}</p>}
               {/* Delay sits bottom-left, on the status line, so it adds no height to the destination */}
+              {/* On its way is the default and says nothing; only a past or future trip gets a small note, bottom right */}
               <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[15px] text-secondary">
                 {delay != null && started && !finished && <DelayIndicator delay={delay} />}
-                {finished ? t('trip.finished') : !started ? t('trip.startsAt', { time: formatTime(new Date(stops[0].departure)) }) : t('trip.onItsWay')}
+                {delay != null && started && !finished && vehicleAge != null && vehicleAge * 60 >= 30 && <span aria-hidden>·</span>}
                 {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
+                {(finished || !started) && (
+                  <span className="ml-auto text-[13px]">
+                    {finished ? t('trip.past') : t('trip.upcoming', { time: formatTime(new Date(stops[0].departure)) })}
+                  </span>
+                )}
               </p>
             </section>
 
@@ -131,16 +138,14 @@ export default function TripPage() {
               </ol>
             </section>
 
-            {vehicle && (vehicle.vehicleLabel || vehicle.vehicleLicensePlate) && (
+            {vehicle && (vehicle.vehicleModel || vehicle.vehicleLicensePlate) && (
               <section>
                 <h2 className="px-1 pb-2 text-xl font-bold">{t('trip.vehicle')}</h2>
+                {/* What it is, big; its plate / fleet number under it. (BKK's "label" is the destination, so it isn't shown.) */}
                 <div className="rounded-2xl bg-surface p-4">
-                  <p className="text-[17px] font-semibold">{vehicle.vehicleLabel ?? vehicle.vehicleLicensePlate}</p>
-                  <p className="text-[15px] text-secondary">
-                    {[
-                      vehicle.vehicleLicensePlate && vehicle.vehicleLabel ? t('trip.number', { n: vehicle.vehicleLicensePlate }) : null,
-                      vehicle.vehicleWheelchairAccessible ? t('common.wheelchair') : null,
-                    ]
+                  <p className="text-[20px] leading-snug font-semibold">{vehicleName(vehicle.vehicleModel) ?? vehicle.vehicleLicensePlate}</p>
+                  <p className="mt-0.5 text-[15px] text-secondary">
+                    {[vehicle.vehicleModel ? vehicle.vehicleLicensePlate : null, vehicle.vehicleWheelchairAccessible ? t('common.wheelchair') : null]
                       .filter(Boolean)
                       .join(' · ')}
                   </p>
@@ -402,3 +407,4 @@ function TripSkeleton({ preview }: { preview: TripPreview | null }) {
     </>
   )
 }
+

@@ -6,7 +6,7 @@ import {
   WHEELCHAIR_BOARDING,
 } from "./constants";
 import { db, generation } from "./db";
-import { ensureRealtime } from "./realtime";
+import { ensureRealtime, vehicleModel } from "./realtime";
 import {
   Feature,
   FeatureCollection,
@@ -167,6 +167,8 @@ const formatVehiclePosition = (vp: any) => {
     longitude: vp.longitude,
     speed: vp.speed,
     currentStopSequence: vp.current_stop_sequence,
+    // e.g. "Mercedes-Benz Citaro C2G", from BKK's realtime extension
+    vehicleModel: vehicleModel(vp.vehicle_id),
     trip: vp.trip_id,
     tripStartDate: vp.trip_start_date,
     tripStartTime: vp.trip_start_time,

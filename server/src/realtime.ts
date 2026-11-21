@@ -53,6 +53,60 @@ const VEHICLE_POSITION_COLUMNS = [
 
 type Row = (string | number | null)[];
 
+/**
+ * BKK sends each vehicle's model ("Mercedes-Benz Citaro C2G", "CAF Urbos 3"…)
+ * in its own extension on the VehicleDescriptor (field 1006, sub-field 1).
+ * gtfs-realtime-bindings drops unknown extensions, so read them from the raw
+ * protobuf: FeedMessage.entity(2) → vehicle(4) → vehicle descriptor(8) →
+ * id(1) and extension(1006).model(1).
+ */
+let models = new Map<string, string>();
+export const vehicleModel = (vehicleId: string | null | undefined) => (vehicleId ? models.get(vehicleId) ?? null : null);
+
+function* protoFields(b: Uint8Array, start: number, end: number): Generator<[number, number, number, number]> {
+  let i = start;
+  while (i < end) {
+    let key = 0, shift = 0, x: number;
+    do { x = b[i++]; key += (x & 0x7f) * 2 ** shift; shift += 7; } while (x & 0x80);
+    const field = Math.floor(key / 8), wire = key % 8;
+    if (wire === 0) { do { x = b[i++]; } while (x & 0x80); yield [field, wire, 0, 0]; }
+    else if (wire === 2) {
+      let len = 0; shift = 0;
+      do { x = b[i++]; len += (x & 0x7f) * 2 ** shift; shift += 7; } while (x & 0x80);
+      yield [field, wire, i, i + len];
+      i += len;
+    } else if (wire === 5) { i += 4; yield [field, wire, 0, 0]; }
+    else if (wire === 1) { i += 8; yield [field, wire, 0, 0]; }
+    else return;
+  }
+}
+
+function readVehicleModels(b: Uint8Array) {
+  const out = new Map<string, string>();
+  const text = new TextDecoder();
+  try {
+    for (const [f, w, a, z] of protoFields(b, 0, b.length)) {
+      if (f !== 2 || w !== 2) continue;
+      for (const [f2, w2, a2, z2] of protoFields(b, a, z)) {
+        if (f2 !== 4 || w2 !== 2) continue;
+        for (const [f3, w3, a3, z3] of protoFields(b, a2, z2)) {
+          if (f3 !== 8 || w3 !== 2) continue;
+          let id: string | null = null, model: string | null = null;
+          for (const [f4, w4, a4, z4] of protoFields(b, a3, z3)) {
+            if (f4 === 1 && w4 === 2) id = text.decode(b.subarray(a4, z4));
+            if (f4 === 1006 && w4 === 2)
+              for (const [f5, w5, a5, z5] of protoFields(b, a4, z4)) if (f5 === 1 && w5 === 2) model = text.decode(b.subarray(a5, z5)).trim();
+          }
+          if (id && model) out.set(id, model);
+        }
+      }
+    }
+  } catch {
+    // A malformed extension shouldn't break realtime; keep what was read
+  }
+  return out;
+}
+
 let cache: { stopTimeUpdates: Row[]; vehiclePositions: Row[] } | undefined;
 let fetchedAt = 0;
 let loadedGeneration = -1;
@@ -63,9 +117,9 @@ const fetchFeed = async (name: string) => {
     signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
-  const message = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(
-    new Uint8Array(await res.arrayBuffer())
-  );
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  if (name === "VehiclePositions") models = readVehicleModels(bytes);
+  const message = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(bytes);
   return GtfsRealtimeBindings.transit_realtime.FeedMessage.toObject(message, {
     enums: String,
     longs: String,

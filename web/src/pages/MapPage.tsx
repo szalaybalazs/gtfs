@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { LngLatBounds } from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { LocationIcon } from '../components/Icons'
+import { CloseIcon, LocationIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
 import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, VEHICLES_QUERY, type NearbyStations, type RouteRef, type Station, type VehiclePosition, type Vehicles } from '../lib/api'
@@ -10,6 +10,7 @@ import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
 import { distance, hex, roundedHull } from '../lib/geo'
 import { tappedMarker, useGeoJson, useGlMap, useMarkers, type GlMap, type HtmlMarker } from '../lib/glmap'
 import { useGeolocation } from '../lib/useGeolocation'
+import { vehicleName } from '../lib/vehicle'
 import { useT } from '../lib/i18n'
 
 /**
@@ -141,10 +142,10 @@ export default function MapPage() {
     setView(viewOf(map))
     const onMove = () => setView(viewOf(map))
     // Tapping empty map clears the selection
+    // Tapping empty map clears a selected stop; the vehicle card stays until its ✕
     const onClick = () => {
       if (tappedMarker()) return
       setSelectedStop(null)
-      setSelected(null)
     }
     map.on('moveend', onMove)
     map.on('click', onClick)
@@ -291,7 +292,13 @@ export default function MapPage() {
   const allMarkers = useMemo(() => [...stopMarkers, ...vehicleMarkers, ...me], [stopMarkers, vehicleMarkers, me])
   useMarkers(map, allMarkers)
 
-  const selectedVehicle = vehicles.find((v) => v.id === selected) ?? null
+  // Keep the last known data of the tapped vehicle, so its card stays when it leaves the view
+  const [lastSelected, setLastSelected] = useState<VehiclePosition | null>(null)
+  const fresh = (vehicleQuery.data?.vehiclePositions ?? []).find((v) => v?.id === selected) ?? null
+  useEffect(() => {
+    if (fresh) setLastSelected(fresh)
+  }, [fresh])
+  const selectedVehicle = selected ? (fresh ?? (lastSelected?.id === selected ? lastSelected : null)) : null
 
   return (
     <div className="flex h-dvh flex-col">
@@ -305,10 +312,11 @@ export default function MapPage() {
         }
       />
       <div className="relative flex-1">
-        <div className="absolute inset-0">
+        {/* isolate: markers' z-index stays inside the map, so cards and buttons always draw above them */}
+        <div className="absolute inset-0 isolate">
           <div ref={container} className="h-full w-full bg-canvas" />
         </div>
-        {selectedVehicle && <VehicleCard v={selectedVehicle} />}
+        {selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
         <button
           type="button"
           onClick={location.request}
@@ -325,30 +333,33 @@ export default function MapPage() {
 }
 
 /** Details of the tapped vehicle, as an app card over the map (tap the vehicle again, or the card, to open its trip). */
-function VehicleCard({ v }: { v: VehiclePosition }) {
+function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }) {
   const t = useT()
   const age = v.timestamp ? Math.max(0, Math.round((Date.now() - new Date(v.timestamp).getTime()) / 1000)) : null
-  const body = (
-    <div className="space-y-1">
+  const name = vehicleName(v.vehicleModel)
+  return (
+    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-4 pr-12 shadow-xl">
+      <button type="button" onClick={onClose} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
+        <CloseIcon className="h-4 w-4" />
+      </button>
       <div className="flex items-center gap-2">
         {v.trip?.route && <RouteBadge route={v.trip.route} />}
         <span className="truncate text-[17px] font-semibold">{v.trip?.headsign ?? t('map.unknownDestination')}</span>
       </div>
+      {/* What it is, then its plate and how fresh the position is */}
+      {name && <p className="mt-1 text-[15px] font-medium">{name}</p>}
       <p className="text-[13px] text-secondary">
-        {age != null ? (age < 60 ? t('trip.positionSecs', { n: age }) : t('trip.positionMins', { n: Math.round(age / 60) })) : t('trip.positionUnknown')}
-        {v.vehicleLicensePlate && ` · ${v.vehicleLicensePlate}`}
+        {[
+          v.vehicleLicensePlate,
+          age != null ? (age < 60 ? t('trip.positionSecs', { n: age }) : t('trip.positionMins', { n: Math.round(age / 60) })) : t('trip.positionUnknown'),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
       </p>
-      {v.trip && <p className="text-[15px] font-medium text-accent">{t('map.openTrip')}</p>}
-    </div>
-  )
-  return (
-    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-10 rounded-2xl bg-surface p-4 shadow-xl">
-      {v.trip ? (
-        <Link to={tripUrl(v)} className="block active:opacity-70">
-          {body}
+      {v.trip && (
+        <Link to={tripUrl(v)} className="mt-1.5 inline-block text-[15px] font-medium text-accent active:opacity-60">
+          {t('map.openTrip')}
         </Link>
-      ) : (
-        body
       )}
     </div>
   )
