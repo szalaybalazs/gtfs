@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import FavoriteSheet from '../components/FavoriteSheet'
-import { StarIcon } from '../components/Icons'
+import { GridIcon, ListIcon, StarIcon } from '../components/Icons'
 import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
 import { useParams, useSearchParams } from 'react-router'
 import AfterFilter, { useAfter } from '../components/AfterFilter'
@@ -205,27 +205,9 @@ export default function StationPage() {
                   <AfterFilter
                     stopIds={ids}
                     routeIds={multi ? lineIds : null}
+                    hideEarlier={board}
                     extra={
                       <>
-                      {!from && !multi && (
-                        <button
-                          type="button"
-                          aria-pressed={!board}
-                          onClick={() =>
-                            setParams(
-                              (p) => {
-                                if (board) p.set('view', 'time')
-                                else p.delete('view')
-                                return p
-                              },
-                              { replace: true },
-                            )
-                          }
-                          className={`rounded-full px-2.5 py-0.5 text-[13px] font-medium whitespace-nowrap ${!board ? 'bg-accent text-white' : 'bg-fill'}`}
-                        >
-                          {t('departures.timeOrder')}
-                        </button>
-                      )}
                       {!terminus && (
                         <button
                           type="button"
@@ -254,7 +236,37 @@ export default function StationPage() {
                 footer={!board && (departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
-                title={null}
+                // The view switch (board / time order) sits by the heading, so the toolbar only holds time controls
+                title={
+                  !from && !multi ? (
+                    <>
+                      {t('departures.title')}
+                      <span role="group" aria-label={t('departures.view')} className="ml-auto flex rounded-lg bg-fill p-0.5">
+                        {([['board', GridIcon, t('departures.byLine')], ['time', ListIcon, t('departures.timeOrder')]] as const).map(([v, Icon, label]) => (
+                          <button
+                            key={v}
+                            type="button"
+                            aria-label={label}
+                            aria-pressed={(v === 'board') === board}
+                            onClick={() =>
+                              setParams(
+                                (p) => {
+                                  if (v === 'time') p.set('view', 'time')
+                                  else p.delete('view')
+                                  return p
+                                },
+                                { replace: true },
+                              )
+                            }
+                            className={`rounded-md px-2 py-1 ${(v === 'board') === board ? 'bg-surface text-label shadow-sm' : 'text-secondary'}`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </button>
+                        ))}
+                      </span>
+                    </>
+                  ) : null
+                }
                 departures={shownDepartures}
                 isPending={departures.isPending}
                 error={departures.isError}

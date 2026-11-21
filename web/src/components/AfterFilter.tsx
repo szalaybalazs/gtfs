@@ -216,7 +216,10 @@ export default function AfterFilter({
   stopIds,
   routeIds = null,
   extra,
+  hideEarlier = false,
 }: {
+  /** No "Earlier" (e.g. on the per-line board, which only looks ahead) */
+  hideEarlier?: boolean
   stopIds: string[]
   routeIds?: string[] | null
   /** More controls next to "Earlier" (e.g. the arrivals switch) */
@@ -262,7 +265,7 @@ export default function AfterFilter({
       <TimeControl />
       <span className="ml-auto" />
       {extra}
-      {!none && (
+      {!none && !hideEarlier && (
         <button
           type="button"
           onClick={earlier}
