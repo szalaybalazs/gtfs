@@ -112,8 +112,8 @@ export default function StationPage() {
   // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
   const departures = useDepartures(ids, { perLine: board ? 3 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
   const shownDepartures = useMemo(
-    () => (departures.data?.departures ?? []).filter((d) => (arrivals && !board) || !d.terminates),
-    [departures.data, arrivals, board],
+    () => (departures.data?.departures ?? []).filter((d) => arrivals || !d.terminates),
+    [departures.data, arrivals],
   )
   useEffect(() => setFetched(departures.data?.departures), [departures.data])
 
@@ -226,7 +226,7 @@ export default function StationPage() {
                           {t('departures.timeOrder')}
                         </button>
                       )}
-                      {!terminus && !board && (
+                      {!terminus && (
                         <button
                           type="button"
                           aria-pressed={arrivals}

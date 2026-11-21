@@ -1,3 +1,4 @@
+import { comparePlatforms } from '../lib/categories'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { prefetchStation } from '../lib/prefetch'
@@ -27,7 +28,7 @@ export default function StationRow({
 }) {
   const qc = useQueryClient()
   const t = useT()
-  const stops = (station.stops ?? []).filter((s) => (s.routes ?? []).some(Boolean))
+  const stops = (station.stops ?? []).filter((s) => (s.routes ?? []).some(Boolean)).sort(comparePlatforms)
   if (stops.length === 0) return null
   const prefetch = () => void prefetchStation(qc, station.stationId)
   const platforms = stops.length > 1

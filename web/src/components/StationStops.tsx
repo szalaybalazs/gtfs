@@ -1,3 +1,4 @@
+import { comparePlatforms } from '../lib/categories'
 import { useQuery } from '@tanstack/react-query'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { useT } from '../lib/i18n'
@@ -30,7 +31,7 @@ export default function StationStops({
   })
   const stops = (query.data?.station?.stops ?? []).filter((s) =>
     (s.routes ?? []).some((r) => r && (!lines?.length || lines.includes(r.routeId))),
-  )
+  ).sort(comparePlatforms)
   if (stops.length === 0) return null
   return (
     <>

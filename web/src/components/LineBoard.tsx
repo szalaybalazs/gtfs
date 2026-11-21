@@ -1,69 +1,103 @@
 import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
+import { compareLines } from '../lib/categories'
 import { countdown } from '../lib/countdown'
 import { useT } from '../lib/i18n'
-import { realtimeStatus, statusColor } from '../lib/realtimeStatus'
+import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { formatTime } from '../lib/time'
 import { useNow } from '../lib/useTimetable'
-import { ChevronIcon, LiveIcon } from './Icons'
+import { BikeIcon, ChevronIcon, LiveIcon } from './Icons'
+import { MarkIcon } from './LineMarks'
 import RouteBadge from './RouteBadge'
 
+/** Departed times keep counting (-1, -2… s) this long, like the departures list */
+const LINGER_S = 30
+
 /**
- * A stop group's departures as a board: one row per line + direction with its
- * next few times, ordered by whichever leaves first. Easy to find "your" line
- * at a big hub; tapping a row opens that line's departures from its platform.
+ * A stop group's departures as a board: one row per line + direction, metro
+ * first, then tram, trolleybus, bus, … and by line number within each. Each
+ * row looks like a departure row (next departure big, the following ones
+ * smaller beside it); tapping it opens that line's departures from its platform.
  */
 export default function LineBoard({ departures, stationPath }: { departures: Departure[]; stationPath: string }) {
-  const t = useT()
-  const now = useNow(5_000)
+  const now = useNow(1_000)
   const groups = new Map<string, Departure[]>()
   for (const d of departures) {
-    if (new Date(d.departure).getTime() < now.getTime() - 30_000) continue
-    const key = `${d.route?.shortName ?? d.route?.routeId}|${d.headsign}`
+    if (new Date(d.terminates ? d.arrival : d.departure).getTime() < now.getTime() - LINGER_S * 1000) continue
+    // Arrivals get their own row, apart from the same line leaving
+    const key = `${d.route?.routeId}|${d.headsign}|${d.terminates ? 'arr' : 'dep'}`
     const list = groups.get(key) ?? []
     list.push(d)
     groups.set(key, list)
   }
-  const rows = [...groups.values()]
-
-  // First time: the precise countdown (½ minutes, seconds); later ones: whole minutes
-  const label = (d: Departure, first = false) => {
-    const s = (new Date(d.departure).getTime() - now.getTime()) / 1000
-    if (s >= 60 * 60) return formatTime(new Date(d.departure))
-    if (s < 0) return '0'
-    return first ? countdown(s).value : String(Math.round(s / 60))
-  }
+  const rows = [...groups.values()].sort(
+    (a, b) =>
+      compareLines(a[0].route ?? {}, b[0].route ?? {}) ||
+      (a[0].headsign ?? '').localeCompare(b[0].headsign ?? '', 'hu'),
+  )
 
   return (
     <ul className="divide-y divide-separator">
-      {rows.map((list) => {
-        const first = list[0]
-        const status = realtimeStatus(first.realtime, first.departureDelay)
-        const s = (new Date(first.departure).getTime() - now.getTime()) / 1000
-        const unit = s < 60 * 60 ? t(countdown(Math.max(0, s)).unit) : ''
-        const to = `${stationPath}?from=${encodeURIComponent(first.stopId)}${first.route ? `&lines=${encodeURIComponent(first.route.routeId)}` : ''}`
-        return (
-          <li key={`${first.route?.routeId}|${first.headsign}`}>
-            <Link to={to} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
-              {first.route && <RouteBadge route={first.route} />}
-              <p className="line-clamp-2 min-w-0 flex-1 text-[17px] leading-snug font-medium">{first.headsign ?? '—'}</p>
-              <p className="shrink-0 text-right tabular-nums">
-                <span className={`inline-flex items-center gap-0.5 text-xl font-bold ${status === 'scheduled' ? '' : statusColor[status]}`}>
-                  {label(first, true)}
-                  {status !== 'scheduled' && <LiveIcon className="h-3 w-3" aria-hidden />}
-                </span>
-                {unit && <span className="ml-0.5 text-[13px] text-secondary">{unit}</span>}
-                {list.slice(1).map((d) => (
-                  <span key={d.tripId} className="ml-2 text-[15px] text-secondary">
-                    {label(d)}
-                  </span>
-                ))}
-              </p>
-              <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
-            </Link>
-          </li>
-        )
-      })}
+      {rows.map((list) => (
+        <BoardRow key={`${list[0].route?.routeId}|${list[0].headsign}`} list={list} now={now} stationPath={stationPath} />
+      ))}
     </ul>
+  )
+}
+
+function BoardRow({ list, now, stationPath }: { list: Departure[]; now: Date; stationPath: string }) {
+  const t = useT()
+  const d = list[0]
+  // A trip ending here (Arrivals on) counts down to its arrival
+  const time = new Date(d.terminates ? d.arrival : d.departure)
+  const delay = d.departureDelay ?? d.arrivalDelay
+  const status = realtimeStatus(d.realtime, delay)
+  const to = `${stationPath}?from=${encodeURIComponent(d.stopId)}${d.route ? `&lines=${encodeURIComponent(d.route.routeId)}` : ''}`
+  return (
+    <li>
+      <Link to={to} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
+        {d.route && <RouteBadge route={d.route} />}
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-[17px] leading-snug font-medium">{d.headsign ?? '—'}</p>
+          {/* Same second line as a departure row: marks, then the time (scheduled struck through when it differs) */}
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[15px] tabular-nums">
+            {d.terminates && <span className="rounded-md bg-fill px-1.5 text-[12px] leading-[18px] font-semibold text-secondary uppercase">{t('departures.arrives')}</span>}
+            {d.frontDoor && <MarkIcon mark="frontDoor" className="h-4 w-4 text-secondary" />}
+            {d.onRequest && <MarkIcon mark="demand" className="h-4 w-4 text-secondary" />}
+            {d.wheelchairAccessible === 'AVAILABLE' && <MarkIcon mark="lowFloor" className="h-4 w-4 text-secondary" />}
+            {d.bikesAllowed === 'ALLOWED' && <BikeIcon className="h-4 w-4 text-secondary" aria-label={t('common.bikes')} />}
+            {(status === 'late' || status === 'early') && (
+              <span className="text-secondary line-through">{formatTime(new Date(time.getTime() - delay! * 1000))}</span>
+            )}
+            <span className={`flex items-center gap-0.5 ${statusColor[status]}`} title={t(statusLabel[status])}>
+              {formatTime(time)}
+              {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5" aria-label={t(statusLabel[status])} />}
+            </span>
+          </p>
+        </div>
+        {/* The following departures, small, then the next one big (as on a departure row) */}
+        {list.slice(1).map((n) => (
+          <Countdown key={n.tripId} d={n} now={now} small />
+        ))}
+        <Countdown d={d} now={now} />
+        <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
+      </Link>
+    </li>
+  )
+}
+
+/** Minutes / seconds until a departure, negative seconds just after it leaves; the live mark in its own corner */
+function Countdown({ d, now, small = false }: { d: Departure; now: Date; small?: boolean }) {
+  const t = useT()
+  const seconds = (new Date(d.terminates ? d.arrival : d.departure).getTime() - now.getTime()) / 1000
+  const left = seconds < 0
+  const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
+  const { value, unit } = left ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const } : countdown(seconds)
+  return (
+    <div className={`relative text-right ${small ? 'min-w-9 pr-2.5 text-secondary' : 'min-w-14 pr-3.5 text-label'} ${left ? 'opacity-45' : ''}`}>
+      {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
+      <p className={`leading-none font-bold tabular-nums ${small ? 'text-[17px]' : 'text-2xl'}`}>{value}</p>
+      <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{t(unit)}</p>
+    </div>
   )
 }

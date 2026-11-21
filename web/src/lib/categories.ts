@@ -50,3 +50,25 @@ export function replacesCategory(r: { routeId: string }): Category['key'] | null
   if (/^MP/i.test(r.routeId)) return 'metro'
   return null
 }
+
+type Lineish = Routeish & { shortName?: string | null }
+
+/** Sort key for a line: its category in BKK order (metro, tram, trolleybus, bus, …) */
+export const categoryRank = (r: Routeish) => CATEGORIES.indexOf(categoryOf(r))
+
+/** Metro first, then tram, trolleybus, bus, …; by line number within each */
+export function compareLines(a: Lineish, b: Lineish) {
+  return categoryRank(a) - categoryRank(b) || (a.shortName ?? '').localeCompare(b.shortName ?? '', 'hu', { numeric: true })
+}
+
+/**
+ * Platforms in the same order, by the most important line stopping there
+ * (a metro platform before a tram stop before a bus stop).
+ */
+export function comparePlatforms(a: { routes?: (Lineish | null)[] | null }, b: { routes?: (Lineish | null)[] | null }) {
+  const best = (s: { routes?: (Lineish | null)[] | null }) => (s.routes ?? []).filter((r): r is Lineish => !!r).sort(compareLines)[0]
+  const x = best(a)
+  const y = best(b)
+  if (!x || !y) return x ? -1 : y ? 1 : 0
+  return compareLines(x, y)
+}
