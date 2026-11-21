@@ -60,7 +60,30 @@ export default function SettingsPage() {
   const [theme, setThemeState] = useState(getTheme)
   const [language, setLanguage] = useLocaleSetting()
   const [radius, setRadius] = useNearbyRadius()
-  const { favorites, clear } = useFavorites()
+  const { favorites, clear, exportJson, importJson } = useFavorites()
+  // Short status under the favourites card ("Copied", "Added 3", …)
+  const [favNote, setFavNote] = useState<string | null>(null)
+  const copyFavorites = async () => {
+    try {
+      await navigator.clipboard.writeText(exportJson())
+      setFavNote(t('settings.favCopied', { n: favorites.length }))
+    } catch {
+      // No clipboard access: show it so it can be copied by hand
+      window.prompt(t('settings.favCopyManual'), exportJson())
+    }
+  }
+  const pasteFavorites = async () => {
+    let text: string | null = null
+    try {
+      text = await navigator.clipboard.readText()
+    } catch {
+      // Reading the clipboard isn't allowed everywhere; ask for it instead
+    }
+    if (!text?.trim().startsWith('{') && !text?.trim().startsWith('[')) text = window.prompt(t('settings.favPastePrompt'))
+    if (!text) return
+    const added = importJson(text)
+    setFavNote(added == null ? t('settings.favInvalid') : added === 0 ? t('settings.favNothing') : t('settings.favAdded', { n: added }))
+  }
 
   return (
     <div className="min-h-dvh">
@@ -135,6 +158,16 @@ export default function SettingsPage() {
               {t('common.clear')}
             </button>
           </div>
+          {/* Move favourites to another device or browser: copy as JSON there, paste here */}
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <button type="button" disabled={favorites.length === 0} onClick={copyFavorites} className="rounded-2xl bg-surface py-row font-medium text-accent active:opacity-60 disabled:opacity-40">
+              {t('settings.favExport')}
+            </button>
+            <button type="button" onClick={pasteFavorites} className="rounded-2xl bg-surface py-row font-medium text-accent active:opacity-60">
+              {t('settings.favImport')}
+            </button>
+          </div>
+          {favNote && <p className="px-1 pt-2 text-[13px] text-secondary">{favNote}</p>}
         </section>
 
         <section>

@@ -73,6 +73,30 @@ export function useFavorites() {
     write(current.some((f) => f.id === id) ? current.filter((f) => f.id !== id) : [...current, { ...draft, id } as Favorite])
   }, [])
   const clear = useCallback(() => write([]), [])
+  /** All favourites as JSON (to copy to another device or browser) */
+  const exportJson = useCallback(() => JSON.stringify({ app: 'budapestgone', version: 2, favorites: read() }), [])
+  /**
+   * Adds favourites from exported JSON (the object above, or a bare list); ones already
+   * here are skipped. Returns how many were added, or null if it isn't valid.
+   */
+  const importJson = useCallback((text: string): number | null => {
+    let data: unknown
+    try {
+      data = JSON.parse(text.trim())
+    } catch {
+      return null
+    }
+    const list = Array.isArray(data) ? data : (data as { favorites?: unknown })?.favorites
+    if (!Array.isArray(list)) return null
+    const kinds = new Set(['line', 'lineStop', 'stop', 'lines'])
+    const valid = list.filter((f): f is Favorite => !!f && typeof f === 'object' && kinds.has((f as Favorite).kind) && typeof (f as Favorite).id === 'string')
+    if (valid.length === 0 && list.length > 0) return null
+    const current = read()
+    const known = new Set(current.map((f) => f.id))
+    const added = valid.filter((f) => !known.has(f.id) && (known.add(f.id), true))
+    if (added.length) write([...current, ...added])
+    return added.length
+  }, [])
   const groups = useMemo(
     () => ({
       lines: favorites.filter((f): f is Extract<Favorite, { kind: 'line' }> => f.kind === 'line'),
@@ -82,5 +106,5 @@ export function useFavorites() {
     }),
     [favorites],
   )
-  return { favorites, ...groups, has, toggle, clear }
+  return { favorites, ...groups, has, toggle, clear, exportJson, importJson }
 }
