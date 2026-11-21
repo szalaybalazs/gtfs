@@ -1,9 +1,10 @@
 import maplibregl from 'maplibre-gl'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import type { RouteRef } from '../lib/api'
 import { roundedHull } from '../lib/geo'
+import { vehicleIcon } from '../lib/mapIcons'
 import { useGeoJson, useGlMap, useMarkers, type HtmlMarker, type LngLat } from '../lib/glmap'
-import { CloseIcon } from './Icons'
 import { useT } from '../lib/i18n'
 
 export type MapPoint = { lat: number; lon: number; label?: string; strong?: boolean }
@@ -14,17 +15,19 @@ type Props = {
   points: MapPoint[]
   line?: [number, number][] // [lat, lon]
   color?: string
-  vehicle?: { lat: number; lon: number; label: string; bg: string; fg: string; info?: ReactNode } | null
+  /** The vehicle, drawn exactly like on the main map */
+  vehicle?: { lat: number; lon: number; route: RouteRef | null; bearing: number | null } | null
   height?: number
-  /** Tap opens a full-screen, interactive copy of the map. */
-  expandable?: boolean
+  /** Tap opens this full screen (e.g. the transit map with the trip on it); it gets a close callback. */
+  expand?: (close: () => void) => ReactNode
 }
 
 /** Small, static-feeling map: an optional line, some points, an optional vehicle. */
 export default function MiniMap(props: Props) {
   const t = useT()
   const [full, setFull] = useState(false)
-  const { height = 260, expandable } = props
+  const { height = 260, expand } = props
+  const expandable = !!expand
   useEffect(() => {
     if (!full) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setFull(false)
@@ -43,27 +46,14 @@ export default function MiniMap(props: Props) {
         )}
       </div>
       {full &&
-        createPortal(
-          <div className="fixed inset-0 z-[1150] bg-canvas">
-            <MapView {...props} interactive />
-            <button
-              type="button"
-              onClick={() => setFull(false)}
-              aria-label={t('map.close')}
-              className="absolute top-[calc(env(safe-area-inset-top)+0.75rem)] left-3 z-20 rounded-full bg-surface p-2.5 shadow-lg active:opacity-60"
-            >
-              <CloseIcon className="h-5 w-5" />
-            </button>
-          </div>,
-          document.body,
-        )}
+        expand &&
+        createPortal(<div className="fixed inset-0 z-[1150] bg-canvas">{expand(() => setFull(false))}</div>, document.body)}
     </>
   )
 }
 
 function MapView({ points, line, color = '#2563eb', vehicle, area, interactive }: Props & { interactive: boolean }) {
   const container = useRef<HTMLDivElement>(null)
-  const [info, setInfo] = useState(false)
   // Everything that must be in view; with an area, its rounded outline (not just the stops)
   const all = useMemo<LngLat[]>(() => {
     const pts = points.map((p) => [p.lat, p.lon] as [number, number])
@@ -129,19 +119,7 @@ function MapView({ points, line, color = '#2563eb', vehicle, area, interactive }
   )
 
   const markers = useMemo<HtmlMarker[]>(
-    () =>
-      vehicle
-        ? [
-            {
-              key: 'vehicle',
-              at: [vehicle.lon, vehicle.lat],
-              html: `<div style="background:${vehicle.bg};color:${vehicle.fg};font:700 13px/24px system-ui;border-radius:12px;text-align:center;box-shadow:0 1px 6px rgb(0 0 0/.4)">${vehicle.label.replace(/[<>&"]/g, '')}</div>`,
-              size: [40, 24],
-              z: 10,
-              onClick: () => setInfo((v) => !v),
-            },
-          ]
-        : [],
+    () => (vehicle ? [{ key: 'vehicle', at: [vehicle.lon, vehicle.lat], ...vehicleIcon(vehicle.route, vehicle.bearing, 16, false), z: 10 }] : []),
     [vehicle],
   )
   useMarkers(map, markers)
@@ -151,10 +129,6 @@ function MapView({ points, line, color = '#2563eb', vehicle, area, interactive }
       <div className="absolute inset-0">
           <div ref={container} className="h-full w-full bg-canvas" />
         </div>
-      {/* Vehicle details as an app card over the map */}
-      {interactive && info && vehicle?.info && (
-        <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-4 shadow-xl">{vehicle.info}</div>
-      )}
     </>
   )
 }

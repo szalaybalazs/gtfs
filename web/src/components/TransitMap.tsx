@@ -1,0 +1,367 @@
+import { useQuery } from '@tanstack/react-query'
+import type { LngLatBounds } from 'maplibre-gl'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { LngLatBoundsLike } from 'maplibre-gl'
+import { Link, useNavigate } from 'react-router'
+import { CloseIcon, LocationIcon } from './Icons'
+import RouteBadge from './RouteBadge'
+import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
+import { distance, roundedHull } from '../lib/geo'
+import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, mainCategory, stopIcon, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
+import { formatTime } from '../lib/time'
+import { tappedMarker, useGeoJson, useGlMap, useMarkers, type GlMap, type HtmlMarker } from '../lib/glmap'
+import { useGeolocation } from '../lib/useGeolocation'
+import { vehicleName } from '../lib/vehicle'
+import { useT } from '../lib/i18n'
+
+/**
+ * Where the map opens without location access: Széll Kálmán tér.
+ * TODO: on the long run, open on a view that covers all of Budapest, or make
+ * the start point a setting (e.g. home stop / last viewed position).
+ */
+const DEFAULT_CENTER: [number, number] = [19.0236, 47.5073]
+
+/** One trip drawn on top of the map: its path, its stops with times, and its vehicle. */
+export type TripOverlay = {
+  tripId: string
+  color: string
+  headsign: string | null
+  path: [number, number][] // [lon, lat]
+  stops: { stopId: string; stationId: string | null; name: string; lat: number; lon: number; time: Date; passed: boolean; strong?: boolean }[]
+}
+
+
+type View = { center: { lat: number; lon: number }; bounds: LngLatBounds; zoom: number }
+const viewOf = (map: GlMap): View => {
+  const c = map.getCenter()
+  return { center: { lat: c.lat, lon: c.lng }, bounds: map.getBounds(), zoom: map.getZoom() }
+}
+
+/**
+ * The transit map: stop groups / stops, live vehicles, your location. Used
+ * full screen on the Map page and, with a `trip` overlay, from a trip: then
+ * only that trip (path, stops with times, its vehicle) shows until you ask for
+ * everything else too.
+ */
+export default function TransitMap({
+  trip,
+  bounds,
+  onClose,
+  onVehicleCount,
+}: {
+  trip?: TripOverlay
+  bounds?: LngLatBoundsLike
+  /** Shows a ✕ (top right) that calls this */
+  onClose?: () => void
+  onVehicleCount?: (n: number | null) => void
+}) {
+  const t = useT()
+  const location = useGeolocation()
+  const container = useRef<HTMLDivElement>(null)
+  const map = useGlMap(container, bounds ? { bounds, padding: 48 } : { center: DEFAULT_CENTER, zoom: 15 })
+  // With a trip: just that trip until "show everything"
+  const [showAll, setShowAll] = useState(!trip)
+  const [selectedTripStop, setSelectedTripStop] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [view, setView] = useState<View | null>(null)
+  const [selectedStop, setSelectedStop] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!map) return
+    setView(viewOf(map))
+    const onMove = () => setView(viewOf(map))
+    // Tapping empty map clears the selection
+    // Tapping empty map clears a selected stop; the vehicle card stays until its ✕
+    const onClick = () => {
+      if (tappedMarker()) return
+      setSelectedStop(null)
+      setSelectedTripStop(null)
+    }
+    map.on('moveend', onMove)
+    map.on('click', onClick)
+    return () => {
+      map.off('moveend', onMove)
+      map.off('click', onClick)
+    }
+  }, [map])
+
+  useEffect(() => {
+    if (map && location.coords) map.flyTo({ center: [location.coords.lon, location.coords.lat], zoom: 15.5 })
+  }, [map, location.coords])
+
+  // Stop groups around the centre; radius covers the visible area (capped), rounded so small pans reuse the cache
+  const zoom = view?.zoom ?? 0
+  const enabled = !!view && zoom >= GROUPS_ZOOM && showAll
+  const round = (n: number) => Math.round(n * 500) / 500
+  const center = view ? { lat: round(view.center.lat), lon: round(view.center.lon) } : { lat: 0, lon: 0 }
+  // Farthest visible corner from the (rounded) centre, plus slack: a stop group's
+  // centre can sit up to ~400 m from its stops, so groups just off-screen still count
+  const corner = view
+    ? Math.max(
+        distance(center, { lat: view.bounds.getNorth(), lon: view.bounds.getEast() }),
+        distance(center, { lat: view.bounds.getSouth(), lon: view.bounds.getWest() }),
+      )
+    : 0
+  const zoomedIn = zoom >= STOPS_ZOOM
+  const radius = Math.min(zoomedIn ? 1200 : 1500, Math.ceil((corner + (zoomedIn ? 400 : 200)) / 100) * 100)
+  const stations = useQuery({
+    queryKey: ['mapStations', zoomedIn, center, radius],
+    queryFn: () => gql<NearbyStations>(zoomedIn ? MAP_STOPS_QUERY : MAP_GROUPS_QUERY, { ...center, radius }),
+    enabled,
+    staleTime: 60 * 60_000,
+    placeholderData: (prev) => prev,
+  })
+
+  // Vehicles in the visible area only (padded a little), every 30 s (the server's realtime cache)
+  const r3 = (n: number) => Math.round(n * 200) / 200
+  const pad = view ? Math.max(view.bounds.getNorth() - view.bounds.getSouth(), view.bounds.getEast() - view.bounds.getWest()) * 0.2 : 0
+  const tripBox =
+    trip && !showAll && trip.stops.length
+      ? {
+          minLat: r3(Math.min(...trip.stops.map((x) => x.lat)) - 0.01),
+          minLon: r3(Math.min(...trip.stops.map((x) => x.lon)) - 0.01),
+          maxLat: r3(Math.max(...trip.stops.map((x) => x.lat)) + 0.01),
+          maxLon: r3(Math.max(...trip.stops.map((x) => x.lon)) + 0.01),
+        }
+      : null
+  const vbox = tripBox ?? (view
+    ? {
+        minLat: r3(view.bounds.getSouth() - pad),
+        minLon: r3(view.bounds.getWest() - pad),
+        maxLat: r3(view.bounds.getNorth() + pad),
+        maxLon: r3(view.bounds.getEast() + pad),
+      }
+    : null)
+  const vehicleQuery = useQuery({
+    queryKey: ['vehicles', vbox],
+    queryFn: () => gql<Vehicles>(VEHICLES_QUERY, { bbox: vbox }),
+    enabled: !!vbox,
+    refetchInterval: 30_000,
+    staleTime: 25_000,
+    placeholderData: (prev) => prev,
+  })
+  const vehicles = useMemo(
+    () =>
+      (vehicleQuery.data?.vehiclePositions ?? []).filter(
+        (v): v is VehiclePosition & { latitude: number; longitude: number } =>
+          !!v &&
+          v.latitude != null &&
+          v.longitude != null &&
+          !!view &&
+          (showAll ? view.bounds.contains([v.longitude, v.latitude]) : v.trip?.tripId === trip?.tripId),
+      ),
+    [vehicleQuery.data, view, showAll, trip?.tripId],
+  )
+
+  const groups = useMemo(() => (stations.data?.stationsByRadius ?? []).filter((s) => s.routes.length > 0), [stations.data])
+
+  // Stop markers, and the dashed outline of each stop group when zoomed in
+  const { stopMarkers, outlines } = useMemo(() => {
+    const markers: HtmlMarker[] = []
+    const features: GeoJSON.Feature[] = []
+    if (!enabled) return { stopMarkers: markers, outlines: features }
+    for (const station of groups) {
+      const stops = (station.stops ?? []).filter((s) => s.lat != null && s.lon != null && (s.routes ?? []).some(Boolean))
+      if (zoom >= STOPS_ZOOM && stops.length > 0) {
+        const c = mainCategory(station.routes)
+        if (stops.length > 1) {
+          const ring = roundedHull(stops.map((s) => [s.lat!, s.lon!]), 25).map(([lat, lon]) => [lon, lat])
+          features.push({ type: 'Feature', properties: { color: c.color }, geometry: { type: 'Polygon', coordinates: [ring] } })
+        }
+        for (const s of stops) {
+          const routes = (s.routes ?? []).filter((r) => r != null)
+          const sel = selectedStop === s.stopId
+          markers.push({
+            key: `stop:${s.stopId}`,
+            at: [s.lon!, s.lat!],
+            ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true, s.headsigns ?? []) : stopIcon(routes)),
+            z: sel ? 1000 : 0,
+            onClick: () =>
+              sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`) : setSelectedStop(s.stopId),
+          })
+        }
+      } else {
+        const sel = selectedStop === station.stationId
+        markers.push({
+          key: `group:${station.stationId}`,
+          at: [station.lon, station.lat],
+          // First tap shows the card (or highlights it); tapping it again opens the stop
+          ...groupIcon(station, zoom >= BADGES_ZOOM || sel, sel),
+          z: sel ? 1000 : 0,
+          onClick: () => (sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}`) : setSelectedStop(station.stationId)),
+        })
+      }
+    }
+    return { stopMarkers: markers, outlines: features }
+  }, [enabled, groups, zoom, selectedStop, navigate])
+
+  const vehicleMarkers = useMemo<HtmlMarker[]>(
+    () =>
+      vehicles.map((v) => ({
+        key: `veh:${v.id}`,
+        at: [v.longitude, v.latitude],
+        ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
+        z: selected === v.id ? 2000 : 500,
+        // First tap: details card. Tap the same vehicle again: open its trip.
+        onClick: () => {
+          if (selected === v.id && v.trip) navigate(tripUrl(v))
+          else setSelected(v.id)
+        },
+      })),
+    [vehicles, zoom, selected, navigate],
+  )
+
+  const me = useMemo<HtmlMarker[]>(
+    () =>
+      location.coords
+        ? [
+            {
+              key: 'me',
+              at: [location.coords.lon, location.coords.lat],
+              html: '<div style="width:18px;height:18px;box-sizing:border-box;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 1px 4px rgb(0 0 0/.35)"></div>',
+              size: [18, 18],
+              z: 1500,
+            },
+          ]
+        : [],
+    [location.coords],
+  )
+
+  useGeoJson(map, 'stop-outlines', { type: 'FeatureCollection', features: outlines }, [
+    // Stop groups as a neutral grey footprint
+    { id: 'stop-outlines-fill', type: 'fill', paint: { 'fill-color': '#8e8e93', 'fill-opacity': 0.1 } },
+    { id: 'stop-outlines-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': '#8e8e93', 'line-width': 1.5, 'line-opacity': 0.5 } },
+  ])
+  // The trip: its path as a line in the line's colour, its stops as dots with the time it gets there
+  useGeoJson(
+    map,
+    'trip-path',
+    trip && trip.path.length > 1 ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: trip.path } } : null,
+    [
+      { id: 'trip-path-casing', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 9 } },
+      { id: 'trip-path', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': trip?.color ?? '#2563eb', 'line-width': 5 } },
+    ],
+  )
+  const tripStopMarkers = useMemo<HtmlMarker[]>(
+    () =>
+      (trip?.stops ?? []).map((s) => {
+        const sel = selectedTripStop === s.stopId
+        const dot = `<div style="position:absolute;left:-6px;top:-6px;width:12px;height:12px;box-sizing:border-box;border-radius:50%;background:#fff;border:3px solid ${s.strong ? '#111' : trip!.color}"></div>`
+        // Time label to the right of the dot, like a timetable on the map
+        const label = `<div style="position:absolute;left:10px;top:-9px;white-space:nowrap;font:600 11px/18px system-ui;padding:0 5px;border-radius:5px;background:rgb(255 255 255/.92);color:#111;box-shadow:0 1px 2px rgb(0 0 0/.2)">${formatTime(s.time)}</div>`
+        const card = sel
+          ? `<div style="position:absolute;left:0;top:-14px;transform:translate(-50%,-100%);padding:6px 9px;background:#fff;border-radius:10px;border:2px solid ${trip!.color};box-shadow:0 4px 12px rgb(0 0 0/.3);white-space:nowrap;font:600 13px/16px system-ui;color:#111">${s.name.replace(/[<>&"]/g, '')}<div style="font:500 11px/14px system-ui;color:#555">${formatTime(s.time)}${trip!.headsign ? ` · ▸ ${trip!.headsign.replace(/[<>&"]/g, '')}` : ''}</div></div>`
+          : ''
+        return {
+          key: `tripstop:${s.stopId}:${s.time.getTime()}`,
+          at: [s.lon, s.lat] as [number, number],
+          html: `<div style="opacity:${s.passed && !sel ? 0.5 : 1}">${dot}${label}${card}</div>`,
+          z: sel ? 3000 : 800,
+          // First tap: name, time and direction. Tap again: open the stop at this trip's time.
+          onClick: () => {
+            if (sel) {
+              const at = new Date(s.time.getTime() - 60_000).toISOString()
+              navigate(`/stations/${encodeURIComponent(s.stationId ?? s.stopId)}?from=${encodeURIComponent(s.stopId)}&trip=${encodeURIComponent(trip!.tripId)}&at=${encodeURIComponent(at)}`)
+            } else setSelectedTripStop(s.stopId)
+          },
+        }
+      }),
+    [trip, selectedTripStop, navigate],
+  )
+  const allMarkers = useMemo(() => [...stopMarkers, ...tripStopMarkers, ...vehicleMarkers, ...me], [stopMarkers, tripStopMarkers, vehicleMarkers, me])
+  useEffect(() => {
+    onVehicleCount?.(vehicleQuery.data ? vehicles.length : null)
+  }, [onVehicleCount, vehicleQuery.data, vehicles.length])
+  useMarkers(map, allMarkers)
+
+  // Keep the last known data of the tapped vehicle, so its card stays when it leaves the view
+  const [lastSelected, setLastSelected] = useState<VehiclePosition | null>(null)
+  const fresh = (vehicleQuery.data?.vehiclePositions ?? []).find((v) => v?.id === selected) ?? null
+  useEffect(() => {
+    if (fresh) setLastSelected(fresh)
+  }, [fresh])
+  const selectedVehicle = selected ? (fresh ?? (lastSelected?.id === selected ? lastSelected : null)) : null
+
+  return (
+    <div className="relative h-full w-full">
+      {/* isolate: markers' z-index stays inside the map, so cards and buttons always draw above them */}
+      <div className="absolute inset-0 isolate">
+        <div ref={container} className="h-full w-full bg-canvas" />
+      </div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('map.close')}
+          className="absolute top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-20 rounded-full bg-surface p-2.5 shadow-lg active:opacity-60"
+        >
+          <CloseIcon className="h-5 w-5" />
+        </button>
+      )}
+      {trip && (
+        <button
+          type="button"
+          onClick={() => setShowAll((v) => !v)}
+          aria-pressed={showAll}
+          className={`absolute top-[calc(env(safe-area-inset-top)+0.75rem)] left-3 z-20 rounded-full px-4 py-2.5 text-[15px] font-semibold shadow-lg active:opacity-70 ${
+            showAll ? 'bg-accent text-white' : 'bg-surface'
+          }`}
+        >
+          {showAll ? t('map.onlyThisTrip') : t('map.showEverything')}
+        </button>
+      )}
+      {selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
+      <button
+        type="button"
+        onClick={location.request}
+        aria-label={t('map.showMyLocation')}
+        className={`absolute right-4 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-surface text-accent shadow-lg active:opacity-70 ${
+          selectedVehicle ? 'bottom-[calc(env(safe-area-inset-bottom)+9.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom)+1.5rem)]'
+        }`}
+      >
+        <LocationIcon filled={!!location.coords} className={`h-5 w-5 ${location.loading ? 'animate-pulse' : ''}`} />
+      </button>
+    </div>
+  )
+}
+
+/** Details of the tapped vehicle, as an app card over the map (tap the vehicle again, or the card, to open its trip). */
+function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }) {
+  const t = useT()
+  const age = v.timestamp ? Math.max(0, Math.round((Date.now() - new Date(v.timestamp).getTime()) / 1000)) : null
+  const name = vehicleName(v.vehicleModel)
+  return (
+    <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 rounded-2xl bg-surface p-4 pr-12 shadow-xl">
+      <button type="button" onClick={onClose} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
+        <CloseIcon className="h-4 w-4" />
+      </button>
+      <div className="flex items-center gap-2">
+        {v.trip?.route && <RouteBadge route={v.trip.route} />}
+        <span className="truncate text-[17px] font-semibold">{v.trip?.headsign ?? t('map.unknownDestination')}</span>
+      </div>
+      {/* What it is, then its plate and how fresh the position is */}
+      {name && <p className="mt-1 text-[15px] font-medium">{name}</p>}
+      <p className="text-[13px] text-secondary">
+        {[
+          v.vehicleLicensePlate,
+          age != null ? (age < 60 ? t('trip.positionSecs', { n: age }) : t('trip.positionMins', { n: Math.round(age / 60) })) : t('trip.positionUnknown'),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      </p>
+      {v.trip && (
+        <Link to={tripUrl(v)} className="mt-1.5 inline-block text-[15px] font-medium text-accent active:opacity-60">
+          {t('map.openTrip')}
+        </Link>
+      )}
+    </div>
+  )
+}
+
+/** Trip page link for a vehicle; tripStartDate comes as YYYYMMDD. */
+function tripUrl(v: { trip: { tripId: string } | null; tripStartDate: string | null }) {
+  const d = v.tripStartDate
+  const date = d && /^\d{8}$/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : ''
+  return `/trips/${encodeURIComponent(v.trip!.tripId)}${date ? `?date=${date}` : ''}`
+}

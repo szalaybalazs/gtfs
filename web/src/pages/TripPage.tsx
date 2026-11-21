@@ -3,6 +3,7 @@ import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
 import Alerts from '../components/Alerts'
 import MiniMap from '../components/MiniMap'
+import TransitMap from '../components/TransitMap'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
 import { gql, TRIP_PATH_QUERY, TRIP_QUERY, type TripDetails, type TripPath, type TripStop } from '../lib/api'
@@ -156,7 +157,6 @@ export default function TripPage() {
             <section>
               <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
               <MiniMap
-                expandable
                 color={color}
                 line={tripPath?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number])}
                 points={stops
@@ -164,37 +164,34 @@ export default function TripPage() {
                   .map((s) => ({ lat: s.stop.lat!, lon: s.stop.lon!, strong: s.stop.stopId === from }))}
                 vehicle={
                   vehicle?.latitude != null && vehicle.longitude != null
-                    ? {
-                        lat: vehicle.latitude,
-                        lon: vehicle.longitude,
-                        label: route?.shortName ?? '•',
-                        bg: color,
-                        fg: hex(route?.textColor, '#ffffff'),
-                        info: (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              {route && <RouteBadge route={route} />}
-                              <span className="truncate text-[17px] font-semibold">{trip.headsign ?? stops.at(-1)?.stop.name}</span>
-                            </div>
-                            {nextIndex >= 0 && (
-                              <p className="text-[15px]">
-                                <span className="text-secondary">{t('trip.nextStop')} </span>
-                                {stops[nextIndex].stop.name} · {formatTime(new Date(stops[nextIndex].departure))}
-                              </p>
-                            )}
-                            <p className="text-[13px] text-secondary">
-                              {vehicleAge != null
-                                ? vehicleAge < 1
-                                  ? t('trip.positionSecs', { n: Math.round(vehicleAge * 60) })
-                                  : t('trip.positionMins', { n: Math.round(vehicleAge) })
-                                : t('trip.positionUnknown')}
-                              {vehicle.vehicleLicensePlate && ` · ${vehicle.vehicleLicensePlate}`}
-                            </p>
-                          </div>
-                        ),
-                      }
+                    ? { lat: vehicle.latitude, lon: vehicle.longitude, route: route ?? null, bearing: vehicle.bearing }
                     : null
                 }
+                // Full screen: the same map as the Map page, with this trip drawn on it
+                expand={(close) => (
+                  <TransitMap
+                    onClose={close}
+                    bounds={tripBounds(stops)}
+                    trip={{
+                      tripId,
+                      color,
+                      headsign: trip.headsign,
+                      path: tripPath?.coordinates ?? [],
+                      stops: stops
+                        .filter((s) => s.stop.lat != null && s.stop.lon != null)
+                        .map((s, i) => ({
+                          stopId: s.stop.stopId,
+                          stationId: s.stop.station?.stationId ?? null,
+                          name: s.stop.name ?? s.stop.stopId,
+                          lat: s.stop.lat!,
+                          lon: s.stop.lon!,
+                          time: new Date(i === stops.length - 1 ? s.arrival : s.departure),
+                          passed: nextIndex === -1 || i < nextIndex,
+                          strong: s.stop.stopId === from,
+                        })),
+                    }}
+                  />
+                )}
               />
             </section>
           </>
@@ -408,3 +405,15 @@ function TripSkeleton({ preview }: { preview: TripPreview | null }) {
   )
 }
 
+
+/** [[west, south], [east, north]] around the trip's stops */
+function tripBounds(stops: TripStop[]): [[number, number], [number, number]] | undefined {
+  const pts = stops.filter((s) => s.stop.lat != null && s.stop.lon != null)
+  if (!pts.length) return undefined
+  const lons = pts.map((s) => s.stop.lon!)
+  const lats = pts.map((s) => s.stop.lat!)
+  return [
+    [Math.min(...lons), Math.min(...lats)],
+    [Math.max(...lons), Math.max(...lats)],
+  ]
+}
