@@ -22,6 +22,32 @@ export const ROUTE_TYPES: Record<number, string> = {
   12: "MONORAIL",
 };
 
+/**
+ * Maps a basic or extended (Google/HVT, 100-1700) GTFS route_type to a basic RouteType name.
+ * Volán / MÁV feeds use extended codes (e.g. 200 coach, 700 bus), which the basic table misses.
+ */
+export function routeTypeName(t: number | null | undefined): string | undefined {
+  if (t == null) return undefined;
+  if (ROUTE_TYPES[t]) return ROUTE_TYPES[t];
+  if (t >= 100 && t < 200) return "RAIL";
+  if (t >= 200 && t < 300) return "BUS"; // coach
+  if (t >= 300 && t < 400) return "RAIL"; // suburban railway
+  if (t >= 400 && t < 500) return t === 401 || t === 402 ? "SUBWAY" : "RAIL"; // urban rail / metro
+  if (t >= 500 && t < 600) return "SUBWAY"; // metro
+  if (t >= 600 && t < 700) return "SUBWAY"; // underground
+  if (t === 800) return "TROLLEYBUS";
+  if (t >= 700 && t < 800) return "BUS";
+  if (t >= 900 && t < 1000) return "TRAM";
+  if (t >= 1000 && t < 1100) return "FERRY"; // water
+  if (t >= 1100 && t < 1200) return "BUS"; // air: no better category
+  if (t === 1200) return "FERRY";
+  if (t === 1300) return "AERIAL_LIFT";
+  if (t === 1400) return "FUNICULAR";
+  if (t >= 1500 && t < 1600) return "BUS"; // taxi
+  if (t >= 1700) return "BUS";
+  return undefined;
+}
+
 export type eRouteType = keyof typeof ROUTE_TYPES;
 
 // 0 (or empty) - Stop (or Platform). A location where passengers board or disembark from a transit vehicle. Is called a platform when defined within a parent_station.

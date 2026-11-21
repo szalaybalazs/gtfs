@@ -15,7 +15,6 @@ import AlertsPage from './pages/AlertsPage'
 import LinesPage from './pages/LinesPage'
 import RoutesPage from './pages/RoutesPage'
 import SettingsPage from './pages/SettingsPage'
-import StationLinesPage from './pages/StationLinesPage'
 import StationPage from './pages/StationPage'
 import StopPage from './pages/StopPage'
 import StopsPage from './pages/StopsPage'
@@ -47,7 +46,6 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/stops" element={<StopsPage />} />
             <Route path="/stops/:stopId" element={<StopPage />} />
             <Route path="/stations/:stationId" element={<StationPage />} />
-            <Route path="/stations/:stationId/lines" element={<StationLinesPage />} />
             <Route path="/trips/:tripId" element={<TripPage />} />
             <Route path="/nearby" element={<NearbyPage />} />
             <Route path="/map" element={<MapPage />} />

@@ -6,13 +6,13 @@ import { REFRESH_MS } from './useTimetable'
 /** Next departures from any of the stops, across all routes. */
 export function useDepartures(
   stopIds: string[],
-  { limit = 20, enabled = true, after = null as Date | null, routeIds = null as string[] | null, arrivals = false } = {},
+  { limit = 20, enabled = true, after = null as Date | null, routeIds = null as string[] | null, arrivals = false, perLine = null as number | null } = {},
 ) {
   const ids = [...stopIds].sort()
   const afterIso = after?.toISOString() ?? null
   return useQuery({
-    queryKey: ['departures', ids, routeIds, limit, afterIso, arrivals],
-    queryFn: () => gql<Departures>(DEPARTURES_QUERY, { stopIds: ids, routeIds, limit, after: afterIso, arrivals }),
+    queryKey: ['departures', ids, routeIds, limit, afterIso, arrivals, perLine],
+    queryFn: () => gql<Departures>(DEPARTURES_QUERY, { stopIds: ids, routeIds, limit, after: afterIso, arrivals, perLine }),
     enabled: enabled && ids.length > 0,
     refetchInterval: REFRESH_MS,
     placeholderData: (prev) => prev,

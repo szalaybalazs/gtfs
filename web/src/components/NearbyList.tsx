@@ -56,7 +56,7 @@ export default function NearbyList({ limit }: { limit?: number }) {
         <ul>
           {/* Same rows as All stops: the group (opens its lines: pick a line, then a direction) with its platforms under it */}
           {shown.map(({ station, distance }) => (
-            <StationRow key={station.stationId} station={station} distance={distance} groupTo={`/stations/${encodeURIComponent(station.stationId)}/lines`} />
+            <StationRow key={station.stationId} station={station} distance={distance} />
           ))}
         </ul>
       )}

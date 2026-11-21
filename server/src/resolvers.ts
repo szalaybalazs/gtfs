@@ -2,7 +2,7 @@ import { GraphQLDate, GraphQLDateTime, GraphQLTime } from "graphql-scalars";
 import {
   BIKES_ALLOWED,
   LOCATION_TYPES,
-  ROUTE_TYPES,
+  routeTypeName,
   WHEELCHAIR_BOARDING,
 } from "./constants";
 import { db, generation } from "./db";
@@ -91,7 +91,7 @@ const formatRoute = (r: any) => {
     shortName: trainLabel(r),
     longName: r.route_long_name,
     desc: r.route_desc,
-    type: ROUTE_TYPES[r.route_type],
+    type: routeTypeName(r.route_type),
     url: r.route_url,
     color: r.route_color,
     textColor: r.route_text_color,
@@ -789,12 +789,14 @@ export const resolvers = {
         hours = 3,
         after,
         arrivals = false,
-      }: { stopIds: string[]; routeIds?: string[]; limit: number; hours: number; after?: Date; arrivals?: boolean }
+        perLine,
+      }: { stopIds: string[]; routeIds?: string[]; limit: number; hours: number; after?: Date; arrivals?: boolean; perLine?: number }
     ) => {
       // Client-controlled sizes are clamped so one request can't do unbounded work
       stopIds = stopIds.slice(0, 60);
       if (routeIds?.length) routeIds = expandRoutes(routeIds.slice(0, 60));
-      limit = Math.min(Math.max(1, limit), 200);
+      limit = Math.min(Math.max(1, limit), perLine ? 400 : 200);
+      if (perLine) perLine = Math.min(Math.max(1, perLine), 10);
       hours = Math.min(Math.max(1, hours), 6);
       if (stopIds.length === 0) return [];
       await ensureRealtime();
@@ -871,6 +873,16 @@ export const resolvers = {
           return t >= from && t <= to;
         })
         .sort((a, b) => a.departure.at.getTime() - b.departure.at.getTime())
+        // Board mode: only the next few of each line + direction, so rare lines still show
+        .filter(
+          ((seen) => ({ r }: { r: any }) => {
+            if (!perLine) return true;
+            const key = `${canonicalRoute(r.route_id)}|${cleanHeadsign(r.trip_headsign)}`;
+            const n = (seen.get(key) ?? 0) + 1;
+            seen.set(key, n);
+            return n <= perLine;
+          })(new Map<string, number>())
+        )
         .slice(0, limit)
         .map(({ r, arrival, departure }) => ({
           tripId: r.trip_id,

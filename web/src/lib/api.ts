@@ -254,8 +254,8 @@ export type Departure = {
 export type Departures = { departures: Departure[] }
 
 export const DEPARTURES_QUERY = /* GraphQL */ `
-  query Departures($stopIds: [ID!]!, $routeIds: [ID!], $limit: Int, $hours: Int, $after: DateTime, $arrivals: Boolean) {
-    departures(stopIds: $stopIds, routeIds: $routeIds, limit: $limit, hours: $hours, after: $after, arrivals: $arrivals) {
+  query Departures($stopIds: [ID!]!, $routeIds: [ID!], $limit: Int, $hours: Int, $after: DateTime, $arrivals: Boolean, $perLine: Int) {
+    departures(stopIds: $stopIds, routeIds: $routeIds, limit: $limit, hours: $hours, after: $after, arrivals: $arrivals, perLine: $perLine) {
       tripId serviceDate stopId headsign arrival departure arrivalDelay departureDelay
       realtime wheelchairAccessible bikesAllowed frontDoor onRequest terminates
       route { ${ROUTE_REF} }

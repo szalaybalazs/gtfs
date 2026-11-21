@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from 'react-router'
 import AfterFilter, { useAfter } from '../components/AfterFilter'
 import Alerts from '../components/Alerts'
 import Departures, { MoreButton } from '../components/Departures'
+import LineBoard from '../components/LineBoard'
 import NavBar from '../components/NavBar'
 import StationStops from '../components/StationStops'
 import StopInfoCard from '../components/StopInfoCard'
@@ -105,12 +106,14 @@ export default function StationPage() {
   // Arrivals too: always on a terminus platform (nothing departs there), otherwise via the switch
   const terminus = !!fromPlatform && (fromPlatform.headsigns ?? []).length === 0 && (fromPlatform.routes ?? []).some(Boolean)
   const arrivals = terminus || params.get('arrivals') === '1'
+  // A whole stop group shows a board (one row per line + direction) unless "Time order" is on
+  const board = !from && !multi && params.get('view') !== 'time'
   // A single platform always asks for arrivals (we don't know yet if it's a terminus when the request
   // starts, in parallel with the stop group); rows that end here are dropped below unless wanted
-  const departures = useDepartures(ids, { limit: fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
+  const departures = useDepartures(ids, { perLine: board ? 3 : null, limit: board ? 300 : fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null, arrivals: arrivals || !!from })
   const shownDepartures = useMemo(
-    () => (departures.data?.departures ?? []).filter((d) => arrivals || !d.terminates),
-    [departures.data, arrivals],
+    () => (departures.data?.departures ?? []).filter((d) => (arrivals && !board) || !d.terminates),
+    [departures.data, arrivals, board],
   )
   useEffect(() => setFetched(departures.data?.departures), [departures.data])
 
@@ -203,7 +206,27 @@ export default function StationPage() {
                     stopIds={ids}
                     routeIds={multi ? lineIds : null}
                     extra={
-                      !terminus && (
+                      <>
+                      {!from && !multi && (
+                        <button
+                          type="button"
+                          aria-pressed={!board}
+                          onClick={() =>
+                            setParams(
+                              (p) => {
+                                if (board) p.set('view', 'time')
+                                else p.delete('view')
+                                return p
+                              },
+                              { replace: true },
+                            )
+                          }
+                          className={`rounded-full px-2.5 py-0.5 text-[13px] font-medium ${!board ? 'bg-accent text-white' : 'bg-fill'}`}
+                        >
+                          {t('departures.timeOrder')}
+                        </button>
+                      )}
+                      {!terminus && !board && (
                         <button
                           type="button"
                           aria-pressed={arrivals}
@@ -221,12 +244,14 @@ export default function StationPage() {
                         >
                           {t('departures.showArrivals')}
                         </button>
-                      )
+                      )}
+                      </>
                     }
                   />
                 }
+                board={board && shownDepartures.length > 0 ? <LineBoard departures={shownDepartures} stationPath={`/stations/${encodeURIComponent(station.stationId)}`} /> : undefined}
                 show={limit}
-                footer={(departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
+                footer={!board && (departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}

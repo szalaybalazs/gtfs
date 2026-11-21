@@ -1,4 +1,4 @@
-import { ROUTE_TYPES } from "../constants";
+import { routeTypeName } from "../constants";
 
 /**
  * The map's Lines layer: every BKK line's path, one per direction (the shape
@@ -31,7 +31,7 @@ export function buildRouteLines(all: All): { type: string; feature: any }[] {
     );
     if (pts.length < 2) continue;
     const coords = simplify(pts, 0.00008).map(([x, y]) => [Math.round(x * 1e5) / 1e5, Math.round(y * 1e5) / 1e5]);
-    const type = ROUTE_TYPES[r.route_type] ?? "BUS";
+    const type = routeTypeName(r.route_type) ?? "BUS";
     out.push({
       type,
       feature: {

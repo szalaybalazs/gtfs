@@ -31,7 +31,10 @@ export default function Departures({
   show,
   includePast = false,
   highlightTrip,
+  board,
 }: {
+  /** Replaces the row list (e.g. the per-line board), keeping the toolbar, loading and error states */
+  board?: ReactNode
   // includePast also means "not live": departed rows stay (faded) instead of collapsing away
   /** Keep departures that already left (after "⋯ Earlier"); shown greyed */
   includePast?: boolean
@@ -89,6 +92,8 @@ export default function Departures({
               </button>
             )}
           </p>
+        ) : board ? (
+          board
         ) : upcoming.length === 0 ? (
           <p className="p-6 text-center text-secondary">{empty ?? t('departures.empty')}</p>
         ) : (
