@@ -163,7 +163,7 @@ export default function TripPage() {
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
                 {stops.map((s, i) => (i >= 1 && i <= hiddenPassed ? (i === 1 ? <li key="fold">
                       <button type="button" onClick={() => setShowAllPassed(true)} className={`flex w-full items-center pr-3 text-left active:bg-fill ${referenceTime != null ? 'pl-2' : ''}`}>
-                        {referenceTime != null && <span className="w-[3.5ch] shrink-0" />}
+                        {referenceTime != null && <span className="w-[3.5ch] shrink-0 font-mono text-[13px]" aria-hidden />}
                         {/* The line, dotted where stops are folded away */}
                         <span className="relative mr-1.5 flex h-10 w-7 shrink-0 justify-center">
                           <span
