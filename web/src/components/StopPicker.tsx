@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Stop } from '../lib/api'
+import { useT } from '../lib/i18n'
 import { score } from '../lib/search'
 import { CheckIcon, SearchIcon, UpDownIcon } from './Icons'
 
@@ -18,6 +19,7 @@ export default function StopPicker({
   color: string
   onChange: (stopId: string) => void
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const selectedRef = useRef<HTMLLIElement>(null)
@@ -41,7 +43,7 @@ export default function StopPicker({
         }}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill"
       >
-        <span className="text-secondary">From</span>
+        <span className="text-secondary">{t('picker.from')}</span>
         <span className="min-w-0 flex-1 truncate font-medium">{value.name}</span>
         <UpDownIcon className="h-4 w-4 shrink-0 text-secondary" />
       </button>
@@ -51,16 +53,16 @@ export default function StopPicker({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Choose a stop"
+            aria-label={t('picker.choose')}
             className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-t-3xl bg-canvas pb-[env(safe-area-inset-bottom)] shadow-2xl sm:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 pb-2">
               <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-separator sm:hidden" aria-hidden />
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-xl font-bold">From</h2>
+                <h2 className="text-xl font-bold">{t('picker.from')}</h2>
                 <button type="button" onClick={() => setOpen(false)} className="text-[17px] font-medium text-accent">
-                  Done
+                  {t('common.done')}
                 </button>
               </div>
               <div className="flex h-9 items-center gap-1.5 rounded-[10px] bg-fill px-2 text-secondary">
@@ -68,7 +70,7 @@ export default function StopPicker({
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search stops"
+                  placeholder={t('search.stops')}
                   className="w-full bg-transparent text-[17px] text-label outline-none placeholder:text-secondary"
                 />
               </div>
@@ -101,7 +103,7 @@ export default function StopPicker({
                   </li>
                 )
               })}
-              {shown.length === 0 && <li className="p-6 text-center text-secondary">No stop matches “{q}”.</li>}
+              {shown.length === 0 && <li className="p-6 text-center text-secondary">{t('search.noStopMatch', { q })}</li>}
             </ol>
           </div>
         </div>

@@ -1,3 +1,5 @@
+import type { MessageKey } from './i18n'
+
 /** How a time relates to the schedule, for colouring it. */
 export type RealtimeStatus = 'scheduled' | 'onTime' | 'early' | 'late'
 
@@ -16,9 +18,10 @@ export const statusColor: Record<RealtimeStatus, string> = {
   late: 'text-late',
 }
 
-export const statusLabel: Record<RealtimeStatus, string> = {
-  scheduled: 'Scheduled',
-  onTime: 'Live, on time',
-  early: 'Live, early',
-  late: 'Live, late',
+/** i18n keys: t(statusLabel[status]) */
+export const statusLabel: Record<RealtimeStatus, MessageKey> = {
+  scheduled: 'status.scheduled',
+  onTime: 'status.onTime',
+  early: 'status.early',
+  late: 'status.late',
 }

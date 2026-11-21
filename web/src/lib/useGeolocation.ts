@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useT } from './i18n'
 
 export type Coords = { lat: number; lon: number }
 
+type Failure = { code: 'unsupported' | 'denied' | 'timeout' | 'unavailable'; detail?: string }
+
 type State = {
   coords: Coords | null
-  error: string | null
+  failure: Failure | null
   loading: boolean
 }
 
@@ -14,27 +17,28 @@ type State = {
  * called.
  */
 export function useGeolocation(auto = false) {
-  const [state, setState] = useState<State>({ coords: null, error: null, loading: false })
+  const t = useT()
+  const [state, setState] = useState<State>({ coords: null, failure: null, loading: false })
 
   const request = useCallback(() => {
     if (!('geolocation' in navigator)) {
-      setState((s) => ({ ...s, error: 'Location is not available in this browser' }))
+      setState((s) => ({ ...s, failure: { code: 'unsupported' } }))
       return
     }
-    setState((s) => ({ ...s, loading: true, error: null }))
+    setState((s) => ({ ...s, loading: true, failure: null }))
     const ok = (pos: GeolocationPosition) =>
-      setState({ coords: { lat: pos.coords.latitude, lon: pos.coords.longitude }, error: null, loading: false })
+      setState({ coords: { lat: pos.coords.latitude, lon: pos.coords.longitude }, failure: null, loading: false })
     const fail = (err: GeolocationPositionError) =>
       setState((s) => ({
         ...s,
         loading: false,
         // Distinguish the cases: home screen apps on iOS often fail with a timeout, not a denial
-        error:
+        failure:
           err.code === err.PERMISSION_DENIED
-            ? 'Location access is not allowed'
+            ? { code: 'denied' }
             : err.code === err.TIMEOUT
-              ? 'Location timed out (no GPS fix yet)'
-              : `Location unavailable${err.message ? `: ${err.message}` : ''}`,
+              ? { code: 'timeout' }
+              : { code: 'unavailable', detail: err.message || undefined },
       }))
     // High accuracy first; iOS home screen apps frequently time out or report
     // "unavailable" with it, so fall back to a coarse fix before giving up.
@@ -52,5 +56,12 @@ export function useGeolocation(auto = false) {
     if (auto) request()
   }, [auto, request])
 
-  return { ...state, request }
+  // Message in the current language, worked out at render so it follows a language switch
+  const f = state.failure
+  const error = !f
+    ? null
+    : f.code === 'unavailable' && f.detail
+      ? t('geo.unavailableDetail', { detail: f.detail })
+      : t(`geo.${f.code}`)
+  return { coords: state.coords, loading: state.loading, error, denied: f?.code === 'denied', request }
 }

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import './index.css'
 import Layout from './components/Layout'
+import { initLocale } from './lib/i18n'
 import { applyTheme } from './lib/theme'
 import HomePage from './pages/HomePage'
 import MapPage from './pages/MapPage'
@@ -20,6 +21,7 @@ import TripPage from './pages/TripPage'
 import UxMapPage from './pages/UxMapPage'
 
 applyTheme()
+initLocale()
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import type { TFunction } from './i18n'
 
 /** How favourites show times: relative ("3'", "45s") or absolute ("13:05"). Kept in this browser. */
 export type TimeMode = 'relative' | 'absolute'
@@ -35,7 +36,7 @@ export function useTimeMode(): [TimeMode, (m: TimeMode) => void] {
 }
 
 /** "45s" under a minute, otherwise whole minutes with an apostrophe: "3'". */
-export function shortRelative(seconds: number) {
+export function shortRelative(seconds: number, t: TFunction) {
   const s = Math.max(0, Math.round(seconds))
-  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}'`
+  return s < 60 ? t('short.seconds', { n: s }) : t('short.minutes', { n: Math.floor(s / 60) })
 }

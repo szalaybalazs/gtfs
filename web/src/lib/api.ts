@@ -201,6 +201,7 @@ export type VehiclePosition = {
   vehicleId: string | null
   vehicleLicensePlate: string | null
   tripStartDate: string | null
+  timestamp?: string | null
   trip: { tripId: string; headsign: string | null; route: RouteRef | null } | null
 }
 
@@ -213,7 +214,7 @@ export const VEHICLES_QUERY = /* GraphQL */ `
       latitude
       longitude
       bearing
-      vehicleLabel vehicleId vehicleLicensePlate tripStartDate
+      vehicleLabel vehicleId vehicleLicensePlate tripStartDate timestamp
       trip { tripId headsign route { routeId shortName color textColor type } }
     }
   }

@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router'
+import { useT } from '../lib/i18n'
 import { GridIcon, ListIcon } from './Icons'
 
 export type View = 'departures' | 'timetable'
@@ -21,13 +22,14 @@ export function useView(): [View, (v: View) => void] {
 
 /** Nav bar button: shows the icon of the view you'd switch to (grid = timetable, list = departures). */
 export default function ViewToggle() {
+  const t = useT()
   const [view, setView] = useView()
   const next: View = view === 'departures' ? 'timetable' : 'departures'
   return (
     <button
       type="button"
       onClick={() => setView(next)}
-      aria-label={next === 'timetable' ? 'Show timetable' : 'Show departures'}
+      aria-label={next === 'timetable' ? t('view.showTimetable') : t('view.showDepartures')}
       className="rounded-md p-2 active:opacity-50"
     >
       {next === 'timetable' ? <GridIcon className="h-6 w-6" /> : <ListIcon className="h-6 w-6" />}

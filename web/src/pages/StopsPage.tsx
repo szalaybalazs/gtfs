@@ -5,6 +5,7 @@ import NavBar from '../components/NavBar'
 import SearchInput from '../components/SearchInput'
 import StationRow from '../components/StationRow'
 import { gql, STATIONS_QUERY, type StationsPage } from '../lib/api'
+import { useT } from '../lib/i18n'
 import { score } from '../lib/search'
 import { rank } from '../lib/usage'
 
@@ -12,6 +13,7 @@ const PAGE_SIZE = 20
 
 /** Every stop group, searchable by name, loaded page by page. */
 export default function StopsPage() {
+  const t = useT()
   const [params, setParams] = useSearchParams()
   const search = params.get('q') ?? ''
   // Debounce typing so each keystroke doesn't hit the API
@@ -54,10 +56,10 @@ export default function StopsPage() {
 
   return (
     <div className="min-h-dvh">
-      <NavBar title="All stops" menu>
+      <NavBar title={t('nav.allStops')} menu>
         <div className="pb-2">
           <SearchInput
-            placeholder="Search stops"
+            placeholder={t('search.stops')}
             value={search}
             onChange={(v) =>
               setParams(
@@ -75,9 +77,9 @@ export default function StopsPage() {
       <main className="mx-auto max-w-2xl px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load stops.{' '}
+            {t('nearby.loadError')}{' '}
             <button type="button" className="font-medium text-accent" onClick={() => query.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
@@ -89,9 +91,9 @@ export default function StopsPage() {
           </ul>
         )}
         {!query.isPending && !query.isError && stations.length === 0 && !hasNextPage && (
-          <p className="p-6 text-center text-secondary">No stops match “{debounced}”.</p>
+          <p className="p-6 text-center text-secondary">{t('search.noStopMatch', { q: debounced })}</p>
         )}
-        {(query.isPending || isFetchingNextPage) && <p className="p-6 text-center text-sm text-secondary">Loading…</p>}
+        {(query.isPending || isFetchingNextPage) && <p className="p-6 text-center text-sm text-secondary">{t('common.loading')}</p>}
         <div ref={sentinel} />
       </main>
     </div>

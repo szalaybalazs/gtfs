@@ -5,6 +5,7 @@ import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
 import { gql, ROUTE_QUERY, SHARED_STATIONS_QUERY, type RouteDetails, type RouteRef, type SharedStation, type SharedStations } from '../lib/api'
 import { formatDistance } from '../lib/geo'
+import { useT, type TFunction } from '../lib/i18n'
 import { useGeolocation } from '../lib/useGeolocation'
 
 export const linesUrl = (routeIds: string[]) => `/lines?ids=${routeIds.map(encodeURIComponent).join(',')}`
@@ -21,6 +22,7 @@ export const stationLinesUrl = (stationId: string, routeIds: string[]) =>
  * board then shows all of them, and tapping a platform narrows it.
  */
 export default function LinesPage() {
+  const t = useT()
   const [params] = useSearchParams()
   const ids = (params.get('ids') ?? '').split(',').filter(Boolean).slice(0, 12)
   const location = useGeolocation(true)
@@ -53,7 +55,7 @@ export default function LinesPage() {
 
   return (
     <div className="min-h-dvh">
-      <NavBar title="Shared stops" back={{ label: 'Routes' }} />
+      <NavBar title={t('lines.title')} back={{ label: t('nav.routes') }} />
       <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         <div className="flex flex-wrap gap-1.5 rounded-2xl bg-surface p-4">
           {routes.map((r) => (
@@ -62,31 +64,32 @@ export default function LinesPage() {
           {routes.length === 0 && <span className="text-secondary">…</span>}
         </div>
 
-        {ids.length < 2 && <p className="p-6 text-center text-secondary">Pick at least two lines on the Routes page (long-press a line).</p>}
+        {ids.length < 2 && <p className="p-6 text-center text-secondary">{t('lines.pickTwo')}</p>}
         {query.isPending && ids.length >= 2 && <div className="h-40 animate-pulse rounded-2xl bg-surface" />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load shared stops.{' '}
+            {t('lines.loadError')}{' '}
             <button type="button" className="font-medium text-accent" onClick={() => query.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
 
         {query.isSuccess && shared.length === 0 && (
-          <p className="p-6 text-center text-secondary">These lines never stop at the same place, so they can't share a departures board.</p>
+          <p className="p-6 text-center text-secondary">{t('lines.never')}</p>
         )}
 
         {all.length > 0 && (
-          <Section title={lineCount === 2 ? 'Both lines stop at' : `All ${lineCount} lines stop at`} items={all} />
+          <Section title={lineCount === 2 ? t('lines.bothStopAt') : t('lines.allStopAt', { n: lineCount })} items={all} />
         )}
-        {some.length > 0 && <Section title={all.length ? 'Some of the lines' : 'Only some of the lines meet'} items={some} showLines />}
+        {some.length > 0 && <Section title={all.length ? t('lines.someOfLines') : t('lines.onlySomeMeet')} items={some} showLines />}
       </main>
     </div>
   )
 }
 
 function Section({ title, items, showLines }: { title: string; items: SharedStation[]; showLines?: boolean }) {
+  const t = useT()
   return (
     <section>
       <h2 className="px-1 pb-2 text-xl font-bold">{title}</h2>
@@ -99,7 +102,7 @@ function Section({ title, items, showLines }: { title: string; items: SharedStat
                   {station.name}
                   {distance != null && <span className="ml-2 font-normal text-secondary">{formatDistance(distance)}</span>}
                 </p>
-                <p className="truncate text-[13px] text-secondary">{platformNote(station.stops ?? [], routes)}</p>
+                <p className="truncate text-[13px] text-secondary">{platformNote(station.stops ?? [], routes, t)}</p>
                 {showLines && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {routes.map((r) => (
@@ -118,10 +121,10 @@ function Section({ title, items, showLines }: { title: string; items: SharedStat
 }
 
 /** "Same platform" when one platform serves every line, else how many stops they're spread over */
-function platformNote(stops: NonNullable<SharedStation['station']['stops']>, routes: RouteRef[]) {
+function platformNote(stops: NonNullable<SharedStation['station']['stops']>, routes: RouteRef[], t: TFunction) {
   const ids = new Set(routes.map((r) => r.routeId))
   const used = stops.filter((s) => (s.routes ?? []).some((r) => r && ids.has(r.routeId)))
   const together = used.some((s) => routes.every((r) => (s.routes ?? []).some((x) => x?.routeId === r.routeId)))
-  if (together) return 'Same platform'
-  return `Different platforms · ${used.length} stops in this group`
+  if (together) return t('lines.samePlatform')
+  return t('lines.differentPlatforms', { n: used.length })
 }

@@ -13,6 +13,7 @@ import StopInfoCard from '../components/StopInfoCard'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { recordVisit } from '../lib/usage'
 import { useDepartures } from '../lib/useDepartures'
+import { useT } from '../lib/i18n'
 
 /**
  * A stop group (e.g. Széll Kálmán tér): every line at the top, departures
@@ -20,6 +21,7 @@ import { useDepartures } from '../lib/useDepartures'
  * then a small map. `:stationId` may also be any platform's stop id.
  */
 export default function StationPage() {
+  const t = useT()
   const { stationId = '' } = useParams()
   const [params, setParams] = useSearchParams()
   const from = params.get('from')
@@ -90,14 +92,14 @@ export default function StationPage() {
   return (
     <div className="min-h-dvh">
       <NavBar
-        back={{ label: 'Back' }}
+        back={{ label: t('common.back') }}
         trailing={
           <>
             {favoriteOptions.length > 0 && (
               <button
               type="button"
               onClick={() => setSheet(true)}
-              aria-label="Favourites"
+              aria-label={t('common.favourites')}
               className={`rounded-md p-2 active:opacity-50 ${favorite ? 'text-accent' : 'text-label'}`}
             >
               <StarIcon filled={favorite} className="h-6 w-6" />
@@ -110,9 +112,9 @@ export default function StationPage() {
         {query.isPending && <div className="h-32 animate-pulse rounded-2xl bg-surface" />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load this stop.{' '}
+            {t('station.loadError')}{' '}
             <button type="button" className="font-medium text-accent" onClick={() => query.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
@@ -124,8 +126,8 @@ export default function StationPage() {
                 name={station.name}
                 note={
                   platforms.length > 1
-                    ? `${platforms.length} stops here, usually one per direction · tap one below to narrow`
-                    : 'All these lines leave from the same platform'
+                    ? t('station.platformsNote', { n: platforms.length })
+                    : t('station.samePlatform')
                 }
                 routes={selectedLines}
               />
@@ -139,7 +141,7 @@ export default function StationPage() {
             ) : (
               <StopInfoCard
                 name={station.name}
-                note={`${platforms.length} stop${platforms.length === 1 ? '' : 's'} in this group · tap one below to narrow the departures`}
+                note={t('station.groupNote', { n: platforms.length })}
                 routes={station.routes}
               />
             )}

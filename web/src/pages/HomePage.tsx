@@ -5,25 +5,27 @@ import NearbyList from '../components/NearbyList'
 import RouteTile from '../components/RouteTile'
 import TimeModeMenu from '../components/TimeModeMenu'
 import { useFavorites } from '../lib/favorites'
+import { useT } from '../lib/i18n'
 
 export default function HomePage() {
+  const t = useT()
   const { favorites, lines, lineStops, stops, multiLines } = useFavorites()
   return (
     <div className="min-h-dvh">
-      <NavBar title="Home" menu trailing={<TimeModeMenu />} />
+      <NavBar title={t('nav.home')} menu trailing={<TimeModeMenu />} />
       <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {favorites.length === 0 && (
           <p className="rounded-2xl bg-surface p-4 text-secondary">
-            Tap the star on a line or a stop to pin it here.{' '}
+            {t('home.empty')}{' '}
             <Link to="/routes" className="font-medium text-accent">
-              Browse lines
+              {t('home.browseLines')}
             </Link>
           </p>
         )}
 
         {lines.length > 0 && (
           <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">Lines</h2>
+            <h2 className="px-1 pb-2 text-xl font-bold">{t('home.lines')}</h2>
             <div className="flex flex-wrap gap-2">
               {lines.map((f) => (
                 <RouteTile key={f.id} route={f.route} compact />
@@ -34,7 +36,7 @@ export default function HomePage() {
 
         {(lineStops.length > 0 || multiLines.length > 0) && (
           <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">Lines from stops</h2>
+            <h2 className="px-1 pb-2 text-xl font-bold">{t('home.linesFromStops')}</h2>
             <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
               {lineStops.map((f) => (
                 <li key={f.id}>
@@ -52,7 +54,7 @@ export default function HomePage() {
 
         {stops.length > 0 && (
           <section>
-            <h2 className="px-1 pb-2 text-xl font-bold">Stops</h2>
+            <h2 className="px-1 pb-2 text-xl font-bold">{t('home.stops')}</h2>
             <ul className="divide-y divide-separator overflow-hidden rounded-2xl bg-surface">
               {stops.map((f) => (
                 <li key={f.id}>
@@ -65,9 +67,9 @@ export default function HomePage() {
 
         <section>
           <div className="flex items-baseline justify-between px-1 pb-2">
-            <h2 className="text-xl font-bold">Nearby stops</h2>
+            <h2 className="text-xl font-bold">{t('home.nearbyStops')}</h2>
             <Link to="/nearby" className="text-[15px] font-medium text-accent">
-              See all
+              {t('home.seeAll')}
             </Link>
           </div>
           <NearbyList radius={500} limit={5} />

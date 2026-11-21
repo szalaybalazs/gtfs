@@ -1,4 +1,5 @@
 import type { RouteRef } from '../lib/api'
+import { useT } from '../lib/i18n'
 import RouteBadge from './RouteBadge'
 
 /**
@@ -18,14 +19,14 @@ export default function StopInfoCard({
   routes: RouteRef[]
   note?: string
 }) {
+  const t = useT()
   return (
     <section className="rounded-2xl bg-surface p-4">
       {id && <p className="font-mono text-[13px] font-semibold text-secondary">#{id}</p>}
       <h1 className="text-2xl leading-tight font-bold">{name}</h1>
       {headsigns && headsigns.length > 0 && (
-        <p className="mt-1 text-[15px]">
-          <span className="text-secondary">towards </span>
-          <span className="font-medium">{headsigns.join(' / ')}</span>
+        <p className="mt-1 text-[15px] text-secondary">
+          {t.rich('common.towards', { to: <span className="font-medium text-label">{headsigns.join(' / ')}</span> })}
         </p>
       )}
       {note && <p className="mt-1 text-[13px] text-secondary">{note}</p>}

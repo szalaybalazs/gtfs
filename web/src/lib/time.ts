@@ -1,3 +1,5 @@
+import { getLocale, intlLocale, translate } from './i18n'
+
 // Timetables are shown in the feed's local time regardless of where the
 // viewer is.
 export const TIME_ZONE = 'Europe/Budapest'
@@ -36,8 +38,14 @@ export function formatTime(date: Date) {
 
 export function formatDelay(seconds: number) {
   const minutes = Math.round(seconds / 60)
-  if (minutes === 0) return 'on time'
-  return minutes > 0 ? `${minutes} min late` : `${-minutes} min early`
+  const locale = getLocale()
+  if (minutes === 0) return translate(locale, 'delay.onTime')
+  return minutes > 0 ? translate(locale, 'delay.late', { n: minutes }) : translate(locale, 'delay.early', { n: -minutes })
+}
+
+/** Short day in the UI language and Budapest time: "18 Nov" / "nov. 18." */
+export function formatShortDate(date: Date) {
+  return date.toLocaleDateString(intlLocale(), { month: 'short', day: 'numeric', timeZone: TIME_ZONE })
 }
 
 const secondsFormatter = new Intl.DateTimeFormat('en-GB', {

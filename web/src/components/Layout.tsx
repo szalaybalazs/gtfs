@@ -1,23 +1,29 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigationType } from 'react-router'
+import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router'
 import { CATEGORIES } from '../lib/categories'
+import { useT, type MessageKey } from '../lib/i18n'
 import CategoryIcon from './CategoryIcon'
 import { BusIcon, CloseIcon, GearIcon, HomeIcon, MapIcon, PinIcon } from './Icons'
 
 const MenuContext = createContext<() => void>(() => {})
 export const useOpenMenu = () => useContext(MenuContext)
 
-const LINKS: { to: string; label: string; icon: ReactNode }[] = [
-  { to: '/', label: 'Home', icon: <HomeIcon className="h-5 w-5" /> },
-  { to: '/routes', label: 'Routes', icon: <BusIcon className="h-5 w-5" /> },
-  { to: '/stops', label: 'All stops', icon: <PinIcon className="h-5 w-5" /> },
-  { to: '/nearby', label: 'Nearby', icon: <PinIcon className="h-5 w-5" /> },
-  { to: '/map', label: 'Map', icon: <MapIcon className="h-5 w-5" /> },
-  { to: '/settings', label: 'Settings', icon: <GearIcon className="h-5 w-5" /> },
+const LINKS: { to: string; label: MessageKey; icon: ReactNode }[] = [
+  { to: '/', label: 'nav.home', icon: <HomeIcon className="h-5 w-5" /> },
+  { to: '/routes', label: 'nav.routes', icon: <BusIcon className="h-5 w-5" /> },
+  { to: '/stops', label: 'nav.allStops', icon: <PinIcon className="h-5 w-5" /> },
+  { to: '/nearby', label: 'nav.nearby', icon: <PinIcon className="h-5 w-5" /> },
+  { to: '/map', label: 'nav.map', icon: <MapIcon className="h-5 w-5" /> },
+  { to: '/settings', label: 'nav.settings', icon: <GearIcon className="h-5 w-5" /> },
 ]
+
+const TOP_LEVEL = new Set(LINKS.map((l) => l.to))
+const standalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
 
 /** App shell: page content plus a slide-in side menu. */
 export default function Layout() {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const activeType = location.pathname === '/routes' ? new URLSearchParams(location.search).get('type') : null
@@ -39,14 +45,20 @@ export default function Layout() {
     if (page.dir === 'forward') window.scrollTo(0, 0)
   }, [page])
 
-  // Swipe right from the left edge opens the menu, swipe left closes it (home screen apps have no browser gestures)
+  // Left-edge swipe, the usual split: on a top-level page (Home, Routes, …) it
+  // opens the menu; on any deeper page it goes back, like iOS. Only in the home
+  // screen app: in a browser tab the browser's own back swipe already does this.
+  // Swipe left closes the menu.
+  const navigate = useNavigate()
+  const topLevel = TOP_LEVEL.has(location.pathname)
   const swipe = useRef<{ x: number; y: number; opening: boolean } | null>(null)
   useEffect(() => {
     const onStart = (e: TouchEvent) => {
       const t = e.touches[0]
       if (e.touches.length !== 1) return
       // Not while panning the map
-      if ((e.target as Element | null)?.closest?.('.leaflet-container')) return
+      if ((e.target as Element | null)?.closest?.('.maplibregl-map')) return
+      if (!open && !standalone()) return
       if (open || t.clientX < 24) swipe.current = { x: t.clientX, y: t.clientY, opening: !open }
     }
     const onMove = (e: TouchEvent) => {
@@ -56,7 +68,8 @@ export default function Layout() {
       const dy = e.touches[0].clientY - s.y
       if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) swipe.current = null
       else if (s.opening && dx > 50) {
-        setOpen(true)
+        if (topLevel || window.history.length <= 1) setOpen(true)
+        else navigate(-1)
         swipe.current = null
       } else if (!s.opening && dx < -50) {
         setOpen(false)
@@ -74,7 +87,7 @@ export default function Layout() {
       window.removeEventListener('touchmove', onMove)
       window.removeEventListener('touchend', onEnd)
     }
-  }, [open])
+  }, [open, topLevel, navigate])
 
   return (
     <MenuContext.Provider value={() => setOpen(true)}>
@@ -87,7 +100,7 @@ export default function Layout() {
         aria-hidden
       />
       <nav
-        aria-label="Main menu"
+        aria-label={t('nav.mainMenu')}
         inert={!open}
         className={`fixed inset-y-0 left-0 z-[1101] flex w-72 overflow-y-auto pb-6 max-w-[85vw] flex-col bg-canvas pt-[env(safe-area-inset-top)] shadow-2xl transition-transform duration-200 ${
           open ? 'translate-x-0' : '-translate-x-full'
@@ -98,14 +111,14 @@ export default function Layout() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="Close menu"
+            aria-label={t('nav.closeMenu')}
             className="absolute top-3 right-3 rounded-md p-2 active:opacity-50"
           >
             <CloseIcon className="h-5 w-5" />
           </button>
           <img src="/icon.svg" alt="" className="h-14 w-14 rounded-2xl" />
-          <span className="mt-2 text-2xl font-bold">Timetable</span>
-          <span className="text-[13px] text-secondary">Budapest</span>
+          <span className="mt-2 text-2xl font-bold">{t('app.name')}</span>
+          <span className="text-[13px] text-secondary">{t('app.city')}</span>
         </div>
         <ul className="mx-3 space-y-0.5 rounded-2xl bg-surface p-2">
           {LINKS.map((link) => (
@@ -121,7 +134,7 @@ export default function Layout() {
                 }
               >
                 {link.icon}
-                {link.label}
+                {t(link.label)}
               </NavLink>
               {link.to === '/routes' && (
                 // Vehicle types, with BKK's round pictograms
@@ -136,7 +149,7 @@ export default function Layout() {
                         }`}
                       >
                         <CategoryIcon category={c} className="h-6 w-6" />
-                        {c.label}
+                        {t(`category.${c.key}`)}
                       </Link>
                     </li>
                   ))}

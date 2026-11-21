@@ -11,6 +11,7 @@ import { linesUrl } from './LinesPage'
 import { CATEGORIES, categoryOf } from '../lib/categories'
 import RouteTile from '../components/RouteTile'
 import { useFavorites } from '../lib/favorites'
+import { useT } from '../lib/i18n'
 import { score } from '../lib/search'
 import { rank } from '../lib/usage'
 import { useGeolocation } from '../lib/useGeolocation'
@@ -18,6 +19,7 @@ import { useGeolocation } from '../lib/useGeolocation'
 const PAGE_SIZE = 50
 
 export default function RoutesPage() {
+  const t = useT()
   const [params, setParams] = useSearchParams()
   const search = params.get('q') ?? ''
   const category = CATEGORIES.find((c) => c.key === params.get('type')) ?? null
@@ -92,13 +94,13 @@ export default function RoutesPage() {
   return (
     <div className="min-h-dvh">
       <NavBar
-        title="Routes"
+        title={t('nav.routes')}
         menu
         leading={
           <button
             type="button"
             onClick={location.request}
-            title={location.error ?? (location.coords ? 'Location enabled' : 'Use my location')}
+            title={location.error ?? (location.coords ? t('routes.locationEnabled') : t('nearby.useMyLocation'))}
             className="-ml-2 rounded-md p-2 text-accent active:opacity-50"
           >
             <LocationIcon
@@ -117,7 +119,7 @@ export default function RoutesPage() {
             onClick={() => setParam('type', null)}
             className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${!category ? 'bg-accent text-white' : 'bg-fill text-label'}`}
           >
-            All
+            {t('routes.all')}
           </button>
           {/* Only types that actually have lines (e.g. 'Other' is usually empty) */}
           {CATEGORIES.filter((c) => category?.key === c.key || allRoutes.some((r) => categoryOf(r).key === c.key)).map((c) => (
@@ -130,7 +132,7 @@ export default function RoutesPage() {
               }`}
             >
               <CategoryIcon category={c} className="h-5 w-5" color={category?.key === c.key ? '#ffffff' : undefined} />
-              {c.label}
+              {t(`category.${c.key}`)}
             </button>
           ))}
         </div>
@@ -139,16 +141,16 @@ export default function RoutesPage() {
       <main className="mx-auto max-w-2xl pb-[env(safe-area-inset-bottom)]">
         {query.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load routes.{' '}
+            {t('routes.loadError')}{' '}
             <button type="button" className="text-accent" onClick={() => query.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
 
         {favorites.length > 0 && !narrowing && (
           <section className="px-4 pt-4">
-            <h2 className="pb-2 text-xl font-bold">Favourites</h2>
+            <h2 className="pb-2 text-xl font-bold">{t('common.favourites')}</h2>
             <div className="flex flex-wrap gap-2">
               {favorites.map((route) => (
                 <RouteTile key={route.id} route={route.route} compact />
@@ -159,7 +161,7 @@ export default function RoutesPage() {
 
         {search.trim() && (
           <section className="px-4 pt-5">
-            <h2 className="pb-2 text-xl font-bold">Best matches</h2>
+            <h2 className="pb-2 text-xl font-bold">{t('routes.bestMatches')}</h2>
             <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
               {routes.slice(0, 40).map((route) => (
                 <li key={route.routeId}>{tile(route)}</li>
@@ -171,7 +173,7 @@ export default function RoutesPage() {
           <section key={c.key} className="px-4 pt-5">
             <h2 className="flex items-center gap-2 pb-2 text-xl font-bold">
               <CategoryIcon category={c} className="h-7 w-7" />
-              {c.label}
+              {t(`category.${c.key}`)}
               <span className="text-[15px] font-normal text-secondary">{list.length}</span>
             </h2>
             <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
@@ -183,14 +185,14 @@ export default function RoutesPage() {
         ))}
 
         {query.isPending || isFetchingNextPage ? (
-          <p className="p-6 text-center text-sm text-secondary">Loading…</p>
+          <p className="p-6 text-center text-sm text-secondary">{t('common.loading')}</p>
         ) : (
           routes.length === 0 &&
-          !query.isError && <p className="p-6 text-center text-secondary">No routes found</p>
+          !query.isError && <p className="p-6 text-center text-secondary">{t('routes.none')}</p>
         )}
         <div ref={sentinel} />
         {!selecting && allRoutes.length > 0 && (
-          <p className="px-4 pt-2 pb-6 text-center text-[13px] text-secondary">Tip: long-press a line to pick several and see where they meet</p>
+          <p className="px-4 pt-2 pb-6 text-center text-[13px] text-secondary">{t('routes.tip')}</p>
         )}
         {selecting && <div className="h-28" />}
       </main>
@@ -200,13 +202,13 @@ export default function RoutesPage() {
           <div className="mx-auto flex max-w-2xl items-center gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
               {selected.map((r) => (
-                <button key={r.routeId} type="button" onClick={() => toggle(r)} aria-label={`Remove ${r.shortName ?? r.routeId}`} className="shrink-0">
+                <button key={r.routeId} type="button" onClick={() => toggle(r)} aria-label={t('routes.remove', { line: r.shortName ?? r.routeId })} className="shrink-0">
                   <RouteBadge route={r} fit />
                 </button>
               ))}
             </div>
             <button type="button" onClick={() => setSelected([])} className="shrink-0 px-1 text-[15px] font-medium text-accent">
-              Clear
+              {t('common.clear')}
             </button>
             <button
               type="button"
@@ -214,7 +216,7 @@ export default function RoutesPage() {
               onClick={() => navigate(linesUrl(selected.map((r) => r.routeId)))}
               className="shrink-0 rounded-full bg-accent px-4 py-2 text-[15px] font-semibold text-white disabled:opacity-40"
             >
-              {selected.length < 2 ? 'Pick one more' : 'Shared stops'}
+              {selected.length < 2 ? t('routes.pickOneMore') : t('lines.title')}
             </button>
           </div>
         </div>

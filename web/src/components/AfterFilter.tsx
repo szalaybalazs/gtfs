@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { useT } from '../lib/i18n'
 import { formatTime, localParts, TIME_ZONE } from '../lib/time'
 import { ClockIcon } from './Icons'
 
@@ -64,6 +65,7 @@ const pad = (n: number) => String(n).padStart(2, '0')
  * picker (hour/minute steppers, quick offsets), no native time input.
  */
 export function TimeControl() {
+  const t = useT()
   const { picked, after, earlier, setTime } = useAfter()
   const [open, setOpen] = useState(false)
   const base = picked ?? new Date()
@@ -103,11 +105,11 @@ export function TimeControl() {
   }
   const Stepper = ({ value, onChange, max, step }: { value: number; onChange: (v: number) => void; max: number; step: number }) => (
     <div className="flex flex-col items-center">
-      <button type="button" onClick={() => onChange((value + step) % max)} className="rounded-lg px-4 py-1 text-xl active:bg-fill" aria-label="Later">
+      <button type="button" onClick={() => onChange((value + step) % max)} className="rounded-lg px-4 py-1 text-xl active:bg-fill" aria-label={t('after.later')}>
         ▲
       </button>
       <span className="text-3xl font-bold tabular-nums">{pad(value)}</span>
-      <button type="button" onClick={() => onChange((value - step + max) % max)} className="rounded-lg px-4 py-1 text-xl active:bg-fill" aria-label="Earlier">
+      <button type="button" onClick={() => onChange((value - step + max) % max)} className="rounded-lg px-4 py-1 text-xl active:bg-fill" aria-label={t('after.stepEarlier')}>
         ▼
       </button>
     </div>
@@ -124,13 +126,13 @@ export function TimeControl() {
       >
         <ClockIcon className="h-5 w-5" />
         <span className="tabular-nums">
-          {after ? `From ${formatTime(after)}` : 'Now'}
-          {earlier > 0 && !picked && <span className="font-normal text-secondary"> (earlier)</span>}
+          {after ? t('after.from', { time: formatTime(after) }) : t('after.now')}
+          {earlier > 0 && !picked && <span className="font-normal text-secondary"> {t('after.earlierNote')}</span>}
         </span>
       </button>
       {open && pos && (
-        <div role="dialog" aria-label="Departures from" style={{ top: pos.top, left: pos.left }} className="fixed z-[1200] w-64 rounded-2xl bg-surface p-4 shadow-xl ring-1 ring-separator">
-          <p className="text-[12px] font-semibold text-secondary uppercase">Departures from</p>
+        <div role="dialog" aria-label={t('after.dialog')} style={{ top: pos.top, left: pos.left }} className="fixed z-[1200] w-64 rounded-2xl bg-surface p-4 shadow-xl ring-1 ring-separator">
+          <p className="text-[12px] font-semibold text-secondary uppercase">{t('after.dialog')}</p>
           <div className="my-2 flex items-center justify-center gap-2">
             <Stepper value={h} onChange={setH} max={24} step={1} />
             <span className="text-3xl font-bold">:</span>
@@ -139,16 +141,16 @@ export function TimeControl() {
           <div className="mb-3 flex justify-center gap-2 text-[13px]">
             {[15, 30, 60].map((n) => (
               <button key={n} type="button" onClick={() => plus(n)} className="rounded-full bg-fill px-2.5 py-1 font-medium active:opacity-60">
-                +{n < 60 ? `${n}'` : '1h'}
+                {n < 60 ? t('after.plusMinutes', { n }) : t('after.plusHour')}
               </button>
             ))}
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => choose(null)} className="flex-1 rounded-xl bg-fill py-2 font-medium active:opacity-60">
-              Now
+              {t('after.now')}
             </button>
             <button type="button" onClick={() => choose(`${pad(h)}:${pad(m)}`)} className="flex-1 rounded-xl bg-accent py-2 font-semibold text-white active:opacity-80">
-              Show
+              {t('after.show')}
             </button>
           </div>
         </div>
@@ -159,12 +161,13 @@ export function TimeControl() {
 
 /** Header row of a departures card: the time picker (Now / From HH:MM) and "⋯ Earlier". */
 export default function AfterFilter() {
+  const t = useT()
   const { loadEarlier } = useAfter()
   return (
     <div className="flex items-center justify-between gap-3 border-b border-separator px-4 py-2.5 text-[15px]">
       <TimeControl />
-      <button type="button" onClick={loadEarlier} className="flex items-center gap-1 font-medium text-accent active:opacity-60" aria-label="Show earlier departures">
-        <span className="text-lg leading-none">⋯</span> Earlier
+      <button type="button" onClick={loadEarlier} className="flex items-center gap-1 font-medium text-accent active:opacity-60" aria-label={t('after.showEarlier')}>
+        <span className="text-lg leading-none">⋯</span> {t('after.earlier')}
       </button>
     </div>
   )

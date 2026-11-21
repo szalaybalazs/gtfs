@@ -15,6 +15,7 @@ import { gql, ROUTE_QUERY, type Direction, type RouteDetails, type Stop } from '
 import FavoriteSheet from '../components/FavoriteSheet'
 import { favoriteId, useFavorites, type FavoriteDraft } from '../lib/favorites'
 import { distance, formatDistance, hex } from '../lib/geo'
+import { useT } from '../lib/i18n'
 import { recordVisit } from '../lib/usage'
 import { useDepartures } from '../lib/useDepartures'
 import { useGeolocation, type Coords } from '../lib/useGeolocation'
@@ -66,6 +67,7 @@ function choose(directions: Direction[], dirParam: number | null, stopParam: str
 }
 
 export default function RouteDetailsPage() {
+  const t = useT()
   const { routeId = '' } = useParams()
   const [params, setParams] = useSearchParams()
   const dirParam = params.has('dir') ? Number(params.get('dir')) : null
@@ -129,11 +131,11 @@ export default function RouteDetailsPage() {
 
   const hint =
     choice?.reason === 'nearest'
-      ? `Nearest stop to you · ${formatDistance(choice.metres!)}`
+      ? t('route.nearest', { d: formatDistance(choice.metres!) })
       : choice?.reason === 'terminus'
-        ? `Nothing close by, so showing the end stop · ${formatDistance(choice.metres!)}`
+        ? t('route.terminus', { d: formatDistance(choice.metres!) })
         : location.loading
-          ? 'Finding the nearest stop…'
+          ? t('route.finding')
           : choice?.reason === 'first'
             ? (location.error ?? '')
             : ''
@@ -141,7 +143,7 @@ export default function RouteDetailsPage() {
   return (
     <div className="min-h-dvh">
       <NavBar
-        back={{ to: '/routes', label: 'Routes' }}
+        back={{ to: '/routes', label: t('nav.routes') }}
         leading={route && <RouteBadge route={route} size="lg" />}
         trailing={
           route && (
@@ -150,7 +152,7 @@ export default function RouteDetailsPage() {
               <button
               type="button"
               onClick={() => setSheet(true)}
-              aria-label="Favourites"
+              aria-label={t('common.favourites')}
               className={`rounded-md p-2 active:opacity-50 ${favorite ? 'text-accent' : 'text-label'}`}
             >
               <StarIcon filled={favorite} className="h-6 w-6" />
@@ -163,9 +165,9 @@ export default function RouteDetailsPage() {
       <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {routeQuery.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load this route.{' '}
+            {t('route.loadError')}{' '}
             <button type="button" className="font-medium text-accent" onClick={() => routeQuery.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
@@ -193,7 +195,7 @@ export default function RouteDetailsPage() {
                     setParam({ dir: null, stop: null })
                     location.request()
                   }}
-                  aria-label="Nearest stop"
+                  aria-label={t('route.nearestStop')}
                   className="flex w-12 shrink-0 items-center justify-center rounded-2xl bg-surface text-accent active:opacity-50"
                 >
                   <LocationIcon className="h-5 w-5" />
@@ -206,9 +208,9 @@ export default function RouteDetailsPage() {
               onClick={() => otherDirection && changeDirection(otherDirection.directionId)}
               className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill disabled:active:bg-surface"
             >
-              <span className="text-secondary">Towards</span>
+              <span className="text-secondary">{t('route.towards')}</span>
               <span className="min-w-0 flex-1 truncate font-medium">{direction.headsign}</span>
-              {otherDirection && <SwapIcon className="h-5 w-5 shrink-0" aria-label="Swap direction" />}
+              {otherDirection && <SwapIcon className="h-5 w-5 shrink-0" aria-label={t('route.swap')} />}
             </button>
           </section>
         )}
@@ -222,7 +224,7 @@ export default function RouteDetailsPage() {
                 highlightTrip={arrivedOn}
                 title={null}
                 departures={departures}
-                empty="No departures in the next 90 minutes."
+                empty={t('route.empty')}
                 isPending={departuresQuery.isPending}
                 error={departuresQuery.isError}
                 onRetry={() => departuresQuery.refetch()}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useT } from '../lib/i18n'
 import { SearchIcon } from './Icons'
 
 /**
@@ -14,7 +15,7 @@ import { SearchIcon } from './Icons'
 export default function SearchInput({
   value,
   onChange,
-  placeholder = 'Search',
+  placeholder,
   delay = 150,
 }: {
   value: string
@@ -22,6 +23,7 @@ export default function SearchInput({
   placeholder?: string
   delay?: number
 }) {
+  const t = useT()
   const [text, setText] = useState(value)
   const focused = useRef(false)
   const latest = useRef(onChange)
@@ -52,7 +54,7 @@ export default function SearchInput({
           focused.current = false
           if (text !== value) latest.current(text)
         }}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('search.placeholder')}
         autoComplete="off"
         className="w-full bg-transparent text-[17px] text-label outline-none placeholder:text-secondary"
       />

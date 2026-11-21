@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
+import { useT } from '../lib/i18n'
 import MiniMap from './MiniMap'
 import StopRow from './StopRow'
 
@@ -21,6 +22,7 @@ export default function StationStops({
   /** Only stops served by any of these lines */
   lines?: string[]
 }) {
+  const t = useT()
   const query = useQuery({
     queryKey: ['station', id],
     queryFn: () => gql<StationDetails>(STATION_QUERY, { id }),
@@ -34,10 +36,10 @@ export default function StationStops({
     <>
       <section>
         <div className="flex items-baseline justify-between px-1 pb-2">
-          <h2 className="text-xl font-bold">Stops here</h2>
+          <h2 className="text-xl font-bold">{t('stations.stopsHere')}</h2>
           {onSelect && current && (
             <button type="button" onClick={() => onSelect(null)} className="text-[15px] font-medium text-accent">
-              Show all
+              {t('stations.showAll')}
             </button>
           )}
         </div>
@@ -53,7 +55,7 @@ export default function StationStops({
         </ul>
       </section>
       <section>
-        <h2 className="px-1 pb-2 text-xl font-bold">Map</h2>
+        <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
         <MiniMap
           area
           height={220}

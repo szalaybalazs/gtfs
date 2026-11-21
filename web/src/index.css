@@ -11,6 +11,7 @@
   --color-live: #16a34a;
   --color-late: #dc2626;
   --color-early: #9333ea;
+  --color-realtime: #2563eb;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -27,6 +28,7 @@
     --color-live: #4ade80;
     --color-late: #f87171;
   --color-early: #c084fc;
+    --color-realtime: #60a5fa;
     --color-early: #c084fc;
   }
 }
@@ -41,6 +43,7 @@
     --color-accent: #4ade80;
     --color-live: #4ade80;
     --color-late: #f87171;
+    --color-realtime: #60a5fa;
   --color-early: #c084fc;
     --color-early: #c084fc;
   }
@@ -76,3 +79,12 @@ body {
 }
 /* No sideways page scroll while a page slides in */
 html, body { overflow-x: clip; }
+
+/* Bottom sheets rise from the bottom edge */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+.sheet-up { animation: sheet-up 260ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .sheet-up { animation: none; }
+}

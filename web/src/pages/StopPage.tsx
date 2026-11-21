@@ -15,9 +15,11 @@ import ViewToggle, { useView } from '../components/ViewToggle'
 import { gql, STOP_QUERY, type StopDetails } from '../lib/api'
 import { recordVisit } from '../lib/usage'
 import { useDepartures } from '../lib/useDepartures'
+import { useT } from '../lib/i18n'
 
 /** One platform: its lines, then departures or the combined timetable. */
 export default function StopPage() {
+  const t = useT()
   const { stopId = '' } = useParams()
   const [view] = useView()
 
@@ -61,7 +63,7 @@ export default function StopPage() {
   return (
     <div className="min-h-dvh">
       <NavBar
-        back={{ label: 'Back' }}
+        back={{ label: t('common.back') }}
         trailing={
           favoriteOptions.length > 0 && (
             <>
@@ -69,7 +71,7 @@ export default function StopPage() {
               <button
               type="button"
               onClick={() => setSheet(true)}
-              aria-label="Favourites"
+              aria-label={t('common.favourites')}
               className={`rounded-md p-2 active:opacity-50 ${favorite ? 'text-accent' : 'text-label'}`}
             >
               <StarIcon filled={favorite} className="h-6 w-6" />
@@ -82,9 +84,9 @@ export default function StopPage() {
         {query.isPending && <div className="h-24 animate-pulse rounded-2xl bg-surface" />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load this stop.{' '}
+            {t('station.loadError')}{' '}
             <button type="button" className="font-medium text-accent" onClick={() => query.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
@@ -102,9 +104,8 @@ export default function StopPage() {
                 to={`/stations/${encodeURIComponent(stopId)}?from=${encodeURIComponent(stopId)}`}
                 className="flex items-center justify-between rounded-2xl bg-surface px-4 py-3 active:bg-fill"
               >
-                <span>
-                  <span className="text-secondary">Everything at </span>
-                  <span className="font-medium">{stop.name}</span>
+                <span className="text-secondary">
+                  {t.rich('stop.everythingAt', { name: <span className="font-medium text-label">{stop.name}</span> })}
                 </span>
                 <ChevronIcon className="h-4 w-4 text-secondary/60" />
               </Link>
@@ -113,7 +114,7 @@ export default function StopPage() {
             <Alerts routeIds={routes.map((r) => r.routeId)} stopIds={[stopId]} />
 
             {routes.length === 0 ? (
-              <p className="p-6 text-center text-secondary">No lines stop here.</p>
+              <p className="p-6 text-center text-secondary">{t('stop.noLines')}</p>
             ) : (
               <>
                 {view === 'departures' ? (

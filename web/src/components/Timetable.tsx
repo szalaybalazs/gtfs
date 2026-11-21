@@ -2,6 +2,7 @@ import { useQueries } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { gql, TIMETABLE_QUERY, type RouteRef, type Timetable as TimetableData, type TimetableEntry } from '../lib/api'
+import { useT } from '../lib/i18n'
 import { lineColors } from '../lib/lineColors'
 import { localParts } from '../lib/time'
 import { REFRESH_MS, useNow } from '../lib/useTimetable'
@@ -18,6 +19,7 @@ type Entry = TimetableEntry & { route: RouteRef; stopId: string }
  * day. With several lines, minutes are coloured per line (stable colours).
  */
 export default function Timetable({ lines }: { lines: Line[] }) {
+  const t = useT()
   const now = useNow(REFRESH_MS)
   const navigate = useNavigate()
   const queries = useQueries({
@@ -59,9 +61,9 @@ export default function Timetable({ lines }: { lines: Line[] }) {
         const h = localParts(new Date(e.departure)).hour
         hours.set(h, [...(hours.get(h) ?? []), e])
       }
-      return { day, label: day === today ? 'Today' : 'Tomorrow', hours: [...hours.entries()] }
+      return { day, label: day === today ? t('day.today') : t('day.tomorrow'), hours: [...hours.entries()] }
     })
-  }, [entries, now])
+  }, [entries, now, t])
 
   return (
     <section className="space-y-4">
@@ -80,13 +82,13 @@ export default function Timetable({ lines }: { lines: Line[] }) {
         <div className="h-40 animate-pulse rounded-2xl bg-surface" />
       ) : failed ? (
         <p className="rounded-2xl bg-surface p-6 text-center text-secondary">
-          Couldn't load the timetable.{' '}
+          {t('timetable.loadError')}{' '}
           <button type="button" className="font-medium text-accent" onClick={() => queries.forEach((q) => q.refetch())}>
-            Retry
+            {t('common.retry')}
           </button>
         </p>
       ) : days.length === 0 ? (
-        <p className="rounded-2xl bg-surface p-6 text-center text-secondary">No departures today or tomorrow.</p>
+        <p className="rounded-2xl bg-surface p-6 text-center text-secondary">{t('timetable.none')}</p>
       ) : (
         days.map(({ day, label, hours }) => (
           <div key={day}>
@@ -109,10 +111,11 @@ export default function Timetable({ lines }: { lines: Line[] }) {
                               `/trips/${encodeURIComponent(e.tripId)}?date=${e.serviceDate ?? ''}&from=${encodeURIComponent(e.stopId)}`,
                             )
                           }
+                          // Realtime blue, scheduled plain; with several lines, the line's colour underlines it
                           className={`min-w-9 rounded-lg px-1.5 py-1 text-[17px] tabular-nums active:bg-fill ${
                             e.isNext ? 'bg-fill font-bold' : ''
-                          }`}
-                          style={multi ? { color: colors.get(e.route.routeId) } : undefined}
+                          } ${e.departureDelay != null || e.arrivalDelay != null ? 'text-realtime' : ''}`}
+                          style={multi ? { boxShadow: `inset 0 -3px 0 ${colors.get(e.route.routeId)}` } : undefined}
                           aria-label={`${e.route.shortName ?? ''} ${hour}:${minute}`}
                         >
                           {minute}

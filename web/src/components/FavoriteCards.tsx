@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import type { Departure, RouteRef } from '../lib/api'
 import type { Favorite, FavoriteDraft } from '../lib/favorites'
+import { useT } from '../lib/i18n'
 import { realtimeStatus, statusColor } from '../lib/realtimeStatus'
 import { formatTime } from '../lib/time'
 import { shortRelative, useTimeMode } from '../lib/timeMode'
@@ -36,6 +37,7 @@ function runs(departures: Departure[], now: Date, onlyRoute?: string | string[])
  * Side-scrollable when it doesn't fit. Times are coloured by realtime status.
  */
 function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures: Departure[]; pending: boolean; onlyRoute?: string | string[]; fallback: RouteRef[] }) {
+  const t = useT()
   const now = useNow(1_000)
   const [mode] = useTimeMode()
   const groups = runs(departures, now, onlyRoute)
@@ -59,7 +61,7 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
                     <span key={`${d.tripId}-${d.serviceDate}`}>
                       {i > 0 && <span className="text-secondary">, </span>}
                       <span className={statusColor[status]}>
-                        {mode === 'relative' ? shortRelative((at.getTime() - now.getTime()) / 1000) : formatTime(at)}
+                        {mode === 'relative' ? shortRelative((at.getTime() - now.getTime()) / 1000, t) : formatTime(at)}
                       </span>
                     </span>
                   )
@@ -95,11 +97,12 @@ function Card({ title, subtitle, to, link, children }: { title: string; subtitle
 
 /** One line from one stop. */
 export function LineStopCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { kind: 'lineStop' }>; link?: boolean }) {
+  const t = useT()
   const query = useDepartures([fav.stopId], { limit: 8, routeIds: [fav.route.routeId] })
   return (
     <Card
       title={fav.stopName}
-      subtitle={fav.headsign ? `towards ${fav.headsign}` : null}
+      subtitle={fav.headsign ? t('common.towards', { to: fav.headsign }) : null}
       to={`/routes/${encodeURIComponent(fav.route.routeId)}?stop=${encodeURIComponent(fav.stopId)}`}
       link={link}
     >
@@ -110,11 +113,12 @@ export function LineStopCard({ fav, link = true }: { fav: Extract<FavoriteDraft,
 
 /** A stop with every line that leaves from it. */
 export function StopCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { kind: 'stop' }>; link?: boolean }) {
+  const t = useT()
   const query = useDepartures([fav.stopId], { limit: 40 })
   return (
     <Card
       title={fav.name}
-      subtitle={fav.headsigns.length ? `towards ${fav.headsigns.join(' / ')}` : null}
+      subtitle={fav.headsigns.length ? t('common.towards', { to: fav.headsigns.join(' / ') }) : null}
       to={`/stations/${encodeURIComponent(fav.stationId)}?from=${encodeURIComponent(fav.stopId)}`}
       link={link}
     >
@@ -125,6 +129,7 @@ export function StopCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { k
 
 /** Several lines from one stop group, in time order. */
 export function LinesCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { kind: 'lines' }>; link?: boolean }) {
+  const t = useT()
   const ids = fav.routes.map((r) => r.routeId)
   const query = useDepartures(fav.stopIds, { limit: 30, routeIds: ids })
   const params = new URLSearchParams({ lines: ids.join(',') })
@@ -132,7 +137,7 @@ export function LinesCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { 
   return (
     <Card
       title={fav.name}
-      subtitle={fav.headsigns.length ? `towards ${fav.headsigns.join(' / ')}` : `${fav.routes.length} lines`}
+      subtitle={fav.headsigns.length ? t('common.towards', { to: fav.headsigns.join(' / ') }) : t('fav.lineCount', { n: fav.routes.length })}
       to={`/stations/${encodeURIComponent(fav.stationId)}?${params}`}
       link={link}
     >

@@ -12,6 +12,7 @@ type Routeish = { type?: RouteType | null; color?: string | null }
 /**
  * Line categories in BKK's order, with official BKK pictograms
  * (BKK-Icon-Pack, bkk.hu) and BKK's colour coding.
+ * `label` is the English name; the UI shows t(`category.${key}`) (lib/i18n.ts).
  */
 export const CATEGORIES = [
   { key: 'metro', label: 'Metro', icon: metroIcon, color: '#4a4a4a', test: (r: Routeish) => r.type === 'SUBWAY' },

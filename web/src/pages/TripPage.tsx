@@ -5,17 +5,19 @@ import Alerts from '../components/Alerts'
 import MiniMap from '../components/MiniMap'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
-import { gql, TRIP_QUERY, type RouteRef, type TripDetails, type TripStop } from '../lib/api'
+import { gql, TRIP_QUERY, type TripDetails, type TripStop } from '../lib/api'
 import { distance } from '../lib/geo'
 import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
 import { hex } from '../lib/geo'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
+import { formatNumber, useT, type TFunction } from '../lib/i18n'
 import { formatTime, formatTimeParts } from '../lib/time'
 import { REFRESH_MS, useNow } from '../lib/useTimetable'
 
 /** One vehicle's run: where it is, when it reaches each stop. */
 export default function TripPage() {
+  const t = useT()
   const { tripId = '' } = useParams()
   const [params] = useSearchParams()
   const date = params.get('date') || undefined
@@ -47,19 +49,19 @@ export default function TripPage() {
 
   return (
     <div className="min-h-dvh">
-      <NavBar back={{ label: 'Back' }} leading={route && <RouteBadge route={route} size="lg" />} />
+      <NavBar back={{ label: t('common.back') }} />
 
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         {query.isPending && <div className="h-40 animate-pulse rounded-2xl bg-surface" />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
-            Couldn't load this trip.{' '}
+            {t('trip.loadError')}{' '}
             <button type="button" className="font-medium text-accent" onClick={() => query.refetch()}>
-              Retry
+              {t('common.retry')}
             </button>
           </p>
         )}
-        {query.data && !trip && <p className="p-6 text-center text-secondary">This trip no longer exists.</p>}
+        {query.data && !trip && <p className="p-6 text-center text-secondary">{t('trip.gone')}</p>}
 
         {trip && (
           <>
@@ -68,37 +70,36 @@ export default function TripPage() {
             <section className="rounded-2xl bg-surface p-4">
               <div className="flex items-center gap-2">
                 {route && <RouteBadge route={route} />}
-                <span className="text-secondary">towards</span>
+                <span className="text-secondary">{t('trip.towards')}</span>
                 {stops.some((x) => x.realtime) ? (
                   <span className="ml-auto flex items-center gap-1.5 rounded-full bg-live/15 px-2.5 py-0.5 text-[13px] font-semibold text-live">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-live" />
                     </span>
-                    LIVE
+                    {t('trip.live')}
                   </span>
                 ) : (
-                  <span className="ml-auto rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">Scheduled</span>
+                  <span className="ml-auto rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">{t('trip.scheduled')}</span>
                 )}
               </div>
               <h1 className="mt-1 text-2xl leading-tight font-bold">{trip.headsign ?? stops.at(-1)?.stop.name}</h1>
               {viaStops(stops).length > 0 && (
-                <p className="mt-1 text-[15px]">
-                  <span className="text-secondary">via </span>
-                  {viaStops(stops).join(' · ')}
+                <p className="mt-1 text-[15px] text-secondary">
+                  {t.rich('trip.via', { stops: <span className="text-label">{viaStops(stops).join(' · ')}</span> })}
                 </p>
               )}
-              {stats(trip) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip)}</p>}
+              {stats(trip, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, t)}</p>}
               {/* Delay sits bottom-left, on the status line, so it adds no height to the destination */}
               <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[15px] text-secondary">
                 {delay != null && started && !finished && <DelayIndicator delay={delay} />}
-                {finished ? 'This trip has finished.' : !started ? `Starts at ${formatTime(new Date(stops[0].departure))}` : 'On its way'}
+                {finished ? t('trip.finished') : !started ? t('trip.startsAt', { time: formatTime(new Date(stops[0].departure)) }) : t('trip.onItsWay')}
                 {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
               </p>
             </section>
 
             <section>
-              <h2 className="px-1 pb-2 text-xl font-bold">Stops</h2>
+              <h2 className="px-1 pb-2 text-xl font-bold">{t('common.stops')}</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
                 {stops.map((s, i) => (
                   <TripStopRow
@@ -112,7 +113,6 @@ export default function TripPage() {
                     color={color}
                     vehicleLabel={route?.shortName ?? ''}
                     category={route ? categoryOf(route) : CATEGORIES[CATEGORIES.length - 1]}
-                    currentRouteId={route?.routeId}
                     referenceTime={referenceTime}
                     tripId={tripId}
                     showSeconds={hasSeconds}
@@ -123,13 +123,13 @@ export default function TripPage() {
 
             {vehicle && (vehicle.vehicleLabel || vehicle.vehicleLicensePlate) && (
               <section>
-                <h2 className="px-1 pb-2 text-xl font-bold">Vehicle</h2>
+                <h2 className="px-1 pb-2 text-xl font-bold">{t('trip.vehicle')}</h2>
                 <div className="rounded-2xl bg-surface p-4">
                   <p className="text-[17px] font-semibold">{vehicle.vehicleLabel ?? vehicle.vehicleLicensePlate}</p>
                   <p className="text-[15px] text-secondary">
                     {[
-                      vehicle.vehicleLicensePlate && vehicle.vehicleLabel ? `Number ${vehicle.vehicleLicensePlate}` : null,
-                      vehicle.vehicleWheelchairAccessible ? 'Wheelchair accessible' : null,
+                      vehicle.vehicleLicensePlate && vehicle.vehicleLabel ? t('trip.number', { n: vehicle.vehicleLicensePlate }) : null,
+                      vehicle.vehicleWheelchairAccessible ? t('common.wheelchair') : null,
                     ]
                       .filter(Boolean)
                       .join(' · ')}
@@ -139,8 +139,9 @@ export default function TripPage() {
             )}
 
             <section>
-              <h2 className="px-1 pb-2 text-xl font-bold">Map</h2>
+              <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
               <MiniMap
+                expandable
                 color={color}
                 line={trip.path?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number])}
                 points={stops
@@ -148,7 +149,35 @@ export default function TripPage() {
                   .map((s) => ({ lat: s.stop.lat!, lon: s.stop.lon!, strong: s.stop.stopId === from }))}
                 vehicle={
                   vehicle?.latitude != null && vehicle.longitude != null
-                    ? { lat: vehicle.latitude, lon: vehicle.longitude, label: route?.shortName ?? '•', bg: color, fg: hex(route?.textColor, '#ffffff') }
+                    ? {
+                        lat: vehicle.latitude,
+                        lon: vehicle.longitude,
+                        label: route?.shortName ?? '•',
+                        bg: color,
+                        fg: hex(route?.textColor, '#ffffff'),
+                        info: (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              {route && <RouteBadge route={route} />}
+                              <span className="truncate text-[17px] font-semibold">{trip.headsign ?? stops.at(-1)?.stop.name}</span>
+                            </div>
+                            {nextIndex >= 0 && (
+                              <p className="text-[15px]">
+                                <span className="text-secondary">{t('trip.nextStop')} </span>
+                                {stops[nextIndex].stop.name} · {formatTime(new Date(stops[nextIndex].departure))}
+                              </p>
+                            )}
+                            <p className="text-[13px] text-secondary">
+                              {vehicleAge != null
+                                ? vehicleAge < 1
+                                  ? t('trip.positionSecs', { n: Math.round(vehicleAge * 60) })
+                                  : t('trip.positionMins', { n: Math.round(vehicleAge) })
+                                : t('trip.positionUnknown')}
+                              {vehicle.vehicleLicensePlate && ` · ${vehicle.vehicleLicensePlate}`}
+                            </p>
+                          </div>
+                        ),
+                      }
                     : null
                 }
               />
@@ -180,13 +209,11 @@ function TripStopRow({
   color,
   vehicleLabel,
   category,
-  currentRouteId,
   referenceTime,
   tripId,
   showSeconds,
 }: {
   showSeconds: boolean
-  currentRouteId?: string
   referenceTime: number | null
   tripId: string
   stop: TripStop
@@ -199,6 +226,7 @@ function TripStopRow({
   vehicleLabel: string
   category: Category
 }) {
+  const t = useT()
   const arrival = new Date(s.arrival)
   const departure = new Date(s.departure)
   // At the last stop only the arrival matters; elsewhere the departure is the main time
@@ -210,7 +238,6 @@ function TripStopRow({
   // Minutes to or from the selected stop, always positive; blank on the stop itself
   const relative = referenceTime == null || highlighted ? null : Math.round(Math.abs(main.getTime() - referenceTime) / 60_000)
   const mainParts = formatTimeParts(main)
-  const transfers = transferLines(s.stop.station?.routes ?? [], currentRouteId)
   return (
     <li className="relative">
       <Link
@@ -219,7 +246,7 @@ function TripStopRow({
         className={`flex items-center pr-3 active:bg-fill ${passed ? 'opacity-45' : ''} ${referenceTime != null ? 'pl-2' : ''}`}
       >
         {referenceTime != null && (
-          <span className="w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary" aria-label={relative != null ? `${relative} minutes` : undefined}>
+          <span className="w-[3.5ch] shrink-0 text-right font-mono text-[13px] whitespace-pre text-secondary" aria-label={relative != null ? t('trip.minutes', { n: relative }) : undefined}>
             {relative == null ? '' : `${String(relative).padStart(2, ' ')}'`}
           </span>
         )}
@@ -228,7 +255,7 @@ function TripStopRow({
           // The vehicle: BKK pictogram for its type, in the line's colour, on a white disc
           <span
             className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-md"
-            aria-label="Vehicle is here"
+            aria-label={t('trip.vehicleHere')}
             title={vehicleLabel}
           >
             <CategoryIcon category={category} color={color} className="h-6 w-6" />
@@ -245,11 +272,8 @@ function TripStopRow({
         </span>
         <span className="mr-2 flex min-w-0 flex-1 items-center gap-1.5">
           <span className={`truncate text-[17px] ${highlighted ? 'font-bold' : ''}`}>{s.stop.name ?? s.stop.stopId}</span>
-          {transfers.map((r) => (
-            <RouteBadge key={r.routeId} route={r} />
-          ))}
         </span>
-        <span className={`flex items-baseline gap-1 text-right tabular-nums ${statusColor[status]}`} title={statusLabel[status]}>
+        <span className={`flex items-baseline gap-1 text-right tabular-nums ${statusColor[status]}`} title={t(statusLabel[status])}>
           {status === 'late' || status === 'early' ? (
             <span className="text-[12px] text-secondary line-through">{formatTime(new Date(main.getTime() - delay! * 1000))}</span>
           ) : null}
@@ -258,7 +282,7 @@ function TripStopRow({
             {mainParts.hm}
             {showSeconds && <span className="text-[11px] opacity-70">:{mainParts.s}</span>}
           </span>
-          {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5 self-center" aria-label="Realtime" />}
+          {status !== 'scheduled' && <LiveIcon className="h-3.5 w-3.5 self-center" aria-label={t('trip.realtime')} />}
         </span>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
@@ -266,24 +290,6 @@ function TripStopRow({
   )
 }
 
-/**
- * Interchange markers next to a stop: metro and HÉV lines reachable at that
- * stop group (not the line you're on). Our own choice, not from the data:
- * buses and trams are everywhere, and other "rail" in the feed (mainline
- * trains, the Children's Railway) would mostly be noise.
- */
-function transferLines(routes: RouteRef[], currentRouteId?: string) {
-  const major = routes.filter(
-    (r) => r.routeId !== currentRouteId && (r.type === 'SUBWAY' || /^H\d+$/.test(r.shortName ?? '')),
-  )
-  const seen = new Set<string>()
-  return major.filter((r) => {
-    const key = r.shortName ?? r.routeId
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  }).slice(0, 4)
-}
 
 /** Up to three evenly spaced intermediate stops, so the route reads "via A · B · C". */
 function viaStops(stops: TripStop[]) {
@@ -301,43 +307,38 @@ function viaStops(stops: TripStop[]) {
  * fixed two-digit box (right-aligned, tabular figures) so it doesn't jiggle.
  */
 function UpdatedAgo({ seconds }: { seconds: number }) {
+  const t = useT()
   if (seconds < 30) return null
   const s = Math.floor(seconds)
   return (
     <span>
-      {' · updated '}
-      {s < 60 ? (
-        <>
-          <span className="inline-block min-w-[2ch] text-right tabular-nums">{s}</span>s ago
-        </>
-      ) : (
-        <>
-          <span className="tabular-nums">{Math.floor(s / 60)}</span> min ago
-        </>
-      )}
+      {s < 60
+        ? t.rich('trip.updatedSecs', { n: <span className="inline-block min-w-[2ch] text-right tabular-nums">{s}</span> }, s)
+        : t.rich('trip.updatedMins', { n: <span className="tabular-nums">{Math.floor(s / 60)}</span> }, Math.floor(s / 60))}
     </span>
   )
 }
 
 /** Coloured delay on the status line: "3 min late" red, "2 min early" purple, ✓ on time. */
 function DelayIndicator({ delay }: { delay: number }) {
+  const t = useT()
   const minutes = Math.round(Math.abs(delay) / 60)
   if (minutes === 0)
     return (
       <span className="flex items-center gap-1 font-semibold text-live">
         <CheckIcon className="h-4 w-4" />
-        On time
+        {t('trip.onTime')}
       </span>
     )
   const late = delay > 0
-  return <span className={`font-semibold tabular-nums ${late ? 'text-late' : 'text-early'}`}>{minutes} min {late ? 'late' : 'early'}</span>
+  return <span className={`font-semibold tabular-nums ${late ? 'text-late' : 'text-early'}`}>{t(late ? 'trip.late' : 'trip.early', { n: minutes })}</span>
 }
 
 /**
  * "34 min · 12.4 km · 23 stops". Distance follows the route shape when the
  * feed has one, otherwise straight lines between stops (marked ~).
  */
-function stats(trip: NonNullable<TripDetails['trip']>) {
+function stats(trip: NonNullable<TripDetails['trip']>, t: TFunction) {
   const stops = trip.stops
   if (stops.length < 2) return null
   const minutes = Math.round((new Date(stops[stops.length - 1].arrival).getTime() - new Date(stops[0].departure).getTime()) / 60_000)
@@ -354,6 +355,6 @@ function stats(trip: NonNullable<TripDetails['trip']>) {
       if (a.lat != null && a.lon != null && b.lat != null && b.lon != null) metres += distance({ lat: a.lat, lon: a.lon }, { lat: b.lat, lon: b.lon })
     }
   }
-  const km = metres > 0 ? `${approx ? '~' : ''}${(metres / 1000).toFixed(1)} km` : null
-  return [`${minutes} min`, km, `${stops.length} stops`].filter(Boolean).join(' · ')
+  const km = metres > 0 ? `${approx ? '~' : ''}${formatNumber(metres / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km` : null
+  return [t('trip.statsMinutes', { n: minutes }), km, t('trip.statsStops', { n: stops.length })].filter(Boolean).join(' · ')
 }

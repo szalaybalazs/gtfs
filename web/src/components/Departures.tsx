@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
 import { countdown } from '../lib/countdown'
+import { useT } from '../lib/i18n'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { useNow } from '../lib/useTimetable'
 import { BikeIcon, ChevronIcon, LiveIcon, WheelchairIcon } from './Icons'
@@ -16,8 +17,8 @@ export default function Departures({
   isPending,
   error,
   onRetry,
-  title = 'Departures',
-  empty = 'No more departures in the next few hours.',
+  title,
+  empty,
   toolbar,
   includePast = false,
   highlightTrip,
@@ -36,12 +37,14 @@ export default function Departures({
   title?: ReactNode
   empty?: string
 }) {
+  const t = useT()
   const now = useNow(1_000)
   // Departed rows linger for 20 s (counting -1, -2…), collapsing from -15 s
   const upcoming = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 20_000)
 
   return (
     <section>
+      {title === undefined && <h2 className="flex items-center gap-2 px-1 pb-2 text-xl font-bold">{t('departures.title')}</h2>}
       {title && <h2 className="flex items-center gap-2 px-1 pb-2 text-xl font-bold">{title}</h2>}
       <div className="overflow-hidden rounded-2xl bg-surface">
         {toolbar}
@@ -53,15 +56,15 @@ export default function Departures({
           </div>
         ) : error && upcoming.length === 0 ? (
           <p className="p-6 text-center text-secondary">
-            Couldn't load departures.{' '}
+            {t('departures.loadError')}{' '}
             {onRetry && (
               <button type="button" className="font-medium text-accent" onClick={onRetry}>
-                Retry
+                {t('common.retry')}
               </button>
             )}
           </p>
         ) : upcoming.length === 0 ? (
-          <p className="p-6 text-center text-secondary">{empty}</p>
+          <p className="p-6 text-center text-secondary">{empty ?? t('departures.empty')}</p>
         ) : (
           <ul className="divide-y divide-separator">
             {upcoming.map((d) => (
@@ -75,6 +78,7 @@ export default function Departures({
 }
 
 export function DepartureRow({ departure: d, now, mine, autoHide = true }: { departure: Departure; now: Date; mine?: boolean; autoHide?: boolean }) {
+  const t = useT()
   const time = new Date(d.departure)
   const status = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay)
   const seconds = (time.getTime() - now.getTime()) / 1000
@@ -84,9 +88,9 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
   const collapsing = autoHide && seconds < -15 && seconds >= -60
   const left = seconds < -60
   const { value, unit } = left
-    ? { value: String(Math.round(-seconds / 60)), unit: 'min ago' }
+    ? { value: String(Math.round(-seconds / 60)), unit: 'unit.minAgo' as const }
     : justLeft
-      ? { value: `-${Math.ceil(-seconds)}`, unit: 'sec' }
+      ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
       : countdown(seconds)
   return (
     // grid-rows 1fr → 0fr animates the row's height down so the list slides up
@@ -99,23 +103,23 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
         {d.route && <RouteBadge route={d.route} />}
         <div className="min-w-0 flex-1">
           {/* Accessibility/bike icons trail the destination inline, so row heights stay even */}
-          {mine && <p className="text-[12px] font-semibold text-accent uppercase">Your trip</p>}
+          {mine && <p className="text-[12px] font-semibold text-accent uppercase">{t('departures.yourTrip')}</p>}
           <p className="line-clamp-2 text-[17px] leading-snug font-medium">
             {d.headsign ?? '—'}
             {d.wheelchairAccessible === 'AVAILABLE' && (
-              <WheelchairIcon className="ml-1.5 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label="Wheelchair accessible" />
+              <WheelchairIcon className="ml-1.5 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label={t('common.wheelchair')} />
             )}
             {d.bikesAllowed === 'ALLOWED' && (
-              <BikeIcon className="ml-1 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label="Bikes allowed" />
+              <BikeIcon className="ml-1 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label={t('common.bikes')} />
             )}
           </p>
         </div>
         {/* Countdown only: colour says live/on time (green), early (purple), late (red) */}
         {/* Live icon sits in its own gutter so the number and unit share a right edge */}
-        <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : justLeft ? 'text-label' : statusColor[status]}`} title={statusLabel[status]}>
-          {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3" aria-label={statusLabel[status]} />}
+        <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : justLeft ? 'text-label' : statusColor[status]}`} title={t(statusLabel[status])}>
+          {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3" aria-label={t(statusLabel[status])} />}
           <p className="text-2xl leading-none font-bold tabular-nums">{value}</p>
-          <p className={`text-[11px] font-medium ${status === 'scheduled' ? 'text-secondary' : ''}`}>{unit}</p>
+          <p className={`text-[11px] font-medium ${status === 'scheduled' ? 'text-secondary' : ''}`}>{t(unit)}</p>
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>

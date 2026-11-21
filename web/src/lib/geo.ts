@@ -1,3 +1,4 @@
+import { formatNumber } from './i18n'
 import type { Coords } from './useGeolocation'
 
 /** Great-circle distance in metres. */
@@ -10,7 +11,9 @@ export function distance(a: Coords, b: Coords) {
 }
 
 export function formatDistance(metres: number) {
-  return metres < 1000 ? `${Math.round(metres / 10) * 10} m` : `${(metres / 1000).toFixed(1)} km`
+  return metres < 1000
+    ? `${Math.round(metres / 10) * 10} m`
+    : `${formatNumber(metres / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`
 }
 
 /** Feed colour → "#rrggbb"; anything else falls back (values end up in inline HTML styles). */
@@ -40,4 +43,25 @@ export function hull(points: [number, number][]): [number, number][] {
     const len = Math.hypot(dLat, dLon) || 1
     return [lat + (dLat / len) * 0.00014, lon + (dLon / len) * 0.0002]
   })
+}
+
+/**
+ * A soft outline around points: the convex hull of a small circle around each
+ * point, so corners come out rounded and the stops sit inside with some
+ * padding instead of on a sharp polygon's edge. Works for 1–2 points too
+ * (a circle / a capsule). Returns a closed ring of [lat, lon].
+ */
+export function roundedHull(points: [number, number][], radiusM = 30, steps = 12): [number, number][] {
+  if (points.length === 0) return []
+  const out: [number, number][] = []
+  for (const [lat, lon] of points) {
+    const dLat = radiusM / 111_320
+    const dLon = radiusM / (111_320 * Math.cos((lat * Math.PI) / 180))
+    for (let i = 0; i < steps; i++) {
+      const a = (i / steps) * 2 * Math.PI
+      out.push([lat + dLat * Math.sin(a), lon + dLon * Math.cos(a)])
+    }
+  }
+  const ring = hull(out)
+  return [...ring, ring[0]]
 }
