@@ -77,9 +77,15 @@ export default $config({
       link: [bucket, bkkApiKey],
     });
 
-    // gtfs.szalay.me: the web app at /, the GraphQL API at /graphql.
+    // budapestgone.com (+ www): the web app at /, the GraphQL API at /graphql.
+    // gtfs.szalay.me stays as an alias so existing installs (and their favourites, which are per-origin) keep working.
+    // DNS records go to each name's own Route 53 zone, found by name (budapestgone.com is Z02820692S236ULT02D3;
+    // a single fixed `zone` would break the szalay.me alias).
     const router = new sst.aws.Router("Router", {
-      domain: "gtfs.szalay.me",
+      domain: {
+        name: "budapestgone.com",
+        aliases: ["www.budapestgone.com", "gtfs.szalay.me"],
+      },
     });
     router.route("/graphql", api.url, {
       rewrite: { regex: "^/graphql.*$", to: "/" },
