@@ -5,7 +5,7 @@ import { useNearbyRadius } from '../lib/nearbyRadius'
 import StationRow from './StationRow'
 
 /** Nearby stops, or a clear message about why there are none. */
-export default function NearbyList({ limit }: { limit?: number }) {
+export default function NearbyList({ limit, title, trailing }: { limit?: number; title?: React.ReactNode; trailing?: React.ReactNode }) {
   const [radius] = useNearbyRadius()
   const t = useT()
   const { location, query, stations } = useNearbyStations(radius)
@@ -36,20 +36,37 @@ export default function NearbyList({ limit }: { limit?: number }) {
     )
   else if (shown.length === 0) message = t('nearby.none', { n: radius })
 
+  // A small pin by the heading refreshes the position (filled = using it, pulsing = finding you);
+  // only when there's no position yet does a full "Use my location" row show
+  const pin = (
+    <button
+      type="button"
+      onClick={location.request}
+      aria-label={location.coords ? t('nearby.update') : t('nearby.useMyLocation')}
+      title={location.coords ? t('nearby.update') : t('nearby.useMyLocation')}
+      className="-m-1.5 rounded-full p-1.5 text-accent active:bg-fill"
+    >
+      <LocationIcon filled={!!location.coords} className={`h-5 w-5 ${location.loading ? 'animate-pulse' : ''}`} />
+    </button>
+  )
   return (
+    <>
+    <div className="flex items-center gap-2 px-1 pb-2">
+      {title && <h2 className="text-xl font-bold">{title}</h2>}
+      {pin}
+      <span className="ml-auto">{trailing}</span>
+    </div>
     <div className="overflow-hidden rounded-2xl bg-surface">
-      {/* Always-visible location control: asks for permission or refreshes the position */}
-      <button
-        type="button"
-        onClick={location.request}
-        className="flex w-full items-center gap-2 border-b border-separator px-gutter py-2.5 text-left text-[15px] active:bg-fill"
-      >
-        <LocationIcon filled={!!location.coords} className={`h-5 w-5 text-accent ${location.loading ? 'animate-pulse' : ''}`} />
-        <span className="flex-1 text-secondary">
-          {location.loading ? t('nearby.finding') : location.coords ? t('nearby.using') : t('nearby.off')}
-        </span>
-        <span className="font-medium text-accent">{location.coords ? t('nearby.update') : t('nearby.useMyLocation')}</span>
-      </button>
+      {!location.coords && !location.loading && (
+        <button
+          type="button"
+          onClick={location.request}
+          className="flex w-full items-center gap-2 border-b border-separator px-gutter py-2.5 text-left text-[15px] active:bg-fill"
+        >
+          <span className="flex-1 text-secondary">{t('nearby.off')}</span>
+          <span className="font-medium text-accent">{t('nearby.useMyLocation')}</span>
+        </button>
+      )}
       {message ? (
         <p className="p-6 text-center text-secondary">{message}</p>
       ) : (
@@ -61,5 +78,6 @@ export default function NearbyList({ limit }: { limit?: number }) {
         </ul>
       )}
     </div>
+    </>
   )
 }

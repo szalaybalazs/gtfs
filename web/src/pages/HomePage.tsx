@@ -66,13 +66,15 @@ export default function HomePage() {
         )}
 
         <section>
-          <div className="flex items-baseline justify-between px-1 pb-2">
-            <h2 className="text-xl font-bold">{t('home.nearbyStops')}</h2>
-            <Link to="/nearby" className="text-[15px] font-medium text-accent">
-              {t('home.seeAll')}
-            </Link>
-          </div>
-          <NearbyList limit={5} />
+          <NearbyList
+            limit={5}
+            title={t('home.nearbyStops')}
+            trailing={
+              <Link to="/nearby" className="text-[15px] font-medium text-accent">
+                {t('home.seeAll')}
+              </Link>
+            }
+          />
         </section>
       </main>
     </div>
