@@ -10,6 +10,7 @@ import { gql, MAP_GROUPS_QUERY, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, VEHICLES_QUE
 import { distance, roundedHull } from '../lib/geo'
 import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, mainCategory, stopIcon, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
 import { formatTime } from '../lib/time'
+import { LIVE_ICON_HTML, statusCss, type RealtimeStatus } from '../lib/realtimeStatus'
 import { categoryOf } from '../lib/categories'
 import { useMapLayers } from '../lib/mapLayers'
 import LayersMenu from './LayersMenu'
@@ -31,7 +32,18 @@ export type TripOverlay = {
   color: string
   headsign: string | null
   path: [number, number][] // [lon, lat]
-  stops: { stopId: string; stationId: string | null; name: string; lat: number; lon: number; time: Date; passed: boolean; strong?: boolean }[]
+  stops: {
+    stopId: string
+    stationId: string | null
+    name: string
+    lat: number
+    lon: number
+    time: Date
+    passed: boolean
+    strong?: boolean
+    /** Realtime status of this time (colours the label; live data gets the live mark) */
+    status: RealtimeStatus
+  }[]
 }
 
 
@@ -155,7 +167,9 @@ export default function TransitMap({
           v.latitude != null &&
           v.longitude != null &&
           !!view &&
-          (v.trip?.tripId === trip?.tripId || (showAll && layers.vehicles && view.bounds.contains([v.longitude, v.latitude]))),
+          // The trip's own vehicle always; others only with "show everything" + the Vehicles layer.
+          // (Guard on trip: without one, undefined === undefined would keep trip-less vehicles.)
+          ((!!trip && v.trip?.tripId === trip.tripId) || (showAll && layers.vehicles && view.bounds.contains([v.longitude, v.latitude]))),
       ),
     [vehicleQuery.data, view, showAll, trip?.tripId, layers.vehicles],
   )
@@ -219,7 +233,8 @@ export default function TransitMap({
     [location.coords],
   )
 
-  useGeoJson(map, 'stop-outlines', { type: 'FeatureCollection', features: outlines }, [
+  const outlineData = useMemo<GeoJSON.FeatureCollection>(() => ({ type: 'FeatureCollection', features: outlines }), [outlines])
+  useGeoJson(map, 'stop-outlines', outlineData, [
     // Stop groups as a neutral grey footprint
     { id: 'stop-outlines-fill', type: 'fill', paint: { 'fill-color': '#8e8e93', 'fill-opacity': 0.1 } },
     { id: 'stop-outlines-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': '#8e8e93', 'line-width': 1.5, 'line-opacity': 0.5 } },
@@ -272,7 +287,7 @@ export default function TransitMap({
         ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
         // Glide to each new position, along the line's path when we have it
         animate: true,
-        paths: v.trip?.tripId === trip?.tripId && trip?.path.length ? [trip.path] : (pathsByRoute.get(v.trip?.route?.routeId ?? '') ?? null),
+        paths: trip && v.trip?.tripId === trip.tripId && trip.path.length ? [trip.path] : (pathsByRoute.get(v.trip?.route?.routeId ?? '') ?? null),
         z: selected === v.id ? 2000 : 500,
         // First tap: details card. Tap the same vehicle again: open its trip.
         onClick: () => {
@@ -284,10 +299,14 @@ export default function TransitMap({
   )
 
   // The trip: its path as a line in the line's colour, its stops as dots with the time it gets there
+  const tripPathData = useMemo<GeoJSON.Feature | null>(
+    () => (trip && trip.path.length > 1 ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: trip.path } } : null),
+    [trip],
+  )
   useGeoJson(
     map,
     'trip-path',
-    trip && trip.path.length > 1 ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: trip.path } } : null,
+    tripPathData,
     [
       { id: 'trip-path-casing', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 9 } },
       { id: 'trip-path', type: 'line', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': trip?.color ?? '#2563eb', 'line-width': 5 } },
@@ -299,7 +318,9 @@ export default function TransitMap({
         const sel = selectedTripStop === s.stopId
         const dot = `<div style="position:absolute;left:-6px;top:-6px;width:12px;height:12px;box-sizing:border-box;border-radius:50%;background:#fff;border:3px solid ${s.strong ? '#111' : trip!.color}"></div>`
         // Time label to the right of the dot, like a timetable on the map
-        const label = `<div style="position:absolute;left:10px;top:-9px;white-space:nowrap;font:600 11px/18px system-ui;padding:0 5px;border-radius:5px;background:rgb(255 255 255/.92);color:#111;box-shadow:0 1px 2px rgb(0 0 0/.2)">${formatTime(s.time)}</div>`
+        // Coloured like the stop list (late red, early purple, on time green), live mark when it's realtime
+        const live = s.status !== 'scheduled'
+        const label = `<div style="position:absolute;left:10px;top:-9px;width:max-content;display:flex;align-items:center;gap:2px;font:600 11px/18px system-ui;padding:0 5px;border-radius:5px;background:rgb(255 255 255/.92);color:${statusCss[s.status] === 'inherit' ? '#111' : statusCss[s.status]};box-shadow:0 1px 2px rgb(0 0 0/.2)">${formatTime(s.time)}${live ? LIVE_ICON_HTML : ''}</div>`
         const card = sel
           ? `<div style="position:absolute;left:0;top:-14px;transform:translate(-50%,-100%);padding:6px 9px;background:#fff;border-radius:10px;border:2px solid ${trip!.color};box-shadow:0 4px 12px rgb(0 0 0/.3);white-space:nowrap;font:600 13px/16px system-ui;color:#111">${s.name.replace(/[<>&"]/g, '')}<div style="font:500 11px/14px system-ui;color:#555">${formatTime(s.time)}${trip!.headsign ? ` · ▸ ${trip!.headsign.replace(/[<>&"]/g, '')}` : ''}</div></div>`
           : ''

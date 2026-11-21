@@ -998,7 +998,8 @@ export const resolvers = {
           type: "FeatureCollection",
           features: allRouteLines()
             .filter((l) => want.size === 0 || want.has(l.type))
-            .map((l) => l.feature),
+            // Vehicles carry the merged (canonical) line id, so the paths must too
+            .map((l) => ({ ...l.feature, properties: { ...l.feature.properties, routeId: canonicalRoute(l.feature.properties.routeId) } })),
         })
       );
     },

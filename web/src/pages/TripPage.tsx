@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
 import Alerts from '../components/Alerts'
 import MiniMap from '../components/MiniMap'
-import TransitMap from '../components/TransitMap'
+import TransitMap, { type TripOverlay } from '../components/TransitMap'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
 import { gql, TRIP_PATH_QUERY, TRIP_QUERY, type TripDetails, type TripPath, type TripStop } from '../lib/api'
@@ -58,6 +59,44 @@ export default function TripPage() {
   // Only show seconds when the data has them (realtime predictions, MÁV); plain schedules are all :00
   const hasSeconds = stops.some((x) => new Date(x.arrival).getSeconds() !== 0 || new Date(x.departure).getSeconds() !== 0)
   const vehicleAge = vehicle?.timestamp ? (now.getTime() - new Date(vehicle.timestamp).getTime()) / 60_000 : null
+
+  // Built once per data change, not on every 1 s tick: the maps re-upload whatever they're given
+  const miniLine = useMemo(() => tripPath?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number]), [tripPath])
+  const miniPoints = useMemo(
+    () => stops.filter((s) => s.stop.lat != null && s.stop.lon != null).map((s) => ({ lat: s.stop.lat!, lon: s.stop.lon!, strong: s.stop.stopId === from })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [query.data, from],
+  )
+  const miniVehicle = useMemo(
+    () => (vehicle?.latitude != null && vehicle.longitude != null ? { lat: vehicle.latitude, lon: vehicle.longitude, route: route ?? null, bearing: vehicle.bearing } : null),
+    [vehicle, route],
+  )
+  const overlay = useMemo<TripOverlay | null>(
+    () =>
+      trip
+        ? {
+            tripId,
+            color,
+            headsign: trip.headsign,
+            path: tripPath?.coordinates ?? [],
+            stops: stops
+              .filter((s) => s.stop.lat != null && s.stop.lon != null)
+              .map((s, i) => ({
+                stopId: s.stop.stopId,
+                stationId: s.stop.station?.stationId ?? null,
+                name: s.stop.name ?? s.stop.stopId,
+                lat: s.stop.lat!,
+                lon: s.stop.lon!,
+                time: new Date(i === stops.length - 1 ? s.arrival : s.departure),
+                status: realtimeStatus(s.realtime, i === stops.length - 1 ? (s.arrivalDelay ?? s.departureDelay) : (s.departureDelay ?? s.arrivalDelay)),
+                passed: nextIndex === -1 || i < nextIndex,
+                strong: s.stop.stopId === from,
+              })),
+          }
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [query.data, tripPath, color, nextIndex, from, tripId],
+  )
 
   return (
     <div className="min-h-dvh">
@@ -158,40 +197,11 @@ export default function TripPage() {
               <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
               <MiniMap
                 color={color}
-                line={tripPath?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number])}
-                points={stops
-                  .filter((s) => s.stop.lat != null && s.stop.lon != null)
-                  .map((s) => ({ lat: s.stop.lat!, lon: s.stop.lon!, strong: s.stop.stopId === from }))}
-                vehicle={
-                  vehicle?.latitude != null && vehicle.longitude != null
-                    ? { lat: vehicle.latitude, lon: vehicle.longitude, route: route ?? null, bearing: vehicle.bearing }
-                    : null
-                }
+                line={miniLine}
+                points={miniPoints}
+                vehicle={miniVehicle}
                 // Full screen: the same map as the Map page, with this trip drawn on it
-                expand={(close) => (
-                  <TransitMap
-                    onClose={close}
-                    bounds={tripBounds(stops)}
-                    trip={{
-                      tripId,
-                      color,
-                      headsign: trip.headsign,
-                      path: tripPath?.coordinates ?? [],
-                      stops: stops
-                        .filter((s) => s.stop.lat != null && s.stop.lon != null)
-                        .map((s, i) => ({
-                          stopId: s.stop.stopId,
-                          stationId: s.stop.station?.stationId ?? null,
-                          name: s.stop.name ?? s.stop.stopId,
-                          lat: s.stop.lat!,
-                          lon: s.stop.lon!,
-                          time: new Date(i === stops.length - 1 ? s.arrival : s.departure),
-                          passed: nextIndex === -1 || i < nextIndex,
-                          strong: s.stop.stopId === from,
-                        })),
-                    }}
-                  />
-                )}
+                expand={(close) => <TransitMap onClose={close} bounds={tripBounds(stops)} trip={overlay ?? undefined} />}
               />
             </section>
           </>

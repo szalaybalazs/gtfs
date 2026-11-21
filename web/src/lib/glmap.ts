@@ -31,7 +31,8 @@ export function useGlMap(container: RefObject<HTMLDivElement | null>, { center, 
     applied.current = style
     if (ref.current) {
       // Theme changed: new colours, same view. Our sources/layers re-add on 'style.load'.
-      ref.current.setStyle(style)
+      // diff: false so 'style.load' fires and our sources/layers get re-added (the diff path drops them silently)
+      ref.current.setStyle(style, { diff: false })
       return
     }
     const m = new maplibregl.Map({

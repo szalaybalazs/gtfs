@@ -196,7 +196,8 @@ export function TimeControl() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => choose(day === days[0] ? hhmm : `${day}T${hhmm}`)}
+                  // Always with the day: a bare HH:MM that's already past would roll over to tomorrow
+                  onClick={() => choose(`${day}T${hhmm}`)}
                   className="flex-1 rounded-xl bg-accent py-2.5 font-semibold text-white active:opacity-80"
                 >
                   {t('after.show')}
@@ -215,24 +216,31 @@ export default function AfterFilter({ stopIds, routeIds = null }: { stopIds: str
   const t = useT()
   const { after, loadEarlier } = useAfter()
   const [busy, setBusy] = useState(false)
-  const [none, setNone] = useState(false)
 
-  // Find the last departure before the list starts and start there: exactly one more row per tap
+  // Reset when the stops or the start change (the button may have something to show again)
+  const key = `${stopIds.join(',')}|${(routeIds ?? []).join(',')}|${after?.getTime() ?? ''}`
+  const [noneFor, setNoneFor] = useState<string | null>(null)
+  const none = noneFor === key
+
+  // Find the last departure before what's on screen and start there: exactly one more row per tap.
+  // The list already shows from 60 s before its start, so look before that; try short windows first so
+  // a busy stop group can't hit the row limit and skip the real predecessor.
   const earlier = async () => {
     if (busy || stopIds.length === 0) return
     setBusy(true)
     const start = after ?? new Date(Math.floor(Date.now() / 60_000) * 60_000)
+    const edge = start.getTime() - 60_000
     try {
-      for (const hours of [1, 3]) {
-        const from = new Date(start.getTime() - hours * 3_600_000)
-        const data = await gql<Departures>(DEPARTURES_QUERY, { stopIds, routeIds, limit: 200, hours, after: from.toISOString() })
-        const before = data.departures.map((d) => new Date(d.departure)).filter((d) => d.getTime() < start.getTime())
+      for (const minutes of [15, 60, 180]) {
+        const from = new Date(edge - minutes * 60_000)
+        const data = await gql<Departures>(DEPARTURES_QUERY, { stopIds, routeIds, limit: 200, hours: Math.ceil(minutes / 60), after: from.toISOString() })
+        const before = data.departures.map((d) => new Date(d.departure).getTime()).filter((ts) => ts < edge)
         if (before.length) {
-          loadEarlier(new Date(Math.max(...before.map((d) => d.getTime()))))
+          loadEarlier(new Date(Math.max(...before)))
           return
         }
       }
-      setNone(true)
+      setNoneFor(key)
     } catch {
       // Network hiccup: leave the list as it is
     } finally {
