@@ -4,9 +4,11 @@ import type { Favorite, FavoriteDraft } from '../lib/favorites'
 import { useT } from '../lib/i18n'
 import { useDepartures } from '../lib/useDepartures'
 import { useNow } from '../lib/useTimetable'
-import { ChevronIcon } from './Icons'
+import { ChevronIcon, LiveIcon } from './Icons'
 import RouteBadge from './RouteBadge'
-import { Countdown } from './LineBoard'
+import { countdown } from '../lib/countdown'
+import { realtimeStatus } from '../lib/realtimeStatus'
+import { formatTime } from '../lib/time'
 
 /** How many upcoming departures a favourite row shows. */
 const MAX_TIMES = 8
@@ -50,9 +52,9 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
             <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-1.5">
               <RouteBadge route={route} fit />
               {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
-              <span className="flex items-center gap-3 pr-2">
+              <span className="flex items-baseline gap-2.5 pr-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
                 {times.slice(0, 4).map((d) => (
-                  <Countdown key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} small inline />
+                  <ShortTime key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} />
                 ))}
               </span>
             </span>
@@ -80,6 +82,24 @@ function Card({ title, subtitle, to, link, children }: { title: string; subtitle
     </Link>
   ) : (
     body
+  )
+}
+
+/**
+ * One time on a single line: "10s", "10'", "2½'", "17:23" (an hour or more away), with the live
+ * mark right after it when tracked live. Full colour.
+ */
+function ShortTime({ d, now }: { d: Departure; now: Date }) {
+  const at = new Date(d.departure)
+  const s = (at.getTime() - now.getTime()) / 1000
+  const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
+  const text =
+    s < 0 ? `-${Math.ceil(-s)}s` : s >= 3600 ? formatTime(at) : s < 60 ? `${Math.round(s)}s` : `${countdown(s).value}'`
+  return (
+    <span className={`inline-flex items-start ${s < 0 ? 'opacity-45' : ''}`}>
+      {text}
+      {live && s >= 0 && <LiveIcon className="ml-0.5 h-2.5 w-2.5 text-secondary" aria-hidden />}
+    </span>
   )
 }
 
