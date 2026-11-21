@@ -13,7 +13,8 @@ import StopInfoCard from '../components/StopInfoCard'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { recordVisit } from '../lib/usage'
 import { findCachedStation, stationKey } from '../lib/prefetch'
-import { useDepartures } from '../lib/useDepartures'
+import { useDepartures, useSteadyLimit } from '../lib/useDepartures'
+import type { Departure } from '../lib/api'
 import { useT } from '../lib/i18n'
 
 /**
@@ -97,8 +98,12 @@ export default function StationPage() {
   // With ?from= the stop is already known, so departures load in parallel with the stop group (no waterfall)
   // A whole stop group shows more than one platform; each "Show more" adds 20
   const [more, setMore] = useState(0)
-  const limit = (from ? 12 : 25) + more * 20
-  const departures = useDepartures(ids, { limit: limit + 10, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
+  // Show 20 for a whole stop group, 10 for one platform; fetch just enough spare (see useSteadyLimit)
+  const limit = (from ? 10 : 20) + more * 20
+  const [fetched, setFetched] = useState<Departure[] | undefined>()
+  const fetchLimit = useSteadyLimit(limit, fetched)
+  const departures = useDepartures(ids, { limit: fetchLimit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
+  useEffect(() => setFetched(departures.data?.departures), [departures.data])
 
   return (
     <div className="min-h-dvh">
@@ -184,7 +189,7 @@ export default function StationPage() {
               <Departures
                 toolbar={<AfterFilter stopIds={ids} routeIds={multi ? lineIds : null} />}
                 show={limit}
-                footer={(departures.data?.departures.length ?? 0) >= limit + 10 ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
+                footer={(departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}

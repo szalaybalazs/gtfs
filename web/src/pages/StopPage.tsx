@@ -14,7 +14,8 @@ import Timetable from '../components/Timetable'
 import ViewToggle, { useView } from '../components/ViewToggle'
 import { gql, STOP_QUERY, type StopDetails } from '../lib/api'
 import { recordVisit } from '../lib/usage'
-import { useDepartures } from '../lib/useDepartures'
+import { useDepartures, useSteadyLimit } from '../lib/useDepartures'
+import type { Departure } from '../lib/api'
 import { useT } from '../lib/i18n'
 
 /** One platform: its lines, then departures or the combined timetable. */
@@ -59,8 +60,12 @@ export default function StopPage() {
   const favorite = favoriteOptions.some((o) => has(favoriteId(o)))
 
   const [more, setMore] = useState(0)
-  const limit = 20 + more * 20
-  const departures = useDepartures([stopId], { limit: limit + 10, after })
+  // One stop: show 10, fetch just enough spare (see useSteadyLimit)
+  const limit = 10 + more * 20
+  const [fetched, setFetched] = useState<Departure[] | undefined>()
+  const fetchLimit = useSteadyLimit(limit, fetched)
+  const departures = useDepartures([stopId], { limit: fetchLimit, after })
+  useEffect(() => setFetched(departures.data?.departures), [departures.data])
 
   return (
     <div className="min-h-dvh">
@@ -123,7 +128,7 @@ export default function StopPage() {
                   <Departures
                     toolbar={<AfterFilter stopIds={[stopId]} />}
                     show={limit}
-                footer={(departures.data?.departures.length ?? 0) >= limit + 10 ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
+                footer={(departures.data?.departures.length ?? 0) >= fetchLimit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                     title={null}
