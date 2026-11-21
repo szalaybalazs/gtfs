@@ -29,6 +29,17 @@ export default function Layout() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const activeType = location.pathname === '/routes' ? new URLSearchParams(location.search).get('type') : null
+  // Lock page scroll while the menu is open (html and body both, for iOS standalone)
+  useEffect(() => {
+    if (!open) return
+    const html = document.documentElement
+    const prev = [html.style.overflow, document.body.style.overflow]
+    html.style.overflow = document.body.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prev[0]
+      document.body.style.overflow = prev[1]
+    }
+  }, [open])
   // Close on Escape (links close it on click).
   useEffect(() => {
     if (!open) return
@@ -121,14 +132,14 @@ export default function Layout() {
         </Suspense>
       </div>
       <div
-        className={`fixed inset-0 z-[1100] bg-black/30 transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+        className={`fixed inset-0 z-[1100] touch-none bg-black/30 transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         onClick={() => setOpen(false)}
         aria-hidden
       />
       <nav
         aria-label={t('nav.mainMenu')}
         inert={!open}
-        className={`fixed inset-y-0 left-0 z-[1101] flex w-72 overflow-y-auto pb-6 max-w-[85vw] flex-col bg-canvas pt-[env(safe-area-inset-top)] shadow-2xl transition-transform duration-200 ${
+        className={`fixed inset-y-0 left-0 z-[1101] flex w-72 overflow-y-auto overscroll-contain pb-6 max-w-[85vw] flex-col bg-canvas pt-[env(safe-area-inset-top)] shadow-2xl transition-transform duration-200 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
