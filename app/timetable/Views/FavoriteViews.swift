@@ -220,6 +220,24 @@ struct FavoriteCard: View {
     private var request: DeparturesRequest { fav.departuresRequest }
     private var target: StationTarget { fav.stationTarget }
 
+    /// Size and grouping of this favourite, and removing it.
+    @ViewBuilder private var editMenu: some View {
+        let store = FavoritesStore.shared
+        let size = fav.size ?? .small
+        Picker("Size", selection: Binding(get: { size }, set: { v in store.update(fav.id) { $0.size = v } })) {
+            Text("Small").tag(FavSize.small); Text("Medium").tag(FavSize.medium); Text("Large").tag(FavSize.large)
+        }
+        .pickerStyle(.inline)
+        if size != .small {
+            Picker("Group by", selection: Binding(get: { fav.grouping ?? .line }, set: { v in store.update(fav.id) { $0.grouping = v } })) {
+                Text("Line").tag(FavGrouping.line); Text("Time").tag(FavGrouping.time)
+            }
+            .pickerStyle(.inline)
+        }
+        Divider()
+        Button(role: .destructive) { store.toggle(fav) } label: { Label("Remove from favourites", systemImage: "star.slash") }
+    }
+
     var body: some View {
         switch fav.kind {
         case .line:
@@ -252,6 +270,8 @@ struct FavoriteCard: View {
             Group {
                 if link {
                     NavigationLink(value: target) { card }.buttonStyle(RowButtonStyle())
+                        // Long press: the rest of the screen blurs, the card lifts, and its options open under it
+                        .contextMenu { editMenu } preview: { FavoriteCard(fav: fav, link: false).frame(minWidth: 320).background(Theme.surface) }
                 } else {
                     card
                 }
@@ -276,25 +296,6 @@ struct FavoriteSheet: View {
         }
     }
 
-    /// How a saved favourite looks: how many rows it takes, and for more than one, how they are grouped.
-    private func options_(_ option: Favorite) -> some View {
-        let current = store.favorites.first { $0.id == option.id } ?? option
-        let size = current.size ?? .small
-        return VStack(spacing: 8) {
-            Picker("Size", selection: Binding(get: { size }, set: { v in store.update(option.id) { $0.size = v } })) {
-                Text("Small").tag(FavSize.small); Text("Medium").tag(FavSize.medium); Text("Large").tag(FavSize.large)
-            }
-            if size != .small {
-                Picker("Group by", selection: Binding(get: { current.grouping ?? .line }, set: { v in store.update(option.id) { $0.grouping = v } })) {
-                    Text("Line").tag(FavGrouping.line); Text("Time").tag(FavGrouping.time)
-                }
-            }
-        }
-        .pickerStyle(.segmented)
-        .padding(12)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -310,14 +311,13 @@ struct FavoriteSheet: View {
                                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(saved ? Theme.accent : Theme.secondary)
                                 }
                                 .padding(.horizontal, 16).padding(.top, 12)
-                                FavoriteCard(fav: store.favorites.first { $0.id == option.id } ?? option, link: false)
+                                FavoriteCard(fav: option, link: false)
                             }
                             .background(Theme.surface)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(saved ? Theme.accent : .clear, lineWidth: 2))
                         }
                         .buttonStyle(.plain)
-                        if saved { options_(option) }
                     }
                 }
                 .padding(16)

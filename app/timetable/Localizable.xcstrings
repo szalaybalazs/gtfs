@@ -1179,6 +1179,23 @@
         }
       }
     },
+    "Large" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagy"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grande"
+          }
+        }
+      }
+    },
     "Light" : {
       "localizations" : {
         "hu" : {
@@ -1349,6 +1366,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Marcadores"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közepes"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Médio"
           }
         }
       }
@@ -1713,9 +1747,6 @@
         }
       }
     },
-    "One list in time order" : {},
-    "One row per line and direction" : {},
-    "One row per line, its next times" : {},
     "ongoing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1977,7 +2008,6 @@
         }
       }
     },
-    "Route" : {},
     "Route not found." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2297,6 +2327,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "desde %@"
+          }
+        }
+      }
+    },
+    "Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Méret"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho"
+          }
+        }
+      }
+    },
+    "Small" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kicsi"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pequeno"
           }
         }
       }
@@ -3009,70 +3073,19 @@
         }
       }
     },
-    "Size" : {
+    "Remove from favourites" : {
       "extractionState" : "manual",
       "localizations" : {
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Méret"
+            "value" : "Eltávolítás a kedvencekből"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamanho"
-          }
-        }
-      }
-    },
-    "Small" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kicsi"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pequeno"
-          }
-        }
-      }
-    },
-    "Medium" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Közepes"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Médio"
-          }
-        }
-      }
-    },
-    "Large" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nagy"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grande"
+            "value" : "Remover dos favoritos"
           }
         }
       }
