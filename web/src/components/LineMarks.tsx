@@ -1,4 +1,4 @@
-import { Refresh, Telephone, Wheelchair } from '@mynaui/icons-react'
+import { Circle, LetterPCircle, OneCircle, Refresh, Telephone, Wheelchair } from '@mynaui/icons-react'
 import type { ReactNode } from 'react'
 import type { RouteFlags } from '../lib/api'
 import { useT, type MessageKey } from '../lib/i18n'
@@ -18,27 +18,30 @@ export const MARKS: { mark: Mark; label: MessageKey }[] = [
   { mark: 'circular', label: 'legend.circular' },
 ]
 
-const glyph: Record<Mark, ReactNode> = {
-  frontDoor: <span className="text-[0.62em] leading-none font-bold">1</span>,
-  replacement: <span className="text-[0.62em] leading-none font-bold">P</span>,
-  lowFloor: <Wheelchair className="h-[0.7em] w-[0.7em]" strokeWidth={2.2} />,
-  demand: <Telephone className="h-[0.66em] w-[0.66em]" strokeWidth={2.2} />,
-  circular: <Refresh className="h-[0.7em] w-[0.7em]" strokeWidth={2.2} />,
+// Mynaui has circled 1 and P; the others are Mynaui's Circle with the Mynaui icon set inside it
+const ICON = { x: 7, y: 7, width: 10, height: 10, strokeWidth: 2 }
+const inner: Partial<Record<Mark, ReactNode>> = {
+  lowFloor: <Wheelchair {...ICON} />,
+  demand: <Telephone {...ICON} />,
+  circular: <Refresh {...ICON} />,
 }
 
-/** One marker; size follows the surrounding font size. */
-export function MarkIcon({ mark, className = '' }: { mark: Mark; className?: string }) {
+/**
+ * One marker, as an SVG so it lines up exactly like the other inline icons.
+ * Size it with h-/w- classes like any icon.
+ */
+export function MarkIcon({ mark, className = 'h-[1.1em] w-[1.1em] align-[-0.2em]' }: { mark: Mark; className?: string }) {
   const t = useT()
   const label = t(MARKS.find((m) => m.mark === mark)!.label)
+  const cls = `inline shrink-0 ${className}`
+  if (mark === 'frontDoor') return <OneCircle role="img" aria-label={label} className={cls} />
+  if (mark === 'replacement') return <LetterPCircle role="img" aria-label={label} className={cls} />
   return (
-    <span
-      role="img"
-      aria-label={label}
-      title={label}
-      className={`inline-flex h-[1.1em] w-[1.1em] shrink-0 items-center justify-center rounded-full border-[1.5px] border-current align-[-0.15em] ${className}`}
-    >
-      {glyph[mark]}
-    </span>
+    <svg viewBox="0 0 24 24" role="img" aria-label={label} className={cls} fill="none">
+      <title>{label}</title>
+      <Circle x={0} y={0} width={24} height={24} />
+      {inner[mark]}
+    </svg>
   )
 }
 

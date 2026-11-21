@@ -58,6 +58,8 @@ export default function StationStops({
         <h2 className="px-1 pb-2 text-xl font-bold">{t('common.map')}</h2>
         <MiniMap
           area
+          // A stop group is a neutral grey footprint, not a line colour
+          color="#8e8e93"
           height={220}
           points={stops
             .filter((s) => s.lat != null && s.lon != null)

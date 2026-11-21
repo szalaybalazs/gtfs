@@ -284,8 +284,9 @@ export default function MapPage() {
   )
 
   useGeoJson(map, 'stop-outlines', { type: 'FeatureCollection', features: outlines }, [
-    { id: 'stop-outlines-fill', type: 'fill', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.08 } },
-    { id: 'stop-outlines-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.5, 'line-opacity': 0.45 } },
+    // Stop groups as a neutral grey footprint
+    { id: 'stop-outlines-fill', type: 'fill', paint: { 'fill-color': '#8e8e93', 'fill-opacity': 0.1 } },
+    { id: 'stop-outlines-line', type: 'line', layout: { 'line-join': 'round' }, paint: { 'line-color': '#8e8e93', 'line-width': 1.5, 'line-opacity': 0.5 } },
   ])
   const allMarkers = useMemo(() => [...stopMarkers, ...vehicleMarkers, ...me], [stopMarkers, vehicleMarkers, me])
   useMarkers(map, allMarkers)

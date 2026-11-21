@@ -120,8 +120,8 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
               <BikeIcon className="ml-1 inline h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" aria-label={t('common.bikes')} />
             )}
             {/* BKK legend marks for this trip: ① front door only, ☎ stops on request */}
-            {d.frontDoor && <MarkIcon mark="frontDoor" className="ml-1.5 text-[14px] text-secondary" />}
-            {d.onRequest && <MarkIcon mark="demand" className="ml-1 text-[14px] text-secondary" />}
+            {d.frontDoor && <MarkIcon mark="frontDoor" className="ml-1.5 h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" />}
+            {d.onRequest && <MarkIcon mark="demand" className="ml-1 h-3.5 w-3.5 align-[-1px] text-secondary opacity-70" />}
           </p>
         </div>
         {/* Countdown only: colour says live/on time (green), early (purple), late (red) */}

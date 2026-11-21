@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router'
 import { DEPARTURES_QUERY, gql, type Departures } from '../lib/api'
-import { useT } from '../lib/i18n'
+import { intlLocale, useT } from '../lib/i18n'
+import Wheel, { WHEEL_HEIGHT } from './Wheel'
 import { formatTime, localParts, TIME_ZONE } from '../lib/time'
 import { ClockIcon } from './Icons'
 
 /**
  * The departures window, kept in the URL so it survives back/forward:
  * ?after=HH:MM  a chosen time (earlier than now = tomorrow)
+ * ?after=YYYY-MM-DDTHH:MM  a chosen day and time (the picker's second step)
  * ?at=ISO       arrived from a trip: start at that trip's time here
  * ?earlier=ISO  "⋯ Earlier": start at the departure just before the list (one more row per tap)
  */
@@ -19,7 +22,14 @@ export function useAfter() {
   const earlierDate = earlierRaw ? new Date(earlierRaw) : null
   const earlier = earlierDate && !Number.isNaN(earlierDate.getTime()) ? earlierDate : null
   const atDate = at ? new Date(at) : null
-  const picked = raw && /^\d{2}:\d{2}$/.test(raw) ? budapestTime(raw) : atDate && !Number.isNaN(atDate.getTime()) ? atDate : null
+  const picked =
+    raw && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(raw)
+      ? budapestTime(raw.slice(11), raw.slice(0, 10))
+      : raw && /^\d{2}:\d{2}$/.test(raw)
+        ? budapestTime(raw)
+        : atDate && !Number.isNaN(atDate.getTime())
+          ? atDate
+          : null
 
   const update = (changes: Record<string, string | null>) =>
     setParams(
@@ -46,10 +56,10 @@ export function useAfter() {
   }
 }
 
-/** Today's (or tomorrow's) HH:MM in Budapest time, as an absolute Date. */
-function budapestTime(hhmm: string) {
+/** HH:MM in Budapest time on `day` (YYYY-MM-DD), or today/tomorrow when no day is given, as an absolute Date. */
+function budapestTime(hhmm: string, day?: string) {
   const now = new Date()
-  const today = localParts(now).date
+  const today = day ?? localParts(now).date
   const offsetMin = Math.round(
     (new Date(now.toLocaleString('en-US', { timeZone: TIME_ZONE })).getTime() -
       new Date(now.toLocaleString('en-US', { timeZone: 'UTC' })).getTime()) /
@@ -57,106 +67,146 @@ function budapestTime(hhmm: string) {
   )
   const [h, m] = hhmm.split(':').map(Number)
   const utc = Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10), h, m) - offsetMin * 60_000
-  return new Date(utc < now.getTime() - 60_000 ? utc + 86_400_000 : utc)
+  return new Date(!day && utc < now.getTime() - 60_000 ? utc + 86_400_000 : utc)
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+/** The next week of days, as YYYY-MM-DD in Budapest time. */
+function nextDays(n: number) {
+  return Array.from({ length: n }, (_, i) => localParts(new Date(Date.now() + i * 86_400_000)).date)
+}
+
 /**
- * Departures-header control: clock icon + "Now" or the chosen time. Opens an app-styled
- * picker (hour/minute steppers, quick offsets), no native time input.
+ * Departures-header control: clock icon + "Now" or the chosen time. Opens a
+ * centred sheet with iOS-style hour and minute wheels; the day is a second,
+ * collapsed step (today is by far the common case).
  */
 export function TimeControl() {
   const t = useT()
   const { picked, after, setTime } = useAfter()
   const [open, setOpen] = useState(false)
-  const base = picked ?? new Date()
-  const parts = localParts(base)
-  const [h, setH] = useState(+parts.hour)
-  const [m, setM] = useState(Math.ceil(+parts.minute / 5) * 5 % 60)
-  const ref = useRef<HTMLDivElement>(null)
-  // Fixed, so the departures card's rounded overflow doesn't clip it
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const [h, setH] = useState(0)
+  const [m, setM] = useState(0)
+  const [day, setDay] = useState(() => nextDays(1)[0])
+  const [pickDay, setPickDay] = useState(false)
+  const days = nextDays(7)
+  const dayLabel = (d: string) =>
+    d === days[0]
+      ? t('alerts.today')
+      : d === days[1]
+        ? t('alerts.tomorrow')
+        : new Date(`${d}T12:00:00`).toLocaleDateString(intlLocale(), { weekday: 'long', month: 'short', day: 'numeric' })
 
-  useEffect(() => {
-    if (!open) return
-    const r = ref.current?.getBoundingClientRect()
-    if (r) setPos({ top: r.bottom + 4, left: Math.max(8, Math.min(r.left, window.innerWidth - 264)) })
-    const onScroll = () => setOpen(false)
-    window.addEventListener('scroll', onScroll, { passive: true, once: true })
+  const show = () => {
     const p = localParts(picked ?? new Date())
     setH(+p.hour)
-    setM((Math.ceil(+p.minute / 5) * 5) % 60)
-    const onDown = (e: PointerEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false)
-    window.addEventListener('pointerdown', onDown)
+    setM(+p.minute)
+    setDay(picked ? p.date : days[0])
+    setPickDay(false)
+    setOpen(true)
+  }
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    window.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
     return () => {
-      window.removeEventListener('pointerdown', onDown)
-      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const choose = (hhmm: string | null) => {
-    setTime(hhmm)
+  const choose = (value: string | null) => {
+    setTime(value)
     setOpen(false)
   }
-  const plus = (minutes: number) => {
-    const t = new Date(Date.now() + minutes * 60_000)
-    const p = localParts(t)
-    choose(`${p.hour}:${p.minute}`)
-  }
-  const Stepper = ({ value, onChange, max, step }: { value: number; onChange: (v: number) => void; max: number; step: number }) => (
-    <div className="flex flex-col items-center">
-      <button type="button" onClick={() => onChange((value + step) % max)} className="rounded-lg px-4 py-1 text-xl active:bg-fill" aria-label={t('after.later')}>
-        ▲
-      </button>
-      <span className="text-3xl font-bold tabular-nums">{pad(value)}</span>
-      <button type="button" onClick={() => onChange((value - step + max) % max)} className="rounded-lg px-4 py-1 text-xl active:bg-fill" aria-label={t('after.stepEarlier')}>
-        ▼
-      </button>
-    </div>
-  )
+  const hhmm = `${pad(h)}:${pad(m)}`
+  const label = after
+    ? localParts(after).date !== days[0]
+      ? `${dayLabel(localParts(after).date)}, ${t('after.from', { time: formatTime(after) })}`
+      : t('after.from', { time: formatTime(after) })
+    : t('after.now')
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={show}
         aria-haspopup="dialog"
-        aria-expanded={open}
         className={`-ml-1.5 flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[15px] font-semibold active:opacity-50 ${after ? 'text-accent' : ''}`}
       >
         <ClockIcon className="h-5 w-5" />
-        <span className="tabular-nums">
-          {after ? t('after.from', { time: formatTime(after) }) : t('after.now')}
-        </span>
+        <span className="tabular-nums">{label}</span>
       </button>
-      {open && pos && (
-        <div role="dialog" aria-label={t('after.dialog')} style={{ top: pos.top, left: pos.left }} className="fixed z-[1200] w-64 rounded-2xl bg-surface p-4 shadow-xl ring-1 ring-separator">
-          <p className="text-[12px] font-semibold text-secondary uppercase">{t('after.dialog')}</p>
-          <div className="my-2 flex items-center justify-center gap-2">
-            <Stepper value={h} onChange={setH} max={24} step={1} />
-            <span className="text-3xl font-bold">:</span>
-            <Stepper value={m} onChange={setM} max={60} step={5} />
-          </div>
-          <div className="mb-3 flex justify-center gap-2 text-[13px]">
-            {[15, 30, 60].map((n) => (
-              <button key={n} type="button" onClick={() => plus(n)} className="rounded-full bg-fill px-2.5 py-1 font-medium active:opacity-60">
-                {n < 60 ? t('after.plusMinutes', { n }) : t('after.plusHour')}
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/30 p-6" onClick={() => setOpen(false)}>
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('after.dialog')}
+              className="sheet-up w-full max-w-[320px] rounded-3xl bg-surface p-4 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="pb-1 text-center text-[13px] font-semibold text-secondary">{t('after.dialog')}</p>
+
+              {/* The wheels: a grey band marks the selected row, like iOS */}
+              <div className="relative mx-auto flex w-56" style={{ height: WHEEL_HEIGHT }}>
+                <div className="pointer-events-none absolute inset-x-0 top-1/2 h-9 -translate-y-1/2 rounded-lg bg-fill" />
+                <div className="flex-1">
+                  <Wheel count={24} value={h} onChange={setH} label={t('after.hour')} align="right" />
+                </div>
+                <div className="pointer-events-none z-10 flex items-center px-1 text-[23px] font-medium">:</div>
+                <div className="flex-1">
+                  <Wheel count={60} value={m} onChange={setM} label={t('after.minute')} align="left" />
+                </div>
+              </div>
+
+              {/* Second step, rarely needed: another day */}
+              <button
+                type="button"
+                onClick={() => setPickDay((v) => !v)}
+                aria-expanded={pickDay}
+                className="mt-2 flex w-full items-center justify-between rounded-xl px-3 py-2 text-[15px] active:bg-fill"
+              >
+                <span className="text-secondary">{t('after.day')}</span>
+                <span className="font-medium">
+                  {dayLabel(day)} <span className="text-secondary">{pickDay ? '▴' : '▾'}</span>
+                </span>
               </button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => choose(null)} className="flex-1 rounded-xl bg-fill py-2 font-medium active:opacity-60">
-              {t('after.now')}
-            </button>
-            <button type="button" onClick={() => choose(`${pad(h)}:${pad(m)}`)} className="flex-1 rounded-xl bg-accent py-2 font-semibold text-white active:opacity-80">
-              {t('after.show')}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+              {pickDay && (
+                <div className="flex flex-wrap gap-1.5 px-1 pb-1">
+                  {days.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDay(d)}
+                      className={`rounded-full px-3 py-1 text-[13px] font-medium ${d === day ? 'bg-accent text-white' : 'bg-fill'}`}
+                    >
+                      {dayLabel(d)}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-3 flex gap-2">
+                <button type="button" onClick={() => choose(null)} className="flex-1 rounded-xl bg-fill py-2.5 font-medium active:opacity-60">
+                  {t('after.now')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => choose(day === days[0] ? hhmm : `${day}T${hhmm}`)}
+                  className="flex-1 rounded-xl bg-accent py-2.5 font-semibold text-white active:opacity-80"
+                >
+                  {t('after.show')}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+    </>
   )
 }
 

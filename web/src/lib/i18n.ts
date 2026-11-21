@@ -99,7 +99,7 @@ const en = {
   'settings.storedLocally': 'Stored in this browser only',
   'settings.about': 'About',
   'settings.aboutText':
-    'Timetables from BKK, MÁV and Volán GTFS data, with realtime updates where available. Map data © OpenStreetMap contributors.',
+    'Timetables from BKK, MÁV and Volán GTFS data, with realtime data where available. Map data courtesy of OpenStreetMap (© OpenStreetMap contributors).',
 
   // Home
   'home.empty': 'Tap the star on a line or a stop to pin it here.',
@@ -140,6 +140,9 @@ const en = {
   'legend.lowFloor': 'All vehicles low-floor',
   'legend.demand': 'Demand-responsive (stops on request)',
   'legend.circular': 'Circular line',
+  'after.hour': 'Hour',
+  'after.minute': 'Minute',
+  'after.day': 'Day',
   'alerts.today': 'today',
   'alerts.tomorrow': 'tomorrow',
   'alerts.from': 'from {when}',
@@ -357,7 +360,7 @@ const hu: Record<MessageKey, Message> = {
   'settings.storedLocally': 'Csak ebben a böngészőben tárolva',
   'settings.about': 'Névjegy',
   'settings.aboutText':
-    'Menetrendek a BKK, a MÁV és a Volán GTFS-adataiból, ahol elérhető, valós idejű adatokkal. Térképadatok © az OpenStreetMap közreműködői.',
+    'Menetrendek a BKK, a MÁV és a Volán GTFS-adataiból, ahol elérhető, valós idejű adatokkal. Térképadatok az OpenStreetMap jóvoltából (© OpenStreetMap-közreműködők).',
 
   'home.empty': 'Nyomj a csillagra egy járatnál vagy megállónál, hogy kitűzd a kezdőlapra a kedvenceid közé.',
   'home.browseLines': 'Járatok böngészése',
@@ -393,6 +396,9 @@ const hu: Record<MessageKey, Message> = {
   'legend.lowFloor': 'Minden jármű alacsonypadlós',
   'legend.demand': 'Igényvezérelt közlekedés',
   'legend.circular': 'Körjárat',
+  'after.hour': 'Óra',
+  'after.minute': 'Perc',
+  'after.day': 'Nap',
   'alerts.today': 'ma',
   'alerts.tomorrow': 'holnap',
   'alerts.from': 'kezdete: {when}',
