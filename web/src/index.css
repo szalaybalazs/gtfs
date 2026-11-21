@@ -107,3 +107,16 @@ html, body { overflow-x: clip; }
 
 /* Focus rings only for keyboard users: no outline after a mouse click on desktop */
 :focus:not(:focus-visible) { outline: none; }
+
+/* New departure rows slide in (transform + opacity only: composited on the GPU, no layout work) */
+@keyframes row-in-top {
+  from { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes row-in-bottom {
+  from { opacity: 0; transform: translateY(10px); }
+}
+.row-in-top { animation: row-in-top 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.row-in-bottom { animation: row-in-bottom 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .row-in-top, .row-in-bottom { animation: none; }
+}

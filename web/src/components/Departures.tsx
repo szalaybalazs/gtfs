@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
 import { countdown } from '../lib/countdown'
@@ -58,6 +58,12 @@ export default function Departures({
   // Rows still counting down after leaving don't use up a slot, so the list stays the same length
   const leaving = kept.filter((d) => new Date(d.departure).getTime() < now.getTime()).length
   const upcoming = show ? kept.slice(0, show + leaving) : kept
+  // Which rows were already on screen (to animate only the new ones)
+  const seen = useRef(new Set<string>())
+  const firstSeen = upcoming.findIndex((d) => seen.current.has(rowKey(d)))
+  useEffect(() => {
+    for (const d of upcoming) seen.current.add(rowKey(d))
+  })
 
   return (
     <section>
@@ -84,9 +90,12 @@ export default function Departures({
           <p className="p-6 text-center text-secondary">{empty ?? t('departures.empty')}</p>
         ) : (
           <ul className="divide-y divide-separator">
-            {upcoming.map((d) => (
-              <DepartureRow key={`${d.tripId}-${d.serviceDate}-${d.stopId}`} departure={d} now={now} mine={d.tripId === highlightTrip} autoHide={!includePast} />
-            ))}
+            {upcoming.map((d) => {
+              const key = rowKey(d)
+              // Rows that weren't there before slide in: from the top when earlier ones load, from below otherwise
+              const enter = seen.current.size > 0 && !seen.current.has(key) ? (firstSeen !== -1 && upcoming.indexOf(d) < firstSeen ? 'top' : 'bottom') : undefined
+              return <DepartureRow key={key} departure={d} now={now} mine={d.tripId === highlightTrip} autoHide={!includePast} enter={enter} />
+            })}
           </ul>
         )}
         {!isPending && upcoming.length > 0 && footer}
@@ -95,7 +104,22 @@ export default function Departures({
   )
 }
 
-export function DepartureRow({ departure: d, now, mine, autoHide = true }: { departure: Departure; now: Date; mine?: boolean; autoHide?: boolean }) {
+const rowKey = (d: Departure) => `${d.tripId}-${d.serviceDate}-${d.stopId}`
+
+export function DepartureRow({
+  departure: d,
+  now,
+  mine,
+  autoHide = true,
+  enter,
+}: {
+  departure: Departure
+  now: Date
+  mine?: boolean
+  autoHide?: boolean
+  /** Just added to the list: slide in from this side (transform + opacity only, so it runs on the GPU) */
+  enter?: 'top' | 'bottom'
+}) {
   const qc = useQueryClient()
   const t = useT()
   const time = new Date(d.departure)
@@ -114,7 +138,11 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
       : countdown(seconds)
   return (
     // grid-rows 1fr → 0fr animates the row's height down so the list slides up
-    <li className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${collapsing ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr]'}`}>
+    <li
+      className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${collapsing ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr]'} ${
+        enter === 'top' ? 'row-in-top' : enter === 'bottom' ? 'row-in-bottom' : ''
+      }`}
+    >
       <div className="min-h-0 overflow-hidden">
       <Link
         to={`/trips/${encodeURIComponent(d.tripId)}?date=${d.serviceDate}&from=${encodeURIComponent(d.stopId)}`}

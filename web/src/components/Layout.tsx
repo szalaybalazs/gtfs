@@ -40,6 +40,7 @@ export default function Layout() {
   // back. Replace-navigations (search typing, filters, time picker) keep the
   // page as is, so inputs keep focus.
   const navType = useNavigationType()
+  const slides = standalone()
   // Remember this page's heading under its history position, for the Back button's hint
   useEffect(() => {
     const idx = historyIdx()
@@ -112,7 +113,8 @@ export default function Layout() {
 
   return (
     <MenuContext.Provider value={() => setOpen(true)}>
-      <div key={page.key} className={page.dir === 'forward' ? 'page-forward' : page.dir === 'back' ? 'page-back' : undefined}>
+      {/* Slide transitions only in the installed app: a browser tab already animates its own back swipe */}
+      <div key={page.key} className={!slides ? undefined : page.dir === 'forward' ? 'page-forward' : page.dir === 'back' ? 'page-back' : undefined}>
         <Outlet />
       </div>
       <div
