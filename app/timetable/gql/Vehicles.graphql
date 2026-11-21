@@ -1,0 +1,17 @@
+query Vehicles($bbox: BboxInput) {
+  vehiclePositions(bbox: $bbox) {
+    id
+    latitude
+    longitude
+    bearing
+    vehicleLabel
+    vehicleLicensePlate
+    vehicleModel
+    tripStartDate
+    trip {
+      tripId
+      headsign
+      route { routeId shortName color textColor type }
+    }
+  }
+}

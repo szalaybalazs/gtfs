@@ -1303,6 +1303,127 @@
           }
         }
       }
+    },
+    "Show my location": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saját helyzet mutatása"
+          }
+        }
+      }
+    },
+    "Vehicles": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járművek"
+          }
+        }
+      }
+    },
+    "Map layers": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Térképrétegek"
+          }
+        }
+      }
+    },
+    "Loading vehicles…": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járművek betöltése…"
+          }
+        }
+      }
+    },
+    "%lld vehicles in view": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld jármű látható"
+          }
+        }
+      }
+    },
+    "Unknown destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen úti cél"
+          }
+        }
+      }
+    },
+    "On time": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Időben"
+          }
+        }
+      }
+    },
+    "%lld min late": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld percet késik"
+          }
+        }
+      }
+    },
+    "%lld min early": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld percet siet"
+          }
+        }
+      }
+    },
+    "Open trip →": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat megnyitása →"
+          }
+        }
+      }
+    },
+    "Departures →": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indulások →"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

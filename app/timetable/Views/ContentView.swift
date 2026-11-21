@@ -25,6 +25,8 @@ struct ContentView: View {
                     }
             }
             .tabItem { Label("Routes", systemImage: "tram.fill") }
+            NavigationStack { MapView() }
+                .tabItem { Label("Map", systemImage: "map") }
             NavigationStack { SettingsView() }
                 .tabItem { Label("Settings", systemImage: "gear") }
         }

@@ -30,7 +30,9 @@ public enum SchemaMetadata: ApolloAPI.SchemaMetadata {
     case "Station": return TimetableAPI.Objects.Station
     case "StationPaginated": return TimetableAPI.Objects.StationPaginated
     case "Stop": return TimetableAPI.Objects.Stop
+    case "VehiclePosition": return TimetableAPI.Objects.VehiclePosition
     case "TimetableEntry": return TimetableAPI.Objects.TimetableEntry
+    case "Trip": return TimetableAPI.Objects.Trip
     case "TripDetails": return TimetableAPI.Objects.TripDetails
     case "TripStop": return TimetableAPI.Objects.TripStop
     default: return nil

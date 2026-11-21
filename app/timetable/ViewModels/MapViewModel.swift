@@ -1,0 +1,88 @@
+//
+//  MapViewModel.swift
+//  timetable
+//
+//  Live vehicles (smoothly moving between updates) and stop groups around the visible area.
+//
+
+import Foundation
+import CoreLocation
+import MapKit
+import Observation
+import TimetableAPI
+
+struct Vehicle: Identifiable, Hashable {
+    let id: String
+    var coordinate: CLLocationCoordinate2D
+    let bearing: Double?
+    let label: String?
+    let plate: String?
+    let model: String?
+    let tripId: String?
+    let serviceDate: String?
+    let headsign: String?
+    let route: LineRef?
+
+    static func == (a: Vehicle, b: Vehicle) -> Bool { a.id == b.id && a.coordinate.latitude == b.coordinate.latitude && a.coordinate.longitude == b.coordinate.longitude }
+    func hash(into h: inout Hasher) { h.combine(id) }
+}
+
+/// Where a vehicle was and where it is going, so it glides between two reports.
+struct VehicleTrack {
+    var from: CLLocationCoordinate2D
+    var to: CLLocationCoordinate2D
+    var start: Foundation.Date
+    var duration: TimeInterval
+
+    func position(at now: Foundation.Date) -> CLLocationCoordinate2D {
+        let t = min(1, max(0, now.timeIntervalSince(start) / duration))
+        return CLLocationCoordinate2D(latitude: from.latitude + (to.latitude - from.latitude) * t,
+                                      longitude: from.longitude + (to.longitude - from.longitude) * t)
+    }
+}
+
+@MainActor
+@Observable
+final class MapViewModel {
+    private(set) var vehicles: [Vehicle] = []
+    private(set) var tracks: [String: VehicleTrack] = [:]
+    private(set) var stations: [Station] = []
+    private(set) var vehiclesLoaded = false
+
+    /// Vehicles are re-fetched this often; they glide to the new spot over the same time.
+    static let refreshSeconds: Double = 10
+
+    private let client: GraphQLClient
+    init(client: GraphQLClient = Network.shared) { self.client = client }
+
+    func loadVehicles(_ region: MKCoordinateRegion) async {
+        let bbox = BboxInput(
+            minLat: region.center.latitude - region.span.latitudeDelta / 2, minLon: region.center.longitude - region.span.longitudeDelta / 2,
+            maxLat: region.center.latitude + region.span.latitudeDelta / 2, maxLon: region.center.longitude + region.span.longitudeDelta / 2)
+        guard let data = try? await client.fetch(VehiclesQuery(bbox: .some(bbox))), !Task.isCancelled else { return }
+        let now = Foundation.Date()
+        var next: [Vehicle] = []
+        var newTracks: [String: VehicleTrack] = [:]
+        for v in data.vehiclePositions.compactMap({ $0 }) {
+            guard let lat = v.latitude, let lon = v.longitude else { continue }
+            let to = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            let route = v.trip?.route.map { r in LineRef(routeId: r.routeId, shortName: r.shortName, color: r.color, textColor: r.textColor, type: r.type?.rawValue) }
+            next.append(Vehicle(id: v.id, coordinate: to, bearing: v.bearing, label: v.vehicleLabel, plate: v.vehicleLicensePlate, model: v.vehicleModel,
+                                tripId: v.trip?.tripId, serviceDate: v.tripStartDate, headsign: v.trip?.headsign, route: route))
+            // Glide from wherever it is drawn now
+            let from = tracks[v.id]?.position(at: now) ?? to
+            newTracks[v.id] = VehicleTrack(from: from, to: to, start: now, duration: Self.refreshSeconds)
+        }
+        vehicles = next
+        tracks = newTracks
+        vehiclesLoaded = true
+    }
+
+    func loadStations(_ region: MKCoordinateRegion) async {
+        let metres = region.span.latitudeDelta * 111_000 / 2 * 1.3
+        let radius = min(1500, max(300, metres))
+        guard let data = try? await client.fetch(NearbyStationsQuery(lat: region.center.latitude, lon: region.center.longitude, radius: radius)),
+              !Task.isCancelled else { return }
+        stations = data.stationsByRadius.map(Station.init).filter { !$0.routes.isEmpty }
+    }
+}
