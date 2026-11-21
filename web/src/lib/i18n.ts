@@ -21,7 +21,7 @@ type Message = string | Plural
 
 const en = {
   // App shell
-  'app.name': 'Timetable',
+  'app.name': 'BudapestGONE',
   'app.city': 'Budapest',
   'nav.home': 'Home',
   'nav.routes': 'Routes',
@@ -310,7 +310,7 @@ const en = {
 export type MessageKey = keyof typeof en
 
 const hu: Record<MessageKey, Message> = {
-  'app.name': 'Menetrend',
+  'app.name': 'BudapestGONE',
   'app.city': 'Budapest',
   'nav.home': 'Kezdőlap',
   'nav.routes': 'Járatok',

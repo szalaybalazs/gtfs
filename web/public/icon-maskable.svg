@@ -1,1 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#16a34a"/><g transform="translate(82.6 76.5) scale(0.34)"><path fill="#ffffff" fill-rule="evenodd" d="M659 548Q667 548 672.5 542.5Q678 537 678 529V398Q678 390 672.5 384.0Q667 378 659 378H365Q357 378 351.5 384.0Q346 390 346 398V529Q346 537 351.5 542.5Q357 548 365 548ZM420 352H600Q607 352 611.5 347.5Q616 343 616 336Q616 330 611.5 325.0Q607 320 600 320H420Q414 320 409.5 325.0Q405 330 405 336Q405 343 409.5 347.5Q414 352 420 352ZM411 622Q410 613 403.0 606.0Q396 599 386 599Q375 599 368.0 606.5Q361 614 361 624Q361 635 368.0 642.0Q375 649 386 649Q396 649 403.5 641.5Q411 634 411 623Q411 623 411.0 623.0Q411 623 411 622ZM575 215 589 182Q590 181 590.0 180.0Q590 179 590 178Q590 175 588.0 173.0Q586 171 583 171Q582 171 582.0 171.0Q582 171 582 171H442Q441 171 441.0 171.0Q441 171 441 171Q438 171 435.5 173.0Q433 175 433 178Q433 179 433.5 180.0Q434 181 434 182L448 215Q450 220 454.5 223.0Q459 226 464 226H559Q564 226 568.5 223.0Q573 220 575 215ZM653 679Q651 674 640.0 671.0Q629 668 614 668H409Q394 668 383.0 671.0Q372 674 370 679Q370 679 369.5 679.0Q369 679 369 680Q368 684 378.5 691.5Q389 699 406 702Q452 712 511.5 712.0Q571 712 617 702Q634 698 644.5 691.0Q655 684 654 680Q654 679 653.5 679.0Q653 679 653 679ZM410 793 370 870Q368 875 363.0 878.0Q358 881 353 881H307Q302 881 301.0 878.5Q300 876 303 872L368 792Q372 788 376.5 785.5Q381 783 387 782H404Q404 782 404.0 782.0Q404 782 405 782Q407 782 409.0 784.0Q411 786 411 789Q411 790 411.0 791.0Q411 792 410 793ZM366 764Q343 764 326.0 745.0Q309 726 309 699V357Q309 331 326.0 312.0Q343 293 366 293H500V266Q500 261 496.5 257.5Q493 254 488 254H447Q442 254 437.5 251.0Q433 248 431 243H430L404 182Q402 177 397.5 174.0Q393 171 387 171H383Q378 171 374.5 167.5Q371 164 371 159V155Q371 150 374.5 146.5Q378 143 383 143H644Q649 143 652.5 146.5Q656 150 656 155V159Q656 164 652.5 167.5Q649 171 644 171H636Q630 171 625.5 174.0Q621 177 619 182L593 243Q590 248 585.5 251.0Q581 254 576 254H539Q535 254 531.5 257.5Q528 261 528 266V293H661Q684 293 701.0 312.0Q718 331 718 357V699Q718 726 701.0 744.5Q684 763 661 763ZM717 881H671Q666 881 661.0 878.0Q656 875 654 871V870L614 793Q613 792 613.0 791.0Q613 790 613 789Q613 786 614.5 784.0Q616 782 619 782Q620 782 620.0 782.0Q620 782 620 782H637Q642 783 647.0 785.5Q652 788 656 791V792L721 872Q724 876 723.0 878.5Q722 881 717 881ZM637 596Q637 596 636.5 596.0Q636 596 635 596Q624 596 616.0 603.5Q608 611 608 622Q608 634 616.0 641.5Q624 649 635 649Q646 649 654.0 641.5Q662 634 662 622Q662 622 662.0 622.0Q662 622 662 622Q662 622 662.0 622.0Q662 622 662 621Q662 611 655.0 603.5Q648 596 637 596Z"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d4219f"/>
+      <stop offset="1" stop-color="#6d1bb5"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#ff3b3b" stop-opacity="0.95"/>
+      <stop offset="0.35" stop-color="#ff2a2a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ff2a2a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="streakR" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/><g transform="translate(51.2 51.2) scale(0.8)">
+  <!-- road / rails converging to the horizon -->
+  <path d="M206 512 L246 330 M306 512 L266 330" stroke="#fff" stroke-opacity="0.25" stroke-width="8" stroke-linecap="round"/>
+  <!-- slipstream: curved streaks pulled in behind the tram -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M40 300 C120 290 160 250 178 200" stroke="url(#streak)" stroke-width="10"/>
+    <path d="M20 380 C110 370 165 330 186 280" stroke="url(#streak)" stroke-width="8"/>
+    <path d="M60 440 C130 430 175 400 196 350" stroke="url(#streak)" stroke-width="6"/>
+    <path d="M472 300 C392 290 352 250 334 200" stroke="url(#streakR)" stroke-width="10"/>
+    <path d="M492 380 C402 370 347 330 326 280" stroke="url(#streakR)" stroke-width="8"/>
+    <path d="M452 440 C382 430 337 400 316 350" stroke="url(#streakR)" stroke-width="6"/>
+  </g>
+  <!-- pantograph -->
+  <path d="M232 132 L256 104 L280 132 M240 104 H272" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- tram, seen from behind -->
+  <rect x="190" y="132" width="132" height="200" rx="30" fill="#fff"/>
+  <rect x="206" y="152" width="100" height="78" rx="14" fill="#5a1494" fill-opacity="0.85"/>
+  <rect x="214" y="248" width="84" height="14" rx="7" fill="#e9d5f5"/>
+  <rect x="198" y="316" width="116" height="16" rx="6" fill="#ded0ea"/>
+  <!-- tail lights -->
+  <circle cx="214" cy="292" r="44" fill="url(#glow)"/>
+  <circle cx="298" cy="292" r="44" fill="url(#glow)"/>
+  <rect x="202" y="282" width="24" height="20" rx="6" fill="#ff2d2d"/>
+  <rect x="286" y="282" width="24" height="20" rx="6" fill="#ff2d2d"/>
+</g></svg>

@@ -23,7 +23,7 @@
   --color-label: #000000;
   --color-secondary: rgb(60 60 67 / 0.6);
   --color-fill: rgb(120 120 128 / 0.12);
-  --color-accent: #16a34a;
+  --color-accent: #b5179e;
   --color-live: #16a34a;
   --color-late: #dc2626;
   --color-early: #9333ea;
@@ -44,7 +44,7 @@
     --color-label: #ffffff;
     --color-secondary: rgb(235 235 245 / 0.6);
     --color-fill: rgb(118 118 128 / 0.24);
-    --color-accent: #4ade80;
+    --color-accent: #ec5fd6;
     --color-live: #4ade80;
     --color-late: #f87171;
   --color-early: #c084fc;
@@ -63,7 +63,7 @@
     --color-label: #ffffff;
     --color-secondary: rgb(235 235 245 / 0.6);
     --color-fill: rgb(118 118 128 / 0.24);
-    --color-accent: #4ade80;
+    --color-accent: #ec5fd6;
     --color-live: #4ade80;
     --color-late: #f87171;
     --color-realtime: #60a5fa;
