@@ -24,11 +24,6 @@ private func runs(_ departures: [Departure], now: Date, only: Set<String>?) -> [
     return out
 }
 
-private func shortRelative(_ seconds: Double) -> String {
-    let s = max(0, Int(seconds.rounded()))
-    return s < 60 ? "\(s)s" : "\(s / 60)'"
-}
-
 /// The one favourites layout, in time order. Side-scrollable when it doesn't fit; times coloured by realtime status.
 private struct LineTimesRow: View {
     let departures: [Departure]
@@ -52,14 +47,13 @@ private struct LineTimesRow: View {
                         ForEach(Array(groups.enumerated()), id: \.offset) { _, g in
                             HStack(spacing: 6) {
                                 LineBadge(line: g.route, fit: true)
-                                g.times.enumerated().reduce(Text("")) { acc, item in
-                                    let d = item.element
-                                    let status = RealtimeStatus(realtime: d.realtime, delay: d.delay)
-                                    let t = Text(shortRelative(d.departure.timeIntervalSince(context.date))).foregroundColor(Theme.color(status))
-                                    return item.offset == 0 ? acc + t : acc + Text(", ").foregroundColor(Theme.secondary) + t
+                                // Same countdowns as the Lines board: next one big, the rest small, live mark after the number
+                                HStack(spacing: 12) {
+                                    ForEach(Array(g.times.prefix(4).enumerated()), id: \.element.id) { i, d in
+                                        BoardCountdown(departure: d, now: context.date, small: i > 0)
+                                    }
                                 }
-                                .font(.system(size: 17, weight: .semibold)).monospacedDigit()
-                                .fixedSize()
+                                .padding(.trailing, 8)
                             }
                         }
                     }
