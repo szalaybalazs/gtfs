@@ -24,6 +24,7 @@ export default function Departures({
   empty,
   toolbar,
   footer,
+  show,
   includePast = false,
   highlightTrip,
 }: {
@@ -36,6 +37,8 @@ export default function Departures({
   toolbar?: ReactNode
   /** Under the list, inside the card (e.g. "Show more") */
   footer?: ReactNode
+  /** Keep this many upcoming rows on screen; fetch a few extra so the next one slides in when one leaves */
+  show?: number
   departures: Departure[]
   isPending?: boolean
   error?: boolean
@@ -46,7 +49,10 @@ export default function Departures({
   const t = useT()
   const now = useNow(1_000)
   // Departed rows linger for 20 s (counting -1, -2…), collapsing from -15 s
-  const upcoming = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 20_000)
+  const kept = includePast ? departures : departures.filter((d) => new Date(d.departure).getTime() >= now.getTime() - 20_000)
+  // Rows still counting down after leaving don't use up a slot, so the list stays the same length
+  const leaving = kept.filter((d) => new Date(d.departure).getTime() < now.getTime()).length
+  const upcoming = show ? kept.slice(0, show + leaving) : kept
 
   return (
     <section>

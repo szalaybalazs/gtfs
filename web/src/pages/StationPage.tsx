@@ -98,7 +98,7 @@ export default function StationPage() {
   // A whole stop group shows more than one platform; each "Show more" adds 20
   const [more, setMore] = useState(0)
   const limit = (from ? 12 : 25) + more * 20
-  const departures = useDepartures(ids, { limit, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
+  const departures = useDepartures(ids, { limit: limit + 10, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
 
   return (
     <div className="min-h-dvh">
@@ -183,7 +183,8 @@ export default function StationPage() {
             <section className="space-y-2">
               <Departures
                 toolbar={<AfterFilter stopIds={ids} routeIds={multi ? lineIds : null} />}
-                footer={(departures.data?.departures.length ?? 0) >= limit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
+                show={limit}
+                footer={(departures.data?.departures.length ?? 0) >= limit + 10 ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}

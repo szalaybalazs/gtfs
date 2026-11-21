@@ -60,7 +60,7 @@ export default function StopPage() {
 
   const [more, setMore] = useState(0)
   const limit = 20 + more * 20
-  const departures = useDepartures([stopId], { limit, after })
+  const departures = useDepartures([stopId], { limit: limit + 10, after })
 
   return (
     <div className="min-h-dvh">
@@ -122,7 +122,8 @@ export default function StopPage() {
                 {view === 'departures' ? (
                   <Departures
                     toolbar={<AfterFilter stopIds={[stopId]} />}
-                    footer={(departures.data?.departures.length ?? 0) >= limit ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
+                    show={limit}
+                footer={(departures.data?.departures.length ?? 0) >= limit + 10 ? <MoreButton onClick={() => setMore((m) => m + 1)} /> : null}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                     title={null}
