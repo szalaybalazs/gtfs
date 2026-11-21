@@ -17,7 +17,16 @@ const CHEVRON = 'h-4 w-4 shrink-0 text-secondary/60'
  * group's departures), with its platforms indented under it (each "towards …"
  * with its lines; opens that platform).
  */
-export default function StationRow({ station, distance }: { station: Station; distance?: number }) {
+export default function StationRow({
+  station,
+  distance,
+  groupTo,
+}: {
+  station: Station
+  distance?: number
+  /** Where the group row goes (default: the whole group's departures) */
+  groupTo?: string
+}) {
   const qc = useQueryClient()
   const t = useT()
   const stops = (station.stops ?? []).filter((s) => (s.routes ?? []).some(Boolean))
@@ -26,7 +35,7 @@ export default function StationRow({ station, distance }: { station: Station; di
   const platforms = stops.length > 1
   return (
     <li className="border-b border-separator last:border-b-0">
-      <Link to={`/stations/${encodeURIComponent(station.stationId)}`} onPointerDown={prefetch} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
+      <Link to={groupTo ?? `/stations/${encodeURIComponent(station.stationId)}`} onPointerDown={prefetch} className="flex items-center gap-3 px-gutter py-row active:bg-fill">
         <div className="min-w-0 flex-1">
           <p className="truncate text-[17px] font-semibold">
             {station.name}

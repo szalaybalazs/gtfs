@@ -1,20 +1,14 @@
 import { useT } from '../lib/i18n'
 import { LocationIcon } from './Icons'
 import { useNearbyStations } from '../lib/useNearbyStops'
-import { useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router'
-import { formatDistance } from '../lib/geo'
 import { useNearbyRadius } from '../lib/nearbyRadius'
-import { prefetchStation } from '../lib/prefetch'
-import { ChevronIcon } from './Icons'
-import RouteBadge from './RouteBadge'
+import StationRow from './StationRow'
 
 /** Nearby stops, or a clear message about why there are none. */
 export default function NearbyList({ limit }: { limit?: number }) {
   const [radius] = useNearbyRadius()
   const t = useT()
   const { location, query, stations } = useNearbyStations(radius)
-  const qc = useQueryClient()
   const shown = limit ? stations.slice(0, limit) : stations
 
   let message: React.ReactNode = null
@@ -60,28 +54,9 @@ export default function NearbyList({ limit }: { limit?: number }) {
         <p className="p-6 text-center text-secondary">{message}</p>
       ) : (
         <ul>
-          {/* One row per stop (the whole group), not per platform: tap it to pick a line */}
+          {/* Same rows as All stops: the group (opens its lines: pick a line, then a direction) with its platforms under it */}
           {shown.map(({ station, distance }) => (
-            <li key={station.stationId} className="border-b border-separator last:border-b-0">
-              <Link
-                to={`/stations/${encodeURIComponent(station.stationId)}/lines`}
-                onPointerDown={() => void prefetchStation(qc, station.stationId)}
-                className="flex items-center gap-3 px-gutter py-row active:bg-fill"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[17px] font-semibold">
-                    {station.name}
-                    <span className="ml-2 font-normal text-secondary">{formatDistance(distance)}</span>
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {station.routes.filter(Boolean).map((r) => (
-                      <RouteBadge key={r.routeId} route={r} />
-                    ))}
-                  </div>
-                </div>
-                <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
-              </Link>
-            </li>
+            <StationRow key={station.stationId} station={station} distance={distance} groupTo={`/stations/${encodeURIComponent(station.stationId)}/lines`} />
           ))}
         </ul>
       )}
