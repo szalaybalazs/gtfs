@@ -121,9 +121,10 @@ export default function TripPage() {
             <section className="rounded-2xl bg-surface p-gutter">
               <div className="flex items-center gap-2">
                 {route && <RouteBadge route={route} />}
+                <h1 className="min-w-0 flex-1 text-xl leading-tight font-bold">{t('trip.headsign', { to: trip.headsign ?? stops.at(-1)?.stop.name ?? '' })}</h1>
                 {/* Top right: on time / late / early while it runs (the page being live is obvious); "scheduled" when there is no realtime */}
                 {started && !finished && (
-                  <span className="ml-auto text-[15px]">
+                  <span className="shrink-0 text-[15px]">
                     {delay != null ? (
                       <DelayIndicator delay={delay} />
                     ) : (
@@ -132,7 +133,6 @@ export default function TripPage() {
                   </span>
                 )}
               </div>
-              <h1 className="mt-1 text-2xl leading-tight font-bold">{t('trip.headsign', { to: trip.headsign ?? stops.at(-1)?.stop.name ?? '' })}</h1>
               {viaStops(stops).length > 0 && (
                 <p className="mt-1 text-[15px] text-secondary">
                   {t.rich('trip.via', { stops: <span className="text-label">{viaStops(stops).join(' ▸ ')}</span> })}
