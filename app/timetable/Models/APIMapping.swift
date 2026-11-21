@@ -113,7 +113,7 @@ extension Trip {
 extension TripVehicle {
     init(_ v: TripVehicleQuery.Data.Trip.Vehicle) {
         self.init(latitude: v.latitude, longitude: v.longitude, bearing: v.bearing, label: v.vehicleLabel,
-                  plate: v.vehicleLicensePlate, model: v.vehicleModel, wheelchair: false,
+                  plate: v.vehicleLicensePlate, model: v.vehicleModel, wheelchair: v.vehicleWheelchairAccessible ?? false,
                   updated: v.timestamp.flatMap { APIDate.parse($0) })
     }
 }

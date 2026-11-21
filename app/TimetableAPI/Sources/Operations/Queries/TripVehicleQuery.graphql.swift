@@ -7,7 +7,7 @@ public class TripVehicleQuery: GraphQLQuery {
   public static let operationName: String = "TripVehicle"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query TripVehicle($id: ID!, $serviceDate: String) { trip(id: $id, serviceDate: $serviceDate) { __typename tripId vehicle { __typename latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel timestamp } } }"#
+      #"query TripVehicle($id: ID!, $serviceDate: String) { trip(id: $id, serviceDate: $serviceDate) { __typename tripId vehicle { __typename latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel vehicleWheelchairAccessible timestamp } } }"#
     ))
 
   public var id: ID
@@ -73,6 +73,7 @@ public class TripVehicleQuery: GraphQLQuery {
           .field("vehicleLabel", String?.self),
           .field("vehicleLicensePlate", String?.self),
           .field("vehicleModel", String?.self),
+          .field("vehicleWheelchairAccessible", Bool?.self),
           .field("timestamp", TimetableAPI.DateTime?.self),
         ] }
 
@@ -82,6 +83,7 @@ public class TripVehicleQuery: GraphQLQuery {
         public var vehicleLabel: String? { __data["vehicleLabel"] }
         public var vehicleLicensePlate: String? { __data["vehicleLicensePlate"] }
         public var vehicleModel: String? { __data["vehicleModel"] }
+        public var vehicleWheelchairAccessible: Bool? { __data["vehicleWheelchairAccessible"] }
         public var timestamp: TimetableAPI.DateTime? { __data["timestamp"] }
       }
     }

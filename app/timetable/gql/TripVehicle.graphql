@@ -1,6 +1,6 @@
 query TripVehicle($id: ID!, $serviceDate: String) {
   trip(id: $id, serviceDate: $serviceDate) {
     tripId
-    vehicle { latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel timestamp }
+    vehicle { latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel vehicleWheelchairAccessible timestamp }
   }
 }
