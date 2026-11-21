@@ -43,7 +43,10 @@ private struct TimeText: View {
 private struct Title: View {
     let fav: FavoriteData
     var body: some View {
-        Text(fav.title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+        // The name, then where it is headed in a lighter weight
+        (Text(fav.title).font(.system(size: 14, weight: .semibold))
+            + Text(fav.subtitle.map { "  " + $0 } ?? "").font(.system(size: 12)).foregroundColor(.secondary))
+            .lineLimit(1)
     }
 }
 
@@ -79,11 +82,11 @@ private struct FavoriteRow: View {
     let now: Date
 
     private func line(_ count: Int) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             ForEach(runs(fav, now: now, count: count)) { run in
                 HStack(spacing: 4) {
                     LineBadge(line: run.line, fit: true)
-                    HStack(spacing: 6) { ForEach(run.times) { TimeText(departure: $0, now: now, size: 15) } }
+                    HStack(spacing: 6) { ForEach(run.times) { TimeText(departure: $0, now: now, size: 14) } }
                 }
             }
             Spacer(minLength: 0)
@@ -98,7 +101,7 @@ private struct FavoriteRow: View {
             } else {
                 // As many departures as fit the width
                 ViewThatFits(in: .horizontal) {
-                    ForEach([8, 7, 6, 5, 4, 3, 2, 1], id: \.self) { line($0).fixedSize(horizontal: true, vertical: false) }
+                    ForEach([12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1], id: \.self) { line($0).fixedSize(horizontal: true, vertical: false) }
                 }
             }
         }
