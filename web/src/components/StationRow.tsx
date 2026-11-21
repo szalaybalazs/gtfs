@@ -47,9 +47,9 @@ export default function StationRow({ station, distance }: { station: Station; di
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />
       </Link>
-      {/* Platforms in an inset, tinted block under the group: indentation + grouping, no tree lines */}
+      {/* Platforms in a tinted block under the group (the background groups them, no indent or tree lines) */}
       {platforms && (
-        <ul className="mx-3 mb-3 ml-6 divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
+        <ul className="mx-3 mb-3 divide-y divide-separator overflow-hidden rounded-xl bg-fill/60">
           {stops.map((stop) => (
             <li key={stop.stopId}>
               <Link
