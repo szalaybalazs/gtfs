@@ -121,18 +121,15 @@ export default function TripPage() {
             <section className="rounded-2xl bg-surface p-gutter">
               <div className="flex items-center gap-2">
                 {route && <RouteBadge route={route} />}
-                {t('trip.towards') && <span className="text-secondary">{t('trip.towards')}</span>}
-                {/* Live / Scheduled only while it's running; a past or future trip has its own note bottom right */}
-                {!started || finished ? null : stops.some((x) => x.realtime) ? (
-                  <span className="ml-auto flex items-center gap-1.5 rounded-full bg-live/15 px-2.5 py-0.5 text-[13px] font-semibold text-live">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-live opacity-75" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-live" />
-                    </span>
-                    {t('trip.live')}
+                {/* Top right: on time / late / early while it runs (the page being live is obvious); "scheduled" when there is no realtime */}
+                {started && !finished && (
+                  <span className="ml-auto text-[15px]">
+                    {delay != null ? (
+                      <DelayIndicator delay={delay} />
+                    ) : (
+                      <span className="rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">{t('trip.scheduled')}</span>
+                    )}
                   </span>
-                ) : (
-                  <span className="ml-auto rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">{t('trip.scheduled')}</span>
                 )}
               </div>
               <h1 className="mt-1 text-2xl leading-tight font-bold">{t('trip.headsign', { to: trip.headsign ?? stops.at(-1)?.stop.name ?? '' })}</h1>
@@ -142,18 +139,17 @@ export default function TripPage() {
                 </p>
               )}
               {stats(trip, tripPath, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, tripPath, t)}</p>}
-              {/* Delay sits bottom-left, on the status line, so it adds no height to the destination */}
-              {/* On its way is the default and says nothing; only a past or future trip gets a small note, bottom right */}
-              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[15px] text-secondary">
-                {delay != null && started && !finished && <DelayIndicator delay={delay} />}
-                {delay != null && started && !finished && vehicleAge != null && vehicleAge * 60 >= 30 && <span aria-hidden>·</span>}
-                {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
-                {(finished || !started) && (
-                  <span className="ml-auto text-[13px]">
-                    {finished ? t('trip.past') : t('trip.upcoming', { time: formatTime(new Date(stops[0].departure)) })}
-                  </span>
-                )}
-              </p>
+              {/* Last update: small and quiet, but always there while the trip runs; a past or future trip gets its own note instead */}
+              {((started && !finished && vehicleAge != null) || finished || !started) && (
+                <p className="mt-1 flex items-center text-[12px] text-secondary">
+                  {started && !finished && vehicleAge != null && <UpdatedAgo seconds={vehicleAge * 60} />}
+                  {(finished || !started) && (
+                    <span className="ml-auto text-[13px]">
+                      {finished ? t('trip.past') : t('trip.upcoming', { time: formatTime(new Date(stops[0].departure)) })}
+                    </span>
+                  )}
+                </p>
+              )}
             </section>
 
             <section>
@@ -327,13 +323,11 @@ function viaStops(stops: TripStop[]) {
 }
 
 /**
- * " · updated 42s ago", counting every second. BKK's data is already 10–15 s
- * old when it arrives, so only call it out past 30 s. The number sits in a
+ * "updated 42s ago", counting every second, small and always shown. The number sits in a
  * fixed two-digit box (right-aligned, tabular figures) so it doesn't jiggle.
  */
 function UpdatedAgo({ seconds }: { seconds: number }) {
   const t = useT()
-  if (seconds < 30) return null
   const s = Math.floor(seconds)
   return (
     <span>

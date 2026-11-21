@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+// TODO(match web): web/src/pages/TripPage.tsx was reworked first and iOS has to follow:
+//  - no "towards" label; on time / late / early at the top right of the header card (not a LIVE badge)
+//  - "updated Ns ago" always shown, small, on the bottom line of the header card
+//  - header keeps length, minutes and stop count
+//  - compact stop rows (drop the minutes-until column if it forces names to truncate)
+//  - the vehicle marker on the stop list, placed between the two stops it is between (not always the midpoint)
 struct TripView: View {
     let target: TripTarget
     @State private var model = TripViewModel()
