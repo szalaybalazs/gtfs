@@ -167,6 +167,8 @@ struct TripStop: Identifiable, Hashable {
     let arrivalDelay: Int?
     let departureDelay: Int?
     let realtime: Bool
+    var lat: Double? = nil
+    var lon: Double? = nil
     var id: Int { stopSequence }
 }
 
@@ -176,6 +178,18 @@ struct Trip: Hashable {
     let headsign: String?
     let route: LineRef?
     let stops: [TripStop]
+    var vehicle: TripVehicle? = nil
+}
+
+struct TripVehicle: Hashable {
+    let latitude: Double?
+    let longitude: Double?
+    let bearing: Double?
+    let label: String?
+    let plate: String?
+    let model: String?
+    let wheelchair: Bool
+    let updated: Date?
 }
 
 enum TimeFormat {

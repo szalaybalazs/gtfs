@@ -4,6 +4,7 @@ query Trip($id: ID!, $serviceDate: String) {
     serviceDate
     headsign
     route { routeId shortName color textColor type }
+    vehicle { latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel vehicleWheelchairAccessible timestamp }
     stops {
       stopSequence
       arrival
@@ -11,7 +12,7 @@ query Trip($id: ID!, $serviceDate: String) {
       arrivalDelay
       departureDelay
       realtime
-      stop { stopId name station { stationId } }
+      stop { stopId name lat lon station { stationId } }
     }
   }
 }

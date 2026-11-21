@@ -3,6 +3,7 @@
 //  timetable
 //
 
+import CoreLocation
 import Foundation
 import Observation
 import TimetableAPI
@@ -13,6 +14,8 @@ final class TripViewModel {
     private(set) var trip: Trip?
     private(set) var state: LoadState = .idle
     private(set) var loaded = false
+    private(set) var path: [CLLocationCoordinate2D] = []
+    private var pathLoaded = false
 
     private let client: GraphQLClient
     static let refreshSeconds: UInt64 = 30
@@ -37,6 +40,16 @@ final class TripViewModel {
             trip = data.trip.map(Trip.init)
             loaded = true
             state = .idle
+            if !pathLoaded {
+                pathLoaded = true
+                if let d = try? await client.fetch(TripPathQuery(id: tripId, serviceDate: .some(serviceDate))),
+                   let cs = d.trip?.path?.coordinates {
+                    path = cs.compactMap { c in
+                        guard let c, c.count >= 2 else { return nil }
+                        return CLLocationCoordinate2D(latitude: c[1], longitude: c[0])
+                    }
+                }
+            }
         } catch is CancellationError {
             return
         } catch {

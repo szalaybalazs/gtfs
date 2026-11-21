@@ -1,0 +1,6 @@
+query TripPath($id: ID!, $serviceDate: String) {
+  trip(id: $id, serviceDate: $serviceDate) {
+    tripId
+    path { coordinates }
+  }
+}

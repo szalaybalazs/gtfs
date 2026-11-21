@@ -276,17 +276,6 @@
         }
       }
     },
-    "Using your location": {
-      "extractionState": "manual",
-      "localizations": {
-        "hu": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A helyzeted alapján"
-          }
-        }
-      }
-    },
     "Location off": {
       "extractionState": "manual",
       "localizations": {
@@ -1399,6 +1388,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "Indulások →"
+          }
+        }
+      }
+    },
+    "Vehicle": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jármű"
+          }
+        }
+      }
+    },
+    "Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezárás"
+          }
+        }
+      }
+    },
+    "Trip map": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat térképe"
+          }
+        }
+      }
+    },
+    "Wheelchair accessible": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akadálymentes"
+          }
+        }
+      }
+    },
+    "updated %lld s ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "frissítve %lld mp-cel ezelőtt"
+          }
+        }
+      }
+    },
+    "updated %lld min ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "frissítve %lld perccel ezelőtt"
           }
         }
       }

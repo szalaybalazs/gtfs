@@ -41,7 +41,7 @@ struct MapView: View {
     @State private var region = MKCoordinateRegion(center: MapView.center, span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012))
     @State private var layers = MapLayers()
     @State private var selection: MapSelection?
-    @State private var here: CLLocationCoordinate2D?
+    @Namespace private var mapScope
     @State private var now = Foundation.Date()
     /// Stops inside the visible area (plus a margin), capped; computed off the main thread when the view settles.
     @State private var visibleStops: [StopMarker] = []
@@ -61,8 +61,8 @@ struct MapView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Map(position: $position) {
+        ZStack(alignment: .topTrailing) {
+            Map(position: $position, scope: mapScope) {
                 linesContent
                 userContent
                 stopsContent
@@ -71,21 +71,25 @@ struct MapView: View {
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .onMapCameraChange(frequency: .onEnd) { region = $0.region }
             .onReceive(tick) { if showVehicles { now = $0 } }
+            .mapControls { MapScaleView() }
 
-            VStack(spacing: 8) {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 8) {
-                        layersMenu
-                        mapButton("location.fill", label: "Show my location") { Task { await locate() } }
-                    }
+            VStack(spacing: 10) {
+                VStack(spacing: 0) {
+                    layersMenu
+                    Divider().frame(width: 36)
+                    MapUserLocationButton(scope: mapScope)
+                        .labelStyle(.iconOnly).frame(width: 44, height: 44)
                 }
-                .padding(.horizontal, 12).padding(.top, 8)
-                Spacer()
-                if let selection { card(for: selection).transition(.move(edge: .bottom)) }
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                MapCompass(scope: mapScope)
             }
-            .animation(.easeOut(duration: 0.2), value: selection)
+            .padding(.trailing, 12).padding(.top, 8)
         }
+        .mapScope(mapScope)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if let selection { card(for: selection).transition(.move(edge: .bottom)) }
+        }
+        .animation(.easeOut(duration: 0.2), value: selection)
         .navigationTitle("Map")
         .navigationBarTitleDisplayMode(.inline)
         .transitDestinations()
@@ -127,11 +131,7 @@ struct MapView: View {
     }
 
     @MapContentBuilder private var userContent: some MapContent {
-        if let here {
-            Annotation("", coordinate: here) {
-                Circle().fill(Color.blue).frame(width: 14, height: 14).overlay(Circle().stroke(Color.white, lineWidth: 2))
-            }
-        }
+        UserAnnotation()
     }
 
     /// Only hides or shows the precomputed markers, so toggling the layer costs nothing.
@@ -220,14 +220,6 @@ struct MapView: View {
 
     // MARK: Controls
 
-    private func mapButton(_ symbol: String, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 17)).foregroundStyle(Theme.accent)
-                .frame(width: 44, height: 44).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .accessibilityLabel(label)
-    }
-
     private var layersMenu: some View {
         Menu {
             Toggle("Vehicles", isOn: $layers.vehicles)
@@ -242,15 +234,9 @@ struct MapView: View {
             }
         } label: {
             Image(systemName: "square.3.layers.3d").font(.system(size: 17)).foregroundStyle(Theme.accent)
-                .frame(width: 44, height: 44).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .frame(width: 44, height: 44)
         }
         .accessibilityLabel("Map layers")
-    }
-
-    private func locate() async {
-        guard let c = await LocationManager().currentLocation() else { return }
-        here = c
-        withAnimation { position = .region(MKCoordinateRegion(center: c, span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008))) }
     }
 
     // MARK: Bottom cards

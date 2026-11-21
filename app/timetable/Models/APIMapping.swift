@@ -104,7 +104,13 @@ extension Trip {
                 return TripStop(
                     stopSequence: s.stopSequence, stopId: s.stop.stopId, stationId: s.stop.station?.stationId,
                     name: s.stop.name ?? s.stop.stopId, arrival: arrival, departure: departure,
-                    arrivalDelay: s.arrivalDelay, departureDelay: s.departureDelay, realtime: s.realtime)
+                    arrivalDelay: s.arrivalDelay, departureDelay: s.departureDelay, realtime: s.realtime,
+                    lat: s.stop.lat, lon: s.stop.lon)
+            },
+            vehicle: t.vehicle.map {
+                TripVehicle(latitude: $0.latitude, longitude: $0.longitude, bearing: $0.bearing, label: $0.vehicleLabel,
+                            plate: $0.vehicleLicensePlate, model: $0.vehicleModel, wheelchair: $0.vehicleWheelchairAccessible ?? false,
+                            updated: $0.timestamp.flatMap { APIDate.parse($0) })
             })
     }
 }

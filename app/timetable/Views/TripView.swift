@@ -47,6 +47,13 @@ struct TripView: View {
         let color = Color(hex: trip.route?.color ?? "#6b7280")
         return VStack(spacing: 24) {
             header(trip, stops: stops, started: started, finished: finished)
+            if let v = trip.vehicle, v.model != nil || v.plate != nil {
+                TripVehicleCard(vehicle: v, delayMinutes: started && !finished ? Self.delay(stops, upTo: nextIndex) : nil,
+                                live: stops.contains { $0.realtime }, now: now)
+            }
+            if !model.path.isEmpty || stops.contains(where: { $0.lat != nil }) {
+                TripMiniMap(trip: trip, path: model.path, color: color)
+            }
             VStack(spacing: 0) {
                 SectionTitle("Stops")
                 Card {
@@ -104,6 +111,13 @@ struct TripView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
         }
+    }
+
+    /// Delay in minutes at the last stop with realtime data at or before the vehicle.
+    static func delay(_ stops: [TripStop], upTo next: Int) -> Int? {
+        let reached = stops.prefix(max(next, 0) + 1)
+        guard let s = reached.last(where: { $0.realtime }), let d = s.departureDelay ?? s.arrivalDelay else { return nil }
+        return Int((Double(d) / 60).rounded())
     }
 
     /// Up to three evenly spaced intermediate stops, so the route reads "via A ▸ B ▸ C".

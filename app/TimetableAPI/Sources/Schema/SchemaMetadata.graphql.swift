@@ -23,6 +23,7 @@ public enum SchemaMetadata: ApolloAPI.SchemaMetadata {
     case "Alert": return TimetableAPI.Objects.Alert
     case "Departure": return TimetableAPI.Objects.Departure
     case "Direction": return TimetableAPI.Objects.Direction
+    case "LineStringGeometry": return TimetableAPI.Objects.LineStringGeometry
     case "Query": return TimetableAPI.Objects.Query
     case "Route": return TimetableAPI.Objects.Route
     case "RouteFlags": return TimetableAPI.Objects.RouteFlags

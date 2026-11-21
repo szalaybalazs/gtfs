@@ -7,7 +7,7 @@ public class TripQuery: GraphQLQuery {
   public static let operationName: String = "Trip"
   public static let operationDocument: ApolloAPI.OperationDocument = .init(
     definition: .init(
-      #"query Trip($id: ID!, $serviceDate: String) { trip(id: $id, serviceDate: $serviceDate) { __typename tripId serviceDate headsign route { __typename routeId shortName color textColor type } stops { __typename stopSequence arrival departure arrivalDelay departureDelay realtime stop { __typename stopId name station { __typename stationId } } } } }"#
+      #"query Trip($id: ID!, $serviceDate: String) { trip(id: $id, serviceDate: $serviceDate) { __typename tripId serviceDate headsign route { __typename routeId shortName color textColor type } vehicle { __typename latitude longitude bearing vehicleLabel vehicleLicensePlate vehicleModel vehicleWheelchairAccessible timestamp } stops { __typename stopSequence arrival departure arrivalDelay departureDelay realtime stop { __typename stopId name lat lon station { __typename stationId } } } } }"#
     ))
 
   public var id: ID
@@ -54,6 +54,7 @@ public class TripQuery: GraphQLQuery {
         .field("serviceDate", String.self),
         .field("headsign", String?.self),
         .field("route", Route?.self),
+        .field("vehicle", Vehicle?.self),
         .field("stops", [Stop].self),
       ] }
 
@@ -61,7 +62,38 @@ public class TripQuery: GraphQLQuery {
       public var serviceDate: String { __data["serviceDate"] }
       public var headsign: String? { __data["headsign"] }
       public var route: Route? { __data["route"] }
+      public var vehicle: Vehicle? { __data["vehicle"] }
       public var stops: [Stop] { __data["stops"] }
+
+      /// Trip.Vehicle
+      ///
+      /// Parent Type: `VehiclePosition`
+      public struct Vehicle: TimetableAPI.SelectionSet {
+        public let __data: DataDict
+        public init(_dataDict: DataDict) { __data = _dataDict }
+
+        public static var __parentType: any ApolloAPI.ParentType { TimetableAPI.Objects.VehiclePosition }
+        public static var __selections: [ApolloAPI.Selection] { [
+          .field("__typename", String.self),
+          .field("latitude", Double?.self),
+          .field("longitude", Double?.self),
+          .field("bearing", Double?.self),
+          .field("vehicleLabel", String?.self),
+          .field("vehicleLicensePlate", String?.self),
+          .field("vehicleModel", String?.self),
+          .field("vehicleWheelchairAccessible", Bool?.self),
+          .field("timestamp", TimetableAPI.DateTime?.self),
+        ] }
+
+        public var latitude: Double? { __data["latitude"] }
+        public var longitude: Double? { __data["longitude"] }
+        public var bearing: Double? { __data["bearing"] }
+        public var vehicleLabel: String? { __data["vehicleLabel"] }
+        public var vehicleLicensePlate: String? { __data["vehicleLicensePlate"] }
+        public var vehicleModel: String? { __data["vehicleModel"] }
+        public var vehicleWheelchairAccessible: Bool? { __data["vehicleWheelchairAccessible"] }
+        public var timestamp: TimetableAPI.DateTime? { __data["timestamp"] }
+      }
 
       /// Trip.Route
       ///
@@ -126,11 +158,15 @@ public class TripQuery: GraphQLQuery {
             .field("__typename", String.self),
             .field("stopId", TimetableAPI.ID.self),
             .field("name", String?.self),
+            .field("lat", Double?.self),
+            .field("lon", Double?.self),
             .field("station", Station?.self),
           ] }
 
           public var stopId: TimetableAPI.ID { __data["stopId"] }
           public var name: String? { __data["name"] }
+          public var lat: Double? { __data["lat"] }
+          public var lon: Double? { __data["lon"] }
           public var station: Station? { __data["station"] }
 
           /// Trip.Stop.Stop.Station

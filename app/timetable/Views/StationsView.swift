@@ -14,14 +14,18 @@ struct LocationBar: View {
     let radius: Int
 
     var body: some View {
+        if !model.locationAvailable { bar }
+    }
+
+    private var bar: some View {
         Button { Task { await model.loadNearby(radius: radius) } } label: {
             HStack(spacing: 8) {
-                Image(systemName: model.locationAvailable ? "location.fill" : "location.slash")
+                Image(systemName: "location.slash")
                     .foregroundStyle(Theme.accent)
-                Text(model.nearbyState.isLoading ? tr("Finding your location…") : model.locationAvailable ? tr("Using your location") : tr("Location off"))
+                Text(model.nearbyState.isLoading ? tr("Finding your location…") : tr("Location off"))
                     .foregroundStyle(Theme.secondary)
                 Spacer()
-                Text(model.locationAvailable ? tr("Update") : tr("Use my location")).fontWeight(.medium).foregroundStyle(Theme.accent)
+                Text(tr("Use my location")).fontWeight(.medium).foregroundStyle(Theme.accent)
             }
             .font(.system(size: 15))
             .padding(.horizontal, 16).padding(.vertical, 10)
