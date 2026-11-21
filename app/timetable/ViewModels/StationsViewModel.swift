@@ -34,14 +34,20 @@ final class StationsViewModel {
         self.locate = locate ?? { await LocationManager().currentLocation() }
     }
 
+    /// Pages of stop groups: the search results, or all of them when the text is empty.
+    private(set) var page = 0
+    private(set) var pages = 0
+    var hasMore: Bool { page + 1 < pages }
+
     func search(_ text: String) async {
         let query = text.trimmingCharacters(in: .whitespaces)
-        guard !query.isEmpty else { results = []; searchState = .idle; return }
         searchState = .loading
         do {
-            let data = try await client.fetch(StationsQuery(limit: .some(30), page: .some(0), search: .some(query)))
+            let data = try await client.fetch(StationsQuery(limit: .some(30), page: .some(0), search: query.isEmpty ? .null : .some(query)))
             guard !Task.isCancelled else { return }
             results = data.stations.data.map(Station.init).filter { !$0.routes.isEmpty }
+            page = data.stations.page
+            pages = data.stations.pages
             searchState = .idle
         } catch is CancellationError {
             return
@@ -52,9 +58,37 @@ final class StationsViewModel {
         }
     }
 
+    func loadMore(_ text: String) async {
+        guard hasMore, !searchState.isLoading else { return }
+        let query = text.trimmingCharacters(in: .whitespaces)
+        searchState = .loading
+        do {
+            let data = try await client.fetch(StationsQuery(limit: .some(30), page: .some(page + 1), search: query.isEmpty ? .null : .some(query)))
+            guard !Task.isCancelled else { return }
+            results += data.stations.data.map(Station.init).filter { !$0.routes.isEmpty }
+            page = data.stations.page
+            pages = data.stations.pages
+            searchState = .idle
+        } catch {
+            searchState = .idle
+        }
+    }
+
+    /// A position that never arrives (permission prompt ignored, no fix) counts as "location off" after a few seconds.
+    private func locateWithTimeout() async -> CLLocationCoordinate2D? {
+        let locate = self.locate
+        return await withTaskGroup(of: CLLocationCoordinate2D?.self) { group in
+            group.addTask { await locate() }
+            group.addTask { try? await Task.sleep(nanoseconds: 6_000_000_000); return nil }
+            let first = await group.next() ?? nil
+            group.cancelAll()
+            return first
+        }
+    }
+
     func loadNearby(radius: Int) async {
         nearbyState = .loading
-        guard let here = await locate() else {
+        guard let here = await locateWithTimeout() else {
             locationAvailable = false
             nearby = []
             nearbyState = .idle

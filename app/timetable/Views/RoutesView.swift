@@ -12,7 +12,7 @@ struct RouteListItem: View {
     let route: RoutesQuery.Data.Routes.Datum
     
     var body: some View {
-        NavigationLink(destination: RouteDetailsView(id: route.routeId, shortName: route.shortName)){
+        NavigationLink(destination: RouteDetailsView(id: route.routeId, shortName: route.shortName, line: LineRef(routeId: route.routeId, shortName: route.shortName, color: route.color, textColor: route.textColor, type: nil))){
             HStack(alignment: .center) {
                 HStack(alignment: .center) {
                     LineBadge(line: LineRef(routeId: route.routeId, shortName: route.shortName, color: route.color, textColor: route.textColor, type: nil))

@@ -14,6 +14,8 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
+            NavigationStack { HomeView() }
+                .tabItem { Label("Home", systemImage: "house.fill") }
             NavigationStack { StationsView() }
                 .tabItem { Label("Stops", systemImage: "mappin.and.ellipse") }
             NavigationStack(path: $path) {

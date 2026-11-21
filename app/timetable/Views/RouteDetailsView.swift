@@ -11,10 +11,12 @@ import TimetableAPI
 struct RouteDetailsView: View {
     public let id: String
     public let shortName: String?
+    let line: LineRef?
     @State private var routeModel: RouteDetailsViewModel
 
-    init(id: String, shortName: String? = nil) {
+    init(id: String, shortName: String? = nil, line: LineRef? = nil) {
         self.id = id
+        self.line = line
         self.shortName = shortName
         _routeModel = State(initialValue: RouteDetailsViewModel(routeId: id))
     }
@@ -44,6 +46,7 @@ struct RouteDetailsView: View {
             }
         }
         .navigationTitle(shortName ?? id)
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { FavoriteButton(options: line.map { [Favorite.line($0)] } ?? []) } }
         .task { if routeModel.route == nil { await routeModel.load() } }
         .onChange(of: routeModel.directionId) { routeModel.directionChanged() }
     }

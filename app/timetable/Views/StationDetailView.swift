@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Flow
+import TimetableAPI
 
 struct StationDetailView: View {
     let target: StationTarget
@@ -21,6 +22,11 @@ struct StationDetailView: View {
     @State private var picked: Foundation.Date
     @State private var showArrivals = false
     @State private var more = 0
+    /// "⋯ Earlier": the list starts at this (earlier) departure.
+    @State private var earlier: Foundation.Date?
+    @State private var earlierBusy = false
+    @State private var earlierNone = false
+    @State private var timeSheet = false
 
     init(target: StationTarget) {
         self.target = target
@@ -55,7 +61,7 @@ struct StationDetailView: View {
             stopIds: ids,
             routeIds: multi ? target.lines : nil,
             limit: board ? 300 : shown + 5,
-            after: reference,
+            after: earlier ?? reference,
             // A single platform always asks for arrivals (we may not know it's a terminus yet); rows that end here are dropped unless wanted
             arrivals: arrivals || target.from != nil,
             perLine: board ? 4 : nil
@@ -84,6 +90,7 @@ struct StationDetailView: View {
         .background(Theme.canvas)
         .navigationTitle(fromPlatform?.name ?? station?.name ?? "")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { FavoriteButton(options: favoriteOptions) } }
         .task(id: "\(target.stationId)|\(retry)") { await stationModel.load(id: target.stationId) }
         // Re-runs (and cancels the old refresh loop) whenever what is asked for changes
         .task(id: request) {
@@ -91,6 +98,23 @@ struct StationDetailView: View {
             await departuresModel.run(request)
         }
         .refreshable { await departuresModel.load(request) }
+    }
+
+    /// What the star can save here (web: StationPage favoriteOptions).
+    private var favoriteOptions: [Favorite] {
+        guard let station else { return [] }
+        if multi {
+            let selected = station.routes.filter { target.lines.contains($0.routeId) }
+            guard !selected.isEmpty else { return [] }
+            return [Favorite.lines(selected, stationId: station.stationId,
+                                   stopIds: fromPlatform.map { [$0.stopId] } ?? platforms.map(\.stopId),
+                                   from: fromPlatform?.stopId, name: fromPlatform?.name ?? station.name,
+                                   headsigns: fromPlatform?.headsigns ?? [])]
+        }
+        guard let stop = fromPlatform ?? (platforms.count == 1 ? platforms[0] : nil) else { return [] }
+        return [Favorite.stop(stop, stationId: station.stationId)] + stop.routes.map {
+            Favorite.lineStop(route: $0, stopId: stop.stopId, stationId: station.stationId, stopName: stop.name ?? stop.stopId, headsign: nil)
+        }
     }
 
     // MARK: Sections
@@ -162,31 +186,81 @@ struct StationDetailView: View {
         }
     }
 
-    @ViewBuilder
+    /// One compact row: time picker on the left, chips on the right (web: AfterFilter).
     private var timeControls: some View {
-        VStack(spacing: 0) {
-            Toggle("Choose a time", isOn: $chooseTime.animation())
-                .font(.system(size: 15))
-                .padding(.horizontal, 16).padding(.vertical, 8)
-            if chooseTime {
-                DatePicker("Time", selection: $picked, displayedComponents: [.date, .hourAndMinute])
-                    .font(.system(size: 15))
-                    .environment(\.timeZone, TimeFormat.budapest)
-                    .padding(.horizontal, 16).padding(.vertical, 4)
+        HStack(spacing: 12) {
+            Button { timeSheet = true } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "clock").font(.system(size: 16))
+                    Text(timeLabel).font(.system(size: 15, weight: .semibold)).monospacedDigit()
+                }
+                .foregroundStyle(chooseTime ? Theme.accent : Color.primary)
             }
+            .buttonStyle(.plain)
+            Spacer(minLength: 0)
             if !terminus {
-                Toggle("Show arrivals", isOn: $showArrivals)
-                    .font(.system(size: 15))
-                    .padding(.horizontal, 16).padding(.vertical, 8)
+                Button { showArrivals.toggle() } label: {
+                    Text("Arrivals")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(showArrivals ? Color.white : Color.primary)
+                        .padding(.horizontal, 10).padding(.vertical, 2)
+                        .background(showArrivals ? Theme.accent : Theme.fill, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            if !board && !earlierNone {
+                Button { Task { await loadEarlier() } } label: {
+                    Text("⋯ Earlier").font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
+                }
+                .buttonStyle(.plain)
+                .disabled(earlierBusy)
             }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .sheet(isPresented: $timeSheet) {
+            TimePickerSheet(initial: chooseTime ? picked : Foundation.Date()) { choice in
+                earlier = nil; earlierNone = false
+                if let choice { picked = choice; chooseTime = true } else { chooseTime = false }
+            }
+        }
+    }
+
+    private var timeLabel: String {
+        guard chooseTime else { return "Now" }
+        let at = Self.minute(picked)
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeFormat.budapest
+        let time = "From " + TimeFormat.clock(at)
+        if cal.isDateInToday(at) { return time }
+        let f = DateFormatter(); f.timeZone = TimeFormat.budapest; f.dateFormat = "EEE d MMM"
+        return f.string(from: at) + ", " + time
+    }
+
+    /// Finds the last departure before what is on screen and starts the list there: one more row per tap.
+    private func loadEarlier() async {
+        let ids = request.stopIds
+        guard !earlierBusy, !ids.isEmpty else { return }
+        earlierBusy = true
+        defer { earlierBusy = false }
+        let start = earlier ?? reference ?? Self.minute(Foundation.Date())
+        let edge = start.addingTimeInterval(-60)
+        for minutes in [15, 60, 180] {
+            let from = edge.addingTimeInterval(-Double(minutes) * 60)
+            guard let data = try? await Network.shared.fetch(DeparturesQuery(
+                stopIds: ids, routeIds: request.routeIds.map { .some($0) } ?? .null, limit: .some(200),
+                hours: .some((minutes + 59) / 60), after: .some(APIDate.format(from)),
+                arrivals: .some(true), perLine: .null)) else { return }
+            let before = data.departures.compactMap { APIDate.parse($0.departure) }.filter { $0 < edge }
+            if let last = before.max() { earlier = last; return }
+        }
+        earlierNone = true
     }
 
     @ViewBuilder
     private func departureRows(now: Foundation.Date) -> some View {
         let fixed = reference != nil
         let all = distinctDepartures()
-        let visible = tracker.visible(all, now: now, reference: reference)
+        let visible = tracker.visible(all, now: now, reference: earlier ?? reference)
         if visible.isEmpty {
             Text("No departures").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
         } else if board {
@@ -231,11 +305,13 @@ struct StationDetailView: View {
 
     @ViewBuilder
     private var platformsSection: some View {
-        if !platforms.isEmpty {
+        // Arrival-only platforms only when you came from a trip (or are looking at one)
+        let listed = platforms.filter { !$0.isTerminus || target.trip != nil || $0.stopId == target.from }
+        if !listed.isEmpty {
             VStack(spacing: 0) {
                 SectionTitle("Stops here")
                 Card {
-                    RowList(data: platforms, id: \.stopId) { platform in
+                    RowList(data: listed, id: \.stopId) { platform in
                         NavigationLink(value: StationTarget(stationId: target.stationId, from: platform.stopId, lines: target.lines, reference: reference)) {
                             PlatformRow(platform: platform, highlighted: platform.stopId == target.from)
                         }
@@ -263,5 +339,85 @@ struct PlatformRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+    }
+}
+
+/// Hour and minute wheels; the day is a second, collapsed step. "Now" clears the chosen time.
+struct TimePickerSheet: View {
+    let initial: Foundation.Date
+    let done: (Foundation.Date?) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var time: Foundation.Date
+    @State private var pickDay = false
+
+    init(initial: Foundation.Date, done: @escaping (Foundation.Date?) -> Void) {
+        self.initial = initial
+        self.done = done
+        _time = State(initialValue: initial)
+    }
+
+    private var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeFormat.budapest; return c }
+
+    private func dayLabel(_ d: Foundation.Date) -> String {
+        if calendar.isDateInToday(d) { return "Today" }
+        if calendar.isDateInTomorrow(d) { return "Tomorrow" }
+        let f = DateFormatter(); f.timeZone = TimeFormat.budapest; f.dateFormat = "EEEE d MMM"
+        return f.string(from: d)
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text("Show departures from").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.secondary).padding(.top, 20)
+            DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
+                .datePickerStyle(.wheel).labelsHidden()
+                .environment(\.timeZone, TimeFormat.budapest)
+            Button { withAnimation { pickDay.toggle() } } label: {
+                HStack {
+                    Text("Day").foregroundStyle(Theme.secondary)
+                    Spacer()
+                    Text(dayLabel(time) + (pickDay ? " ▴" : " ▾")).fontWeight(.medium)
+                }
+                .font(.system(size: 15)).padding(.horizontal, 12).padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
+            if pickDay {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(0..<7, id: \.self) { i in
+                            let day = Foundation.Date().addingTimeInterval(Double(i) * 86_400)
+                            let on = calendar.isDate(day, inSameDayAs: time)
+                            Button { time = move(time, toDayOf: day) } label: {
+                                Text(dayLabel(day)).font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(on ? Color.white : Color.primary)
+                                    .padding(.horizontal, 12).padding(.vertical, 4)
+                                    .background(on ? Theme.accent : Theme.fill, in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                }
+            }
+            HStack(spacing: 8) {
+                Button { done(nil); dismiss() } label: {
+                    Text("Now").fontWeight(.medium).frame(maxWidth: .infinity).padding(.vertical, 10)
+                        .background(Theme.fill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                Button { done(time); dismiss() } label: {
+                    Text("Show").fontWeight(.semibold).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
+                        .background(Theme.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12).padding(.bottom, 12)
+        }
+        .presentationDetents([.height(pickDay ? 420 : 380)])
+    }
+
+    private func move(_ t: Foundation.Date, toDayOf day: Foundation.Date) -> Foundation.Date {
+        let hm = calendar.dateComponents([.hour, .minute], from: t)
+        var d = calendar.dateComponents([.year, .month, .day], from: day)
+        d.hour = hm.hour; d.minute = hm.minute
+        return calendar.date(from: d) ?? t
     }
 }

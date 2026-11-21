@@ -8,18 +8,48 @@
 import SwiftUI
 import Flow
 
+/// Compact one-line location control: asks for permission or refreshes the position (web: NearbyList).
+struct LocationBar: View {
+    let model: StationsViewModel
+    let radius: Int
+
+    var body: some View {
+        Button { Task { await model.loadNearby(radius: radius) } } label: {
+            HStack(spacing: 8) {
+                Image(systemName: model.locationAvailable ? "location.fill" : "location.slash")
+                    .foregroundStyle(Theme.accent)
+                Text(model.nearbyState.isLoading ? "Finding your location…" : model.locationAvailable ? "Using your location" : "Location off")
+                    .foregroundStyle(Theme.secondary)
+                Spacer()
+                Text(model.locationAvailable ? "Update" : "Use my location").fontWeight(.medium).foregroundStyle(Theme.accent)
+            }
+            .font(.system(size: 15))
+            .padding(.horizontal, 16).padding(.vertical, 10)
+        }
+        .buttonStyle(RowButtonStyle())
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
 struct StationsView: View {
     @Environment(AppSettings.self) private var settings
     @State private var model = StationsViewModel()
     @State private var searchText = ""
 
+    private var searching: Bool { !searchText.trimmingCharacters(in: .whitespaces).isEmpty }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-                    nearbySections
+                if !searching {
+                    LocationBar(model: model, radius: settings.nearbyRadius)
+                }
+                if searching || !model.locationAvailable {
+                    // Search results, or every stop group when there is no location: always something to browse
+                    allSection
                 } else {
-                    searchSection
+                    nearbySection
                 }
             }
             .padding(16)
@@ -27,11 +57,11 @@ struct StationsView: View {
         .background(Theme.canvas)
         .navigationTitle("Stops")
         .searchable(text: $searchText, prompt: "Search stops")
-        .navigationDestination(for: StationTarget.self) { StationDetailView(target: $0) }
-        .navigationDestination(for: TripTarget.self) { TripView(target: $0) }
-        .task(id: searchText) {
+        .transitDestinations()
+        .task(id: "\(searchText)|\(model.locationAvailable)") {
+            guard searching || !model.locationAvailable else { return }
             // Debounce typing; a new keystroke cancels this one
-            try? await Task.sleep(nanoseconds: 250_000_000)
+            if searching { try? await Task.sleep(nanoseconds: 250_000_000) }
             guard !Task.isCancelled else { return }
             await model.search(searchText)
         }
@@ -40,46 +70,44 @@ struct StationsView: View {
     }
 
     @ViewBuilder
-    private var searchSection: some View {
+    private var allSection: some View {
         if let message = model.searchState.errorMessage {
             ErrorView(message: message) { await model.search(searchText) }
-        } else if model.results.isEmpty && !model.searchState.isLoading {
-            ContentUnavailableView.search(text: searchText)
+        } else if model.results.isEmpty {
+            if model.searchState.isLoading { ProgressView().frame(maxWidth: .infinity).padding(.top, 24) }
+            else if searching { ContentUnavailableView.search(text: searchText) }
         } else {
             Card {
-                RowList(data: model.results, id: \.stationId) { StationRow(station: $0, distance: nil) }
+                RowList(data: model.results, id: \.stationId) { station in
+                    StationRow(station: station, distance: nil)
+                        .onAppear { if station.stationId == model.results.last?.stationId { Task { await model.loadMore(searchText) } } }
+                }
             }
+            if model.hasMore { ProgressView() }
         }
     }
 
     @ViewBuilder
-    private var nearbySections: some View {
-        if !model.locationAvailable {
-            Card {
-                VStack(spacing: 8) {
-                    Label("Location is off", systemImage: "location.slash").font(.headline)
-                    Text("Allow location access in Settings to see stops near you, or search above.")
-                        .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                    Button("Try again") { Task { await model.loadNearby(radius: settings.nearbyRadius) } }
-                        .buttonStyle(.bordered)
-                }
-                .padding(16)
-            }
-        } else if let message = model.nearbyState.errorMessage {
+    private var nearbySection: some View {
+        if let message = model.nearbyState.errorMessage {
             ErrorView(message: message) { await model.loadNearby(radius: settings.nearbyRadius) }
         } else if model.nearby.isEmpty {
-            if model.nearbyState.isLoading {
-                ProgressView().frame(maxWidth: .infinity)
-            } else {
-                Text("No stops within \(settings.nearbyRadius) m.").foregroundStyle(.secondary)
-            }
-        }
-        if !model.nearby.isEmpty {
+            if model.nearbyState.isLoading { ProgressView().frame(maxWidth: .infinity) }
+            else { Text("No stops within \(settings.nearbyRadius) m.").foregroundStyle(Theme.secondary) }
+        } else {
             // The group (opens its departures) with its platforms under it
             Card {
                 RowList(data: model.nearby, id: \.station.stationId) { StationRow(station: $0.station, distance: $0.distance) }
             }
         }
+    }
+}
+
+extension View {
+    /// Where stop and trip links lead, for any navigation stack.
+    func transitDestinations() -> some View {
+        navigationDestination(for: StationTarget.self) { StationDetailView(target: $0) }
+            .navigationDestination(for: TripTarget.self) { TripView(target: $0) }
     }
 }
 
@@ -94,7 +122,8 @@ struct StationRow: View {
     let distance: Double?
 
     var body: some View {
-        let platforms = station.sortedPlatforms
+        // Arrival-only platforms (lines but no directions) are not listed here
+        let platforms = station.sortedPlatforms.filter { !$0.isTerminus }
         let several = platforms.count > 1
         if !platforms.isEmpty {
             VStack(spacing: 0) {
@@ -108,7 +137,7 @@ struct StationRow: View {
                                 // The lines are listed once, per platform below; the group shows which kinds run here
                                 HStack(spacing: 6) {
                                     ForEach(LineCategory.allCases.filter { c in station.routes.contains { LineCategory.of($0) == c } }, id: \.self) { c in
-                                        Image(systemName: c.symbol).font(.system(size: 15)).foregroundStyle(c.tint).frame(width: 20, height: 20)
+                                        ModeIcon(category: c)
                                     }
                                     Text("\(platforms.count) platforms · \(station.routes.count) lines")
                                         .font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.leading, 2)

@@ -131,15 +131,16 @@ private struct LiveShape: Shape {
 
 /// Kinds of transport as small glyphs (the web uses BKK pictograms).
 extension LineCategory {
-    var symbol: String {
+    /// The official BKK pictogram (asset catalog, vector, template: tinted with `tint`).
+    var asset: String {
         switch self {
-        case .metro: return "tram.fill.tunnel"
-        case .tram: return "tram.fill"
-        case .trolleybus: return "bus.fill"
-        case .bus: return "bus.fill"
-        case .night: return "moon.fill"
-        case .boat: return "ferry.fill"
-        case .other: return "questionmark.circle.fill"
+        case .metro: return "mode_metro"
+        case .tram: return "mode_tram"
+        case .trolleybus: return "mode_trolleybus"
+        case .bus: return "mode_bus"
+        case .night: return "mode_night"
+        case .boat: return "mode_boat"
+        case .other: return "mode_other"
         }
     }
 
@@ -152,5 +153,15 @@ extension LineCategory {
         case .boat: return Color(hex: "#2b5ba8")
         case .other: return Color(hex: "#7a6a58")
         }
+    }
+}
+
+/// A mode pictogram at the web's size (20 pt in rows).
+struct ModeIcon: View {
+    let category: LineCategory
+    var size: CGFloat = 20
+    var body: some View {
+        Image(category.asset).renderingMode(.template).resizable().scaledToFit()
+            .frame(width: size, height: size).foregroundStyle(category.tint)
     }
 }
