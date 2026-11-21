@@ -327,7 +327,7 @@ export type TripDetails = {
       currentStopSequence: number | null
       timestamp: string | null
     } | null
-    path: { coordinates: [number, number][] } | null
+    path?: { coordinates: [number, number][] } | null
   } | null
 }
 
@@ -344,10 +344,17 @@ export const TRIP_QUERY = /* GraphQL */ `
         latitude longitude bearing vehicleLabel vehicleLicensePlate
         vehicleWheelchairAccessible currentStopSequence timestamp
       }
-      path { coordinates }
     }
   }
 `
+
+/** The route shape on its own: fetched once per trip, not on every 30 s refresh of the times. */
+export const TRIP_PATH_QUERY = /* GraphQL */ `
+  query TripPath($id: ID!, $serviceDate: String) {
+    trip(id: $id, serviceDate: $serviceDate) { tripId path { coordinates } }
+  }
+`
+export type TripPath = { trip: { tripId: string; path: { coordinates: [number, number][] } | null } | null }
 
 /** Map: stop groups only (lines for colour + badges), cheap enough for a wide area. */
 export const MAP_GROUPS_QUERY = /* GraphQL */ `
@@ -363,7 +370,7 @@ export const MAP_STOPS_QUERY = /* GraphQL */ `
   query MapStops($lat: Float!, $lon: Float!, $radius: Float!) {
     stationsByRadius(lat: $lat, lon: $lon, radius: $radius) {
       stationId name lat lon routes { ${ROUTE_REF} }
-      stops { stopId name lat lon routes { ${ROUTE_REF} } }
+      stops { stopId name lat lon headsigns routes { ${ROUTE_REF} } }
     }
   }
 `

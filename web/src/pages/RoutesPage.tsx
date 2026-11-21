@@ -1,5 +1,5 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { LocationIcon } from '../components/Icons'
 import NavBar from '../components/NavBar'
@@ -8,7 +8,7 @@ import SearchInput from '../components/SearchInput'
 import { gql, ROUTES_QUERY, type RouteSummary, type RoutesPage as RoutesData } from '../lib/api'
 import RouteBadge from '../components/RouteBadge'
 import { linesUrl } from './LinesPage'
-import { CATEGORIES, categoryOf } from '../lib/categories'
+import { CATEGORIES, categoryOf, replacesCategory } from '../lib/categories'
 import RouteTile from '../components/RouteTile'
 import { useFavorites } from '../lib/favorites'
 import { useT } from '../lib/i18n'
@@ -16,7 +16,6 @@ import { score } from '../lib/search'
 import { rank } from '../lib/usage'
 import { useGeolocation } from '../lib/useGeolocation'
 
-const PAGE_SIZE = 50
 
 export default function RoutesPage() {
   const t = useT()
@@ -46,18 +45,19 @@ export default function RoutesPage() {
       { replace: true },
     )
 
-  const query = useInfiniteQuery({
-    queryKey: ['routes'],
-    queryFn: ({ pageParam }) => gql<RoutesData>(ROUTES_QUERY, { limit: PAGE_SIZE, page: pageParam }),
-    initialPageParam: 0,
-    getNextPageParam: ({ routes }) => (routes.page + 1 < routes.pages ? routes.page + 1 : undefined),
+  // Every line in one request (a few hundred small rows), so the page renders once instead of growing page by page
+  const query = useQuery({
+    queryKey: ['routes', 'all'],
+    queryFn: () => gql<RoutesData>(ROUTES_QUERY, { limit: 1000, page: 0 }),
     staleTime: 60 * 60_000,
   })
 
-  const allRoutes = useMemo(() => query.data?.pages.flatMap((p) => p.routes.data) ?? [], [query.data])
+  const allRoutes = useMemo(() => query.data?.routes.data ?? [], [query.data])
 
+  // Replacement buses count as part of the tram / metro they replace
+  const groupOf = (r: (typeof allRoutes)[number]) => replacesCategory(r) ?? categoryOf(r).key
   const routes = useMemo(() => {
-    const inCategory = allRoutes.filter((r) => !category || categoryOf(r).key === category.key)
+    const inCategory = allRoutes.filter((r) => !category || groupOf(r) === category.key)
     if (!search.trim()) return inCategory
     // Accent-insensitive, fuzzy, and lines you open often rank first
     return rank(inCategory, search, (r) => [r.shortName ?? '', r.desc ?? '', r.longName ?? ''], (r) => `route:${r.routeId}`, score)
@@ -65,31 +65,37 @@ export default function RoutesPage() {
 
   // Grouped in BKK's order: metro, tram, trolleybus, bus, night, boat, other
   const groups = useMemo(
-    () => CATEGORIES.map((c) => ({ category: c, routes: routes.filter((r) => categoryOf(r).key === c.key) })).filter((g) => g.routes.length > 0),
+    () =>
+      CATEGORIES.map((c) => ({
+        category: c,
+        routes: routes.filter((r) => categoryOf(r).key === c.key && !replacesCategory(r)),
+        replacements: routes.filter((r) => replacesCategory(r) === c.key),
+      })).filter((g) => g.routes.length + g.replacements.length > 0),
     [routes],
   )
 
-  // Grouping, search and filters are client side, so pull in every page (a few hundred lines)
   const narrowing = search.trim() !== '' || category !== null
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage) fetchNextPage()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  // Infinite scroll, like the app's onAppear trigger near the end of the list.
-  const sentinel = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = sentinel.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage()
-      },
-      { rootMargin: '600px' },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+  // A type's highlight uses its lines' own badge colour (the bright BKK yellow for trams), the most common one
+  const chipColors = useMemo(() => {
+    const counts = new Map<string, Map<string, number>>()
+    for (const r of allRoutes) {
+      if (!r.color || replacesCategory(r)) continue
+      const key = categoryOf(r).key
+      const m = counts.get(key) ?? new Map<string, number>()
+      m.set(r.color, (m.get(r.color) ?? 0) + 1)
+      counts.set(key, m)
+    }
+    // Only when most of the type's lines share it (not metro, where every line has its own colour)
+    const out = new Map<string, string>()
+    for (const [k, m] of counts) {
+      const [color, n] = [...m].sort((a, b) => b[1] - a[1])[0]
+      const total = [...m.values()].reduce((a, b) => a + b, 0)
+      if (n / total > 0.6) out.set(k, `#${color}`)
+    }
+    return out
+  }, [allRoutes])
+  const chipColor = (key: string) => chipColors.get(key) ?? CATEGORIES.find((c) => c.key === key)!.color
 
   return (
     <div className="min-h-dvh">
@@ -117,7 +123,7 @@ export default function RoutesPage() {
           <button
             type="button"
             onClick={() => setParam('type', null)}
-            className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium ${!category ? 'bg-accent text-white' : 'bg-fill text-label'}`}
+            className={`shrink-0 rounded-full px-3 py-1 text-sm font-medium outline-none focus:outline-none ${!category ? 'bg-accent text-white' : 'bg-fill text-label'}`}
           >
             {t('routes.all')}
           </button>
@@ -127,11 +133,13 @@ export default function RoutesPage() {
               key={c.key}
               type="button"
               onClick={() => setParam('type', c.key)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-sm font-medium ${
-                category?.key === c.key ? 'bg-accent text-white' : 'bg-fill text-label'
+              // Selected: the vehicle type's own colour (tram yellow with dark text, like its badges)
+              className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-3 pl-1.5 text-sm font-medium outline-none focus:outline-none ${
+                category?.key === c.key ? '' : 'bg-fill text-label'
               }`}
+              style={category?.key === c.key ? { backgroundColor: chipColor(c.key), color: onColor(chipColor(c.key)) } : undefined}
             >
-              <CategoryIcon category={c} className="h-5 w-5" color={category?.key === c.key ? '#ffffff' : undefined} />
+              <CategoryIcon category={c} className="h-5 w-5" color={category?.key === c.key ? onColor(chipColor(c.key)) : undefined} />
               {t(`category.${c.key}`)}
             </button>
           ))}
@@ -169,7 +177,7 @@ export default function RoutesPage() {
             </ul>
           </section>
         )}
-        {!search.trim() && groups.map(({ category: c, routes: list }) => (
+        {!search.trim() && groups.map(({ category: c, routes: list, replacements }) => (
           <section key={c.key} className="px-4 pt-5">
             <h2 className="flex items-center gap-2 pb-2 text-xl font-bold">
               <CategoryIcon category={c} className="h-7 w-7" />
@@ -181,16 +189,36 @@ export default function RoutesPage() {
                 <li key={route.routeId}>{tile(route)}</li>
               ))}
             </ul>
+            {replacements.length > 0 && (
+              <>
+                {/* Pótlóbuszok: blue bus tiles, under the tram/metro lines they stand in for */}
+                <h3 className="pt-4 pb-2 text-[15px] font-semibold text-secondary">
+                  {t('routes.replacements')} <span className="font-normal">{replacements.length}</span>
+                </h3>
+                <ul className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
+                  {replacements.map((route) => (
+                    <li key={route.routeId}>{tile(route)}</li>
+                  ))}
+                </ul>
+              </>
+            )}
           </section>
         ))}
 
-        {query.isPending || isFetchingNextPage ? (
-          <p className="p-6 text-center text-sm text-secondary">{t('common.loading')}</p>
+        {query.isPending ? (
+          // Tile-shaped placeholder: the grid appears in one go when the lines arrive
+          <section className="px-4 pt-5">
+            <div className="mb-3 h-7 w-32 animate-pulse rounded-md bg-fill" />
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2">
+              {Array.from({ length: 24 }, (_, i) => (
+                <div key={i} className="aspect-[2/1] animate-pulse rounded-[10px] bg-fill" />
+              ))}
+            </div>
+          </section>
         ) : (
           routes.length === 0 &&
           !query.isError && <p className="p-6 text-center text-secondary">{t('routes.none')}</p>
         )}
-        <div ref={sentinel} />
         {!selecting && allRoutes.length > 0 && (
           <p className="px-4 pt-2 pb-6 text-center text-[13px] text-secondary">{t('routes.tip')}</p>
         )}
@@ -225,3 +253,10 @@ export default function RoutesPage() {
   )
 }
 
+
+/** Black or white text, whichever reads better on this background colour. */
+function onColor(bg: string) {
+  const h = bg.replace('#', '')
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+  return 0.299 * r + 0.587 * g + 0.114 * b > 0.6 ? '#000000' : '#ffffff'
+}

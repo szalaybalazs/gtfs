@@ -11,6 +11,7 @@ import MapPage from './pages/MapPage'
 import NearbyPage from './pages/NearbyPage'
 import PhonePreviewPage from './pages/PhonePreviewPage'
 import RouteDetailsPage from './pages/RouteDetailsPage'
+import AlertsPage from './pages/AlertsPage'
 import LinesPage from './pages/LinesPage'
 import RoutesPage from './pages/RoutesPage'
 import SettingsPage from './pages/SettingsPage'
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/routes" element={<RoutesPage />} />
             <Route path="/routes/:routeId" element={<RouteDetailsPage />} />
             <Route path="/lines" element={<LinesPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/stops" element={<StopsPage />} />
             <Route path="/stops/:stopId" element={<StopPage />} />
             <Route path="/stations/:stationId" element={<StationPage />} />

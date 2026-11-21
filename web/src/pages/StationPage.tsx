@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import FavoriteSheet from '../components/FavoriteSheet'
 import { StarIcon } from '../components/Icons'
@@ -12,6 +12,7 @@ import StationStops from '../components/StationStops'
 import StopInfoCard from '../components/StopInfoCard'
 import { gql, STATION_QUERY, type StationDetails } from '../lib/api'
 import { recordVisit } from '../lib/usage'
+import { findCachedStation, stationKey } from '../lib/prefetch'
 import { useDepartures } from '../lib/useDepartures'
 import { useT } from '../lib/i18n'
 
@@ -31,10 +32,16 @@ export default function StationPage() {
   const multi = lineIds.length > 0
   const servesLines = (s: { routes?: ({ routeId: string } | null)[] | null }) => !multi || (s.routes ?? []).some((r) => r && lineSet.has(r.routeId))
 
+  const qc = useQueryClient()
   const query = useQuery({
-    queryKey: ['station', stationId],
+    queryKey: stationKey(stationId),
     queryFn: () => gql<StationDetails>(STATION_QUERY, { id: stationId }),
     staleTime: 60 * 60_000,
+    // Name and lines from whichever list you tapped it in, so the header is there at once
+    placeholderData: () => {
+      const cached = findCachedStation(qc, stationId)
+      return cached ? ({ station: cached } as StationDetails) : undefined
+    },
   })
   const station = query.data?.station
   useEffect(() => {
@@ -87,7 +94,8 @@ export default function StationPage() {
   const ids = from ? [from] : platforms.map((s) => s.stopId)
   const { after } = useAfter()
   const arrivedOn = useSearchParams()[0].get('trip')
-  const departures = useDepartures(ids, { limit: multi ? 20 : 8, enabled: !!station, after, routeIds: multi ? lineIds : null })
+  // With ?from= the stop is already known, so departures load in parallel with the stop group (no waterfall)
+  const departures = useDepartures(ids, { limit: multi ? 20 : 8, enabled: !!station || !!from, after, routeIds: multi ? lineIds : null })
 
   return (
     <div className="min-h-dvh">
@@ -109,7 +117,25 @@ export default function StationPage() {
         }
       />
       <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
-        {query.isPending && <div className="h-32 animate-pulse rounded-2xl bg-surface" />}
+        {query.isPending && (
+          // Shaped like the page: info card, then the departures card
+          <>
+            <div className="rounded-2xl bg-surface p-4">
+              <div className="h-7 w-2/3 animate-pulse rounded-md bg-fill" />
+              <div className="mt-2 h-4 w-1/2 animate-pulse rounded bg-fill" />
+              <div className="mt-3 flex gap-1.5">
+                {[0, 1, 2, 3].map((i) => (
+                  <span key={i} className="h-6 w-10 animate-pulse rounded-md bg-fill" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2 rounded-2xl bg-surface p-4">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-12 animate-pulse rounded-lg bg-fill" />
+              ))}
+            </div>
+          </>
+        )}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
             {t('station.loadError')}{' '}
@@ -153,7 +179,7 @@ export default function StationPage() {
 
             <section className="space-y-2">
               <Departures
-                toolbar={<AfterFilter />}
+                toolbar={<AfterFilter stopIds={ids} routeIds={multi ? lineIds : null} />}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}

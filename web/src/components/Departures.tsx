@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
 import { countdown } from '../lib/countdown'
 import { useT } from '../lib/i18n'
+import { prefetchTrip, type TripPreview } from '../lib/prefetch'
 import { realtimeStatus, statusColor, statusLabel } from '../lib/realtimeStatus'
 import { useNow } from '../lib/useTimetable'
 import { BikeIcon, ChevronIcon, LiveIcon, WheelchairIcon } from './Icons'
@@ -78,6 +80,7 @@ export default function Departures({
 }
 
 export function DepartureRow({ departure: d, now, mine, autoHide = true }: { departure: Departure; now: Date; mine?: boolean; autoHide?: boolean }) {
+  const qc = useQueryClient()
   const t = useT()
   const time = new Date(d.departure)
   const status = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay)
@@ -98,6 +101,9 @@ export function DepartureRow({ departure: d, now, mine, autoHide = true }: { dep
       <div className="min-h-0 overflow-hidden">
       <Link
         to={`/trips/${encodeURIComponent(d.tripId)}?date=${d.serviceDate}&from=${encodeURIComponent(d.stopId)}`}
+        state={{ route: d.route, headsign: d.headsign } satisfies TripPreview}
+        // Start loading the trip as the finger goes down; the click lands ~150 ms later
+        onPointerDown={() => void prefetchTrip(qc, d.tripId, d.serviceDate)}
         className={`flex items-center gap-3 px-4 py-3 active:bg-fill ${left || justLeft ? 'opacity-45' : ''} ${mine ? 'bg-accent/10' : ''}`}
       >
         {d.route && <RouteBadge route={d.route} />}

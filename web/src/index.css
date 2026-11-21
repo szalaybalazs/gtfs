@@ -88,3 +88,6 @@ html, body { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   .sheet-up { animation: none; }
 }
+
+/* Focus rings only for keyboard users: no outline after a mouse click on desktop */
+:focus:not(:focus-visible) { outline: none; }

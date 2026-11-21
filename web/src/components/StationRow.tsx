@@ -1,4 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router'
+import { prefetchStation } from '../lib/prefetch'
 import type { Station } from '../lib/api'
 import { formatDistance } from '../lib/geo'
 import { useT } from '../lib/i18n'
@@ -10,6 +12,7 @@ import RouteBadge from './RouteBadge'
  * (usually one per direction), each reading "towards …" with its lines.
  */
 export default function StationRow({ station, distance }: { station: Station; distance?: number }) {
+  const qc = useQueryClient()
   const t = useT()
   const stops = (station.stops ?? []).filter((s) => (s.routes ?? []).some(Boolean) && (s.headsigns ?? []).length > 0)
   if (stops.length === 0) return null
@@ -19,6 +22,8 @@ export default function StationRow({ station, distance }: { station: Station; di
         <li key={stop.stopId} className="border-b border-separator last:border-b-0">
           <Link
             to={`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(stop.stopId)}`}
+            // Start loading the stop group as the finger goes down
+            onPointerDown={() => void prefetchStation(qc, station.stationId)}
             className="flex items-center gap-3 px-4 py-3 active:bg-fill"
           >
             <div className="min-w-0 flex-1">

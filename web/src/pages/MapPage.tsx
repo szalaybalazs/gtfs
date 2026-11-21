@@ -58,7 +58,7 @@ function badgesHtml(routes: RouteRef[], max = 4, justify = 'center') {
 type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>
 
 /** Stop group: a pictogram dot zoomed out; a card with name and lines closer in or when selected. */
-function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false): Icon {
+function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false, towards?: string[]): Icon {
   const c = mainCategory(station.routes)
   const mask = maskCss(c.icon)
   if (!withBadges)
@@ -72,6 +72,10 @@ function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolea
       `<div style="position:absolute;left:0;top:0;transform:translate(-50%,calc(-100% - 6px));display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px;padding:5px 7px;background:#fff;border-radius:10px;border:${selected ? 3 : 2}px solid ${c.color};box-shadow:0 ${selected ? 4 : 2}px ${selected ? 12 : 6}px rgb(0 0 0/${selected ? '.4' : '.25'});white-space:nowrap">` +
       `<div style="display:flex;align-items:center;gap:5px;font:600 12px/14px system-ui;color:#111">` +
       `<span style="width:16px;height:16px;flex:none;background:${c.color};${mask}"></span>${esc(station.name)}</div>` +
+      // A single platform: which way it goes, like the BKK app ("▸ Széll Kálmán tér")
+      (towards?.length
+        ? `<div style="font:500 11px/13px system-ui;color:#555;max-width:180px;overflow:hidden;text-overflow:ellipsis">▸ ${esc(towards.slice(0, 2).join(' / '))}</div>`
+        : '') +
       badgesHtml(station.routes, 4, 'flex-start') +
       `</div>` +
       `<div style="position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:${c.color};border:2px solid #fff;box-sizing:border-box"></div>`,
@@ -226,7 +230,7 @@ export default function MapPage() {
           markers.push({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
-            ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true) : stopIcon(routes)),
+            ...(sel ? groupIcon({ name: s.name ?? station.name, routes }, true, true, s.headsigns ?? []) : stopIcon(routes)),
             z: sel ? 1000 : 0,
             onClick: () =>
               sel ? navigate(`/stations/${encodeURIComponent(station.stationId)}?from=${encodeURIComponent(s.stopId)}`) : setSelectedStop(s.stopId),

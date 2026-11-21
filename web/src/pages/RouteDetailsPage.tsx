@@ -208,7 +208,7 @@ export default function RouteDetailsPage() {
               onClick={() => otherDirection && changeDirection(otherDirection.directionId)}
               className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill disabled:active:bg-surface"
             >
-              <span className="text-secondary">{t('route.towards')}</span>
+              <span className="w-[4.5rem] shrink-0 text-secondary">{t('route.towards')}</span>
               <span className="min-w-0 flex-1 truncate font-medium">{direction.headsign}</span>
               {otherDirection && <SwapIcon className="h-5 w-5 shrink-0" aria-label={t('route.swap')} />}
             </button>
@@ -219,7 +219,7 @@ export default function RouteDetailsPage() {
           <>
             {view === 'departures' ? (
               <Departures
-                toolbar={<AfterFilter />}
+                toolbar={<AfterFilter stopIds={stop ? [stop.stopId] : []} routeIds={[routeId]} />}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                 title={null}

@@ -43,7 +43,7 @@ export default function StopPicker({
         }}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left active:bg-fill"
       >
-        <span className="text-secondary">{t('picker.from')}</span>
+        <span className="w-[4.5rem] shrink-0 text-secondary">{t('picker.from')}</span>
         <span className="min-w-0 flex-1 truncate font-medium">{value.name}</span>
         <UpDownIcon className="h-4 w-4 shrink-0 text-secondary" />
       </button>
@@ -75,7 +75,7 @@ export default function StopPicker({
                 />
               </div>
             </div>
-            <ol className="mx-4 mb-4 overflow-y-auto rounded-2xl bg-surface py-1">
+            <ol className="mx-4 mb-4 overflow-y-auto rounded-2xl bg-surface">
               {shown.map((s, i) => {
                 const selected = s.stopId === value.stopId
                 return (

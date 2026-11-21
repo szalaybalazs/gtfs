@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, useParams, useSearchParams } from 'react-router'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
 import Alerts from '../components/Alerts'
 import MiniMap from '../components/MiniMap'
 import NavBar from '../components/NavBar'
 import RouteBadge from '../components/RouteBadge'
-import { gql, TRIP_QUERY, type TripDetails, type TripStop } from '../lib/api'
+import { gql, TRIP_PATH_QUERY, TRIP_QUERY, type TripDetails, type TripPath, type TripStop } from '../lib/api'
+import { tripKey, type TripPreview } from '../lib/prefetch'
 import { distance } from '../lib/geo'
 import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
@@ -25,10 +26,19 @@ export default function TripPage() {
   const now = useNow(1_000)
 
   const query = useQuery({
-    queryKey: ['trip', tripId, date],
+    queryKey: tripKey(tripId, date),
     queryFn: () => gql<TripDetails>(TRIP_QUERY, { id: tripId, serviceDate: date }),
     refetchInterval: REFRESH_MS,
   })
+  // The shape doesn't change while you watch, so it's fetched once, outside the refresh
+  const pathQuery = useQuery({
+    queryKey: ['tripPath', tripId, date],
+    queryFn: () => gql<TripPath>(TRIP_PATH_QUERY, { id: tripId, serviceDate: date }),
+    staleTime: Infinity,
+  })
+  const tripPath = pathQuery.data?.trip?.path ?? null
+  // What the tapped departure already knew: line and destination show instantly
+  const preview = (useLocation().state as TripPreview | null) ?? null
   const trip = query.data?.trip
   const route = trip?.route
   const color = hex(route?.color, '#6b7280')
@@ -52,7 +62,7 @@ export default function TripPage() {
       <NavBar back={{ label: t('common.back') }} />
 
       <main className="mx-auto max-w-2xl space-y-4 px-4 py-4 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
-        {query.isPending && <div className="h-40 animate-pulse rounded-2xl bg-surface" />}
+        {query.isPending && <TripSkeleton preview={preview} />}
         {query.isError && (
           <p className="p-6 text-center text-secondary">
             {t('trip.loadError')}{' '}
@@ -70,7 +80,7 @@ export default function TripPage() {
             <section className="rounded-2xl bg-surface p-4">
               <div className="flex items-center gap-2">
                 {route && <RouteBadge route={route} />}
-                <span className="text-secondary">{t('trip.towards')}</span>
+                {t('trip.towards') && <span className="text-secondary">{t('trip.towards')}</span>}
                 {stops.some((x) => x.realtime) ? (
                   <span className="ml-auto flex items-center gap-1.5 rounded-full bg-live/15 px-2.5 py-0.5 text-[13px] font-semibold text-live">
                     <span className="relative flex h-2 w-2">
@@ -83,13 +93,13 @@ export default function TripPage() {
                   <span className="ml-auto rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-medium text-secondary">{t('trip.scheduled')}</span>
                 )}
               </div>
-              <h1 className="mt-1 text-2xl leading-tight font-bold">{trip.headsign ?? stops.at(-1)?.stop.name}</h1>
+              <h1 className="mt-1 text-2xl leading-tight font-bold">{t('trip.headsign', { to: trip.headsign ?? stops.at(-1)?.stop.name ?? '' })}</h1>
               {viaStops(stops).length > 0 && (
                 <p className="mt-1 text-[15px] text-secondary">
-                  {t.rich('trip.via', { stops: <span className="text-label">{viaStops(stops).join(' · ')}</span> })}
+                  {t.rich('trip.via', { stops: <span className="text-label">{viaStops(stops).join(' ▸ ')}</span> })}
                 </p>
               )}
-              {stats(trip, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, t)}</p>}
+              {stats(trip, tripPath, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, tripPath, t)}</p>}
               {/* Delay sits bottom-left, on the status line, so it adds no height to the destination */}
               <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[15px] text-secondary">
                 {delay != null && started && !finished && <DelayIndicator delay={delay} />}
@@ -143,7 +153,7 @@ export default function TripPage() {
               <MiniMap
                 expandable
                 color={color}
-                line={trip.path?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number])}
+                line={tripPath?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number])}
                 points={stops
                   .filter((s) => s.stop.lat != null && s.stop.lon != null)
                   .map((s) => ({ lat: s.stop.lat!, lon: s.stop.lon!, strong: s.stop.stopId === from }))}
@@ -242,7 +252,8 @@ function TripStopRow({
     <li className="relative">
       <Link
         // Opening a stop from a trip starts its departures at this trip, marked "Your trip"
-        to={`/stations/${encodeURIComponent(s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(new Date(s.departure).getTime() - 60_000).toISOString())}`}
+        // The stop group's id (not the stop's), so the page reuses what lists already cached under ['station', groupId]
+        to={`/stations/${encodeURIComponent(s.stop.station?.stationId ?? s.stop.stopId)}?from=${encodeURIComponent(s.stop.stopId)}&trip=${encodeURIComponent(tripId)}&at=${encodeURIComponent(new Date(new Date(s.departure).getTime() - 60_000).toISOString())}`}
         className={`flex items-center pr-3 active:bg-fill ${passed ? 'opacity-45' : ''} ${referenceTime != null ? 'pl-2' : ''}`}
       >
         {referenceTime != null && (
@@ -338,11 +349,11 @@ function DelayIndicator({ delay }: { delay: number }) {
  * "34 min · 12.4 km · 23 stops". Distance follows the route shape when the
  * feed has one, otherwise straight lines between stops (marked ~).
  */
-function stats(trip: NonNullable<TripDetails['trip']>, t: TFunction) {
+function stats(trip: NonNullable<TripDetails['trip']>, tripPath: TripPath['trip'] extends infer T ? (T extends { path: infer P } ? P : null) : null, t: TFunction) {
   const stops = trip.stops
   if (stops.length < 2) return null
   const minutes = Math.round((new Date(stops[stops.length - 1].arrival).getTime() - new Date(stops[0].departure).getTime()) / 60_000)
-  const path = trip.path?.coordinates ?? []
+  const path = tripPath?.coordinates ?? []
   let metres = 0
   let approx = false
   if (path.length > 1) {
@@ -357,4 +368,37 @@ function stats(trip: NonNullable<TripDetails['trip']>, t: TFunction) {
   }
   const km = metres > 0 ? `${approx ? '~' : ''}${formatNumber(metres / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km` : null
   return [t('trip.statsMinutes', { n: minutes }), km, t('trip.statsStops', { n: stops.length })].filter(Boolean).join(' · ')
+}
+
+/** Loading state shaped like the real page; with the tapped row's line and destination already filled in. */
+function TripSkeleton({ preview }: { preview: TripPreview | null }) {
+  const t = useT()
+  return (
+    <>
+      <section className="rounded-2xl bg-surface p-4">
+        <div className="flex h-7 items-center gap-2">
+          {preview?.route ? <RouteBadge route={preview.route} /> : <span className="h-6 w-12 animate-pulse rounded-md bg-fill" />}
+        </div>
+        {preview?.headsign ? (
+          <h1 className="mt-1 text-2xl leading-tight font-bold">{t('trip.headsign', { to: preview.headsign })}</h1>
+        ) : (
+          <div className="mt-2 h-7 w-2/3 animate-pulse rounded-md bg-fill" />
+        )}
+        <div className="mt-3 h-4 w-1/2 animate-pulse rounded bg-fill" />
+        <div className="mt-2 h-4 w-1/3 animate-pulse rounded bg-fill" />
+      </section>
+      <section>
+        <div className="mx-1 mb-2 h-6 w-24 animate-pulse rounded bg-fill" />
+        <ol className="overflow-hidden rounded-2xl bg-surface py-2">
+          {Array.from({ length: 8 }, (_, i) => (
+            <li key={i} className="flex h-12 items-center gap-3 px-4">
+              <span className="h-2.5 w-2.5 rounded-full bg-fill" />
+              <span className="h-4 flex-1 animate-pulse rounded bg-fill" style={{ maxWidth: `${55 + ((i * 37) % 35)}%` }} />
+              <span className="h-4 w-12 animate-pulse rounded bg-fill" />
+            </li>
+          ))}
+        </ol>
+      </section>
+    </>
+  )
 }

@@ -119,7 +119,6 @@ export default function Timetable({ lines }: { lines: Line[] }) {
                           aria-label={`${e.route.shortName ?? ''} ${hour}:${minute}`}
                         >
                           {minute}
-                          {e.scheduleRelationship != null && <span className="text-xs align-super">'</span>}
                         </button>
                       )
                     })}

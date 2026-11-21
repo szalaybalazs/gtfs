@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { createPortal } from 'react-dom'
 import { ALERTS_QUERY, gql, type Alert } from '../lib/api'
 import { useT, type TFunction } from '../lib/i18n'
@@ -44,46 +45,102 @@ function period(a: Alert, t: TFunction) {
   return end ? t('alerts.until', { when: w(end) }) : t('alerts.ongoing')
 }
 
-/** Compact alert cards; tap one to open the change in a sheet from the bottom. */
+const isPlanned = (a: Alert, now = Date.now()) => !!a.start && new Date(a.start).getTime() > now
+
+/** Ongoing first (most recently started on top), then planned (soonest first). */
+export function splitAlerts(alerts: Alert[]) {
+  const now = Date.now()
+  const time = (a: Alert) => (a.start ? new Date(a.start).getTime() : 0)
+  const ongoing = alerts.filter((a) => !isPlanned(a, now)).sort((a, b) => time(b) - time(a))
+  const planned = alerts.filter((a) => isPlanned(a, now)).sort((a, b) => time(a) - time(b))
+  return { ongoing, planned }
+}
+
+/** URL of the page listing every alert for these lines/stops. */
+export const alertsUrl = (routeIds: string[], stopIds: string[] = []) => {
+  const p = new URLSearchParams()
+  if (routeIds.length) p.set('routes', routeIds.join(','))
+  if (stopIds.length) p.set('stops', stopIds.join(','))
+  return `/alerts?${p}`
+}
+
+/** One alert as a yellow banner; tap opens it. */
+export function AlertCard({ alert: a, onOpen }: { alert: Alert; onOpen: () => void }) {
+  const t = useT()
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="flex w-full items-start gap-3 rounded-2xl bg-[#fff4cc] px-4 py-3 text-left text-black active:opacity-80 dark:bg-[#3a3214] dark:text-[#fff4cc]"
+    >
+      <span className="mt-0.5 text-lg leading-none" aria-hidden>
+        ⚠︎
+      </span>
+      <span className="min-w-0 flex-1">
+        {a.routes.length > 0 && (
+          <span className="mb-1 flex flex-wrap gap-1">
+            {a.routes.slice(0, 6).map((r) => (
+              <RouteBadge key={r.routeId} route={r} fit />
+            ))}
+          </span>
+        )}
+        <span className="line-clamp-2 block text-[15px] leading-snug font-semibold">{a.header}</span>
+        <span className="mt-0.5 block text-[13px] opacity-70">
+          {isPlanned(a) ? `${t('alerts.planned')} · ` : ''}
+          {period(a, t)}
+        </span>
+      </span>
+      <ChevronIcon className="mt-1 h-4 w-4 shrink-0 opacity-50" />
+    </button>
+  )
+}
+
+/** Opens an alert in the bottom sheet. */
+export function useAlertSheet() {
+  const [open, setOpen] = useState<Alert | null>(null)
+  const sheet = open ? createPortal(<AlertSheet alert={open} onClose={() => setOpen(null)} />, document.body) : null
+  return { open: setOpen, sheet }
+}
+
+/**
+ * Alerts on a page: the two most relevant (ongoing first), and if there are
+ * more, a third banner with how many more are ongoing / planned that opens
+ * the full list.
+ */
 export default function Alerts({ routeIds, stopIds = [] }: { routeIds: string[]; stopIds?: string[] }) {
   const t = useT()
+  const navigate = useNavigate()
   const query = useAlerts(routeIds, stopIds)
-  const [open, setOpen] = useState<Alert | null>(null)
+  const { open, sheet } = useAlertSheet()
   const alerts = query.data?.alerts ?? []
   if (alerts.length === 0) return null
+  const { ongoing, planned } = splitAlerts(alerts)
+  const ordered = [...ongoing, ...planned]
+  const shown = ordered.length > 2 ? ordered.slice(0, 2) : ordered
+  const shownIds = new Set(shown.map((a) => a.id))
+  const moreOngoing = ongoing.filter((a) => !shownIds.has(a.id)).length
+  const morePlanned = planned.filter((a) => !shownIds.has(a.id)).length
   return (
     <section className="space-y-2">
-      {alerts.map((a) => {
-        const upcoming = a.start && new Date(a.start).getTime() > Date.now()
-        return (
-          <button
-            key={a.id}
-            type="button"
-            onClick={() => setOpen(a)}
-            className="flex w-full items-start gap-3 rounded-2xl bg-[#fff4cc] px-4 py-3 text-left text-black active:opacity-80 dark:bg-[#3a3214] dark:text-[#fff4cc]"
-          >
-            <span className="mt-0.5 text-lg leading-none" aria-hidden>
-              ⚠︎
-            </span>
-            <span className="min-w-0 flex-1">
-              {a.routes.length > 0 && (
-                <span className="mb-1 flex flex-wrap gap-1">
-                  {a.routes.slice(0, 6).map((r) => (
-                    <RouteBadge key={r.routeId} route={r} fit />
-                  ))}
-                </span>
-              )}
-              <span className="line-clamp-2 block text-[15px] leading-snug font-semibold">{a.header}</span>
-              <span className="mt-0.5 block text-[13px] opacity-70">
-                {upcoming ? `${t('alerts.planned')} · ` : ''}
-                {period(a, t)}
-              </span>
-            </span>
-            <ChevronIcon className="mt-1 h-4 w-4 shrink-0 opacity-50" />
-          </button>
-        )
-      })}
-      {open && createPortal(<AlertSheet alert={open} onClose={() => setOpen(null)} />, document.body)}
+      {shown.map((a) => (
+        <AlertCard key={a.id} alert={a} onOpen={() => open(a)} />
+      ))}
+      {moreOngoing + morePlanned > 0 && (
+        <button
+          type="button"
+          onClick={() => navigate(alertsUrl(routeIds, stopIds))}
+          className="flex w-full items-center gap-3 rounded-2xl bg-[#fff4cc]/60 px-4 py-3 text-left text-black active:opacity-80 dark:bg-[#3a3214]/60 dark:text-[#fff4cc]"
+        >
+          <span className="min-w-0 flex-1 text-[15px] font-semibold">
+            {[moreOngoing > 0 && t('alerts.moreOngoing', { n: moreOngoing }), morePlanned > 0 && t('alerts.morePlanned', { n: morePlanned })]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+          <span className="shrink-0 text-[13px] font-medium opacity-70">{t('alerts.seeAll')}</span>
+          <ChevronIcon className="h-4 w-4 shrink-0 opacity-50" />
+        </button>
+      )}
+      {sheet}
     </section>
   )
 }

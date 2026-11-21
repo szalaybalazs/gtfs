@@ -1,22 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { DEPARTURES_QUERY, gql, type Departures } from '../lib/api'
 import { useT } from '../lib/i18n'
 import { formatTime, localParts, TIME_ZONE } from '../lib/time'
 import { ClockIcon } from './Icons'
-
-const EARLIER_STEP_MIN = 5
 
 /**
  * The departures window, kept in the URL so it survives back/forward:
  * ?after=HH:MM  a chosen time (earlier than now = tomorrow)
  * ?at=ISO       arrived from a trip: start at that trip's time here
- * ?earlier=N    "⋯ Earlier" pressed N times: start N×5 minutes before
+ * ?earlier=ISO  "⋯ Earlier": start at the departure just before the list (one more row per tap)
  */
 export function useAfter() {
   const [params, setParams] = useSearchParams()
   const raw = params.get('after')
   const at = params.get('at')
-  const earlier = Number(params.get('earlier') ?? 0) || 0
+  const earlierRaw = params.get('earlier')
+  const earlierDate = earlierRaw ? new Date(earlierRaw) : null
+  const earlier = earlierDate && !Number.isNaN(earlierDate.getTime()) ? earlierDate : null
   const atDate = at ? new Date(at) : null
   const picked = raw && /^\d{2}:\d{2}$/.test(raw) ? budapestTime(raw) : atDate && !Number.isNaN(atDate.getTime()) ? atDate : null
 
@@ -31,8 +32,8 @@ export function useAfter() {
 
   // Rounded down to the minute so the value (and the query key built from it)
   // stays stable across renders; otherwise "⋯ Earlier" refetches on every render
-  const base = picked ?? new Date()
-  const start = picked || earlier ? new Date(Math.floor((base.getTime() - earlier * EARLIER_STEP_MIN * 60_000) / 60_000) * 60_000) : null
+  const base = earlier ?? picked
+  const start = base ? new Date(Math.floor(base.getTime() / 60_000) * 60_000) : null
   return {
     /** Window start for the API; null = now */
     after: start,
@@ -40,7 +41,8 @@ export function useAfter() {
     picked,
     earlier,
     setTime: (hhmm: string | null) => update({ after: hhmm, at: null, earlier: null }),
-    loadEarlier: () => update({ earlier: String(earlier + 1) }),
+    /** Start the list at this (earlier) departure */
+    loadEarlier: (at: Date) => update({ earlier: at.toISOString() }),
   }
 }
 
@@ -66,7 +68,7 @@ const pad = (n: number) => String(n).padStart(2, '0')
  */
 export function TimeControl() {
   const t = useT()
-  const { picked, after, earlier, setTime } = useAfter()
+  const { picked, after, setTime } = useAfter()
   const [open, setOpen] = useState(false)
   const base = picked ?? new Date()
   const parts = localParts(base)
@@ -127,7 +129,6 @@ export function TimeControl() {
         <ClockIcon className="h-5 w-5" />
         <span className="tabular-nums">
           {after ? t('after.from', { time: formatTime(after) }) : t('after.now')}
-          {earlier > 0 && !picked && <span className="font-normal text-secondary"> {t('after.earlierNote')}</span>}
         </span>
       </button>
       {open && pos && (
@@ -160,15 +161,49 @@ export function TimeControl() {
 }
 
 /** Header row of a departures card: the time picker (Now / From HH:MM) and "⋯ Earlier". */
-export default function AfterFilter() {
+export default function AfterFilter({ stopIds, routeIds = null }: { stopIds: string[]; routeIds?: string[] | null }) {
   const t = useT()
-  const { loadEarlier } = useAfter()
+  const { after, loadEarlier } = useAfter()
+  const [busy, setBusy] = useState(false)
+  const [none, setNone] = useState(false)
+
+  // Find the last departure before the list starts and start there: exactly one more row per tap
+  const earlier = async () => {
+    if (busy || stopIds.length === 0) return
+    setBusy(true)
+    const start = after ?? new Date(Math.floor(Date.now() / 60_000) * 60_000)
+    try {
+      for (const hours of [1, 3]) {
+        const from = new Date(start.getTime() - hours * 3_600_000)
+        const data = await gql<Departures>(DEPARTURES_QUERY, { stopIds, routeIds, limit: 200, hours, after: from.toISOString() })
+        const before = data.departures.map((d) => new Date(d.departure)).filter((d) => d.getTime() < start.getTime())
+        if (before.length) {
+          loadEarlier(new Date(Math.max(...before.map((d) => d.getTime()))))
+          return
+        }
+      }
+      setNone(true)
+    } catch {
+      // Network hiccup: leave the list as it is
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex items-center justify-between gap-3 border-b border-separator px-4 py-2.5 text-[15px]">
       <TimeControl />
-      <button type="button" onClick={loadEarlier} className="flex items-center gap-1 font-medium text-accent active:opacity-60" aria-label={t('after.showEarlier')}>
-        <span className="text-lg leading-none">⋯</span> {t('after.earlier')}
-      </button>
+      {!none && (
+        <button
+          type="button"
+          onClick={earlier}
+          disabled={busy}
+          className="flex items-center gap-1 font-medium text-accent active:opacity-60 disabled:opacity-50"
+          aria-label={t('after.showEarlier')}
+        >
+          <span className="text-lg leading-none">⋯</span> {t('after.earlier')}
+        </button>
+      )}
     </div>
   )
 }

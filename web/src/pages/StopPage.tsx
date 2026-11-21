@@ -119,7 +119,7 @@ export default function StopPage() {
               <>
                 {view === 'departures' ? (
                   <Departures
-                    toolbar={<AfterFilter />}
+                    toolbar={<AfterFilter stopIds={[stopId]} />}
                 includePast={!!after}
                 highlightTrip={arrivedOn}
                     title={null}
