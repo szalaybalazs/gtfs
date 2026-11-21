@@ -47,8 +47,7 @@ export default function AlertsPage() {
               {t('alerts.sectionPlanned')}
               <span className="text-[15px] font-normal text-secondary">{planned.length}</span>
             </h2>
-            {/* Planned ones in a calmer outline style, so the two groups are clearly different */}
-            <div className="space-y-2 opacity-80">
+            <div className="space-y-2">
               {planned.map((a) => (
                 <AlertCard key={a.id} alert={a} onOpen={() => open(a)} />
               ))}

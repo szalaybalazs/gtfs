@@ -360,7 +360,7 @@ const hu: Record<MessageKey, Message> = {
   'unit.min': 'perc',
   'unit.minAgo': 'perce',
   'unit.minBefore': 'perccel előtte',
-  'short.seconds': '{n} s',
+  'short.seconds': '{n}s',
   'short.minutes': "{n}'",
   'day.today': 'Ma',
   'day.tomorrow': 'Holnap',

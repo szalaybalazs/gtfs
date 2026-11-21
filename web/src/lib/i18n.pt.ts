@@ -41,7 +41,7 @@ export const pt: Record<MessageKey, Message> = {
   'unit.min': 'min',
   'unit.minAgo': 'min atrás',
   'unit.minBefore': 'min antes',
-  'short.seconds': '{n} s',
+  'short.seconds': '{n}s',
   'short.minutes': '{n}\'',
   'day.today': 'Hoje',
   'day.tomorrow': 'Amanhã',
