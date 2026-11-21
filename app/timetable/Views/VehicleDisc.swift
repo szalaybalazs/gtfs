@@ -39,7 +39,7 @@ struct VehicleDisc: View {
         } else {
             ZStack {
                 if let bearing {
-                    ArrowTriangle().fill(bg).frame(width: 10, height: 7)
+                    ArrowTriangle().fill(Color.white).shadow(color: .black.opacity(0.55), radius: 1).frame(width: 10, height: 7)
                         .offset(y: -(size / 2 + 3.5))
                         .rotationEffect(.degrees(bearing))
                 }
