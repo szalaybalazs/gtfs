@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { useT } from '../lib/i18n'
 import { HomeIcon, MenuIcon } from './Icons'
-import { TOP_LEVEL, useOpenMenu } from './Layout'
+import { useOpenMenu } from './Layout'
 import BackButton from './BackButton'
 
 export default function NavBar({
@@ -11,10 +11,10 @@ export default function NavBar({
   trailing,
   children,
 }: {
-  /** Unused: top-level pages get the menu, deeper pages get Back (decided by path) */
+  /** Unused: Home gets the menu, every other page gets Back (decided by path) */
   menu?: boolean
   title?: ReactNode
-  /** Unused (kept for call sites): Back shows on every page that isn't top-level */
+  /** Unused (kept for call sites): Back shows on every page but Home */
   back?: { to?: string; label: string }
   leading?: ReactNode
   trailing?: ReactNode
@@ -28,8 +28,8 @@ export default function NavBar({
       <div className="mx-auto max-w-2xl px-gutter">
         <div className="flex h-11 items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center">
-            {/* Top-level pages: the menu. Deeper pages: Back (the menu is one tap away via Home) */}
-            {TOP_LEVEL.has(pathname) ? (
+            {/* The menu lives on Home only; every other page (Routes, Map, … included) has Back, so Back and the menu never swap places */}
+            {pathname === '/' ? (
               <button type="button" onClick={openMenu} aria-label={t('nav.openMenu')} className="-ml-2 rounded-md p-2 active:opacity-50">
                 <MenuIcon className="h-6 w-6" />
               </button>

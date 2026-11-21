@@ -79,19 +79,19 @@ export default function Layout() {
     if (page.dir === 'forward') window.scrollTo(0, 0)
   }, [page])
 
-  // Left-edge swipe, the usual split: on a top-level page (Home, Routes, …) it
-  // opens the menu; on any deeper page it goes back, like iOS. Only in the home
+  // Left-edge swipe: on Home it opens the menu; on every other page (Routes and Map included) it
+  // goes back, like iOS, so Back and the menu never get mixed up. Only in the home
   // screen app: in a browser tab the browser's own back swipe already does this.
   // Swipe left closes the menu.
   const navigate = useNavigate()
-  const topLevel = TOP_LEVEL.has(location.pathname)
+  const isHome = location.pathname === '/'
   const swipe = useRef<{ x: number; y: number; opening: boolean } | null>(null)
   useEffect(() => {
     const onStart = (e: TouchEvent) => {
       const t = e.touches[0]
       if (e.touches.length !== 1) return
-      // Not while panning the map
-      if ((e.target as Element | null)?.closest?.('.maplibregl-map')) return
+      // Not while panning the map (the very edge still works, for Back)
+      if (t.clientX >= 24 && (e.target as Element | null)?.closest?.('.maplibregl-map')) return
       if (!open && !standalone()) return
       if (open || t.clientX < 24) swipe.current = { x: t.clientX, y: t.clientY, opening: !open }
     }
@@ -102,8 +102,9 @@ export default function Layout() {
       const dy = e.touches[0].clientY - s.y
       if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) swipe.current = null
       else if (s.opening && dx > 50) {
-        if (topLevel || window.history.length <= 1) setOpen(true)
-        else navigate(-1)
+        if (isHome) setOpen(true)
+        else if (historyIdx() > 0) navigate(-1)
+        else navigate('/')
         swipe.current = null
       } else if (!s.opening && dx < -50) {
         setOpen(false)
@@ -121,7 +122,7 @@ export default function Layout() {
       window.removeEventListener('touchmove', onMove)
       window.removeEventListener('touchend', onEnd)
     }
-  }, [open, topLevel, navigate])
+  }, [open, isHome, navigate])
 
   return (
     <MenuContext.Provider value={() => setOpen(true)}>
