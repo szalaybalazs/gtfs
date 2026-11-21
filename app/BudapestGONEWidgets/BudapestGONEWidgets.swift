@@ -2,7 +2,7 @@
 //  BudapestGONEWidgets.swift
 //  BudapestGONEWidgets
 //
-//  Home-screen and lock-screen widgets with the next departures of the user's favourites.
+//  The medium widget: two favourites, each a skinny row of its next departures in time order.
 //
 
 import SwiftUI
@@ -22,6 +22,6 @@ struct FavoritesWidget: Widget {
         }
         .configurationDisplayName(tr("Departures"))
         .description(tr("Next departures of your favourites."))
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies([.systemMedium])
     }
 }

@@ -53,7 +53,7 @@ enum DepartureGrouping: String, AppEnum {
 /// Which favourite a widget shows (a medium or large one can show a second beside / under it).
 struct SelectFavoriteIntent: WidgetConfigurationIntent {
     static let title: LocalizedStringResource = "Favourite"
-    static let description = IntentDescription("Pick the favourite to show; medium and large widgets can show a second one.")
+    static let description = IntentDescription("Pick two favourites. Left empty, the first two in your list are used.")
 
     @Parameter(title: "Favourite")
     var favorite: FavoriteEntity?

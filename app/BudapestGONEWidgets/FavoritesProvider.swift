@@ -54,13 +54,11 @@ struct FavoritesProvider: AppIntentTimelineProvider {
 
     private func load(_ configuration: SelectFavoriteIntent, family: WidgetFamily, at date: Date) async -> FavoritesEntry {
         let saved = FavoritesStore.widgetFavorites()
-        // The picked favourite (else the first saved one); a second only where there is room for it
-        let first = configuration.favorite.flatMap { c in saved.first { $0.id == c.id } } ?? saved.first
-        var chosen = first.map { [$0] } ?? []
-        if family == .systemMedium || family == .systemLarge,
-           let second = configuration.secondFavorite.flatMap({ c in saved.first { $0.id == c.id } }), second.id != first?.id {
-            chosen.append(second)
-        }
+        // The two picked favourites; whichever is left empty is filled from the start of the user's list
+        let first = configuration.favorite.flatMap { c in saved.first { $0.id == c.id } }
+        let second = configuration.secondFavorite.flatMap { c in saved.first { $0.id == c.id } }
+        var chosen = [first, second].compactMap { $0 }
+        for f in saved where chosen.count < 2 && !chosen.contains(where: { $0.id == f.id }) { chosen.append(f) }
         guard !chosen.isEmpty else { return FavoritesEntry(date: date, favorites: [], noFavorites: true) }
         let data = await withTaskGroup(of: (Int, FavoriteData).self) { group in
             for (i, f) in chosen.enumerated() { group.addTask { (i, await Self.fetch(f, longer: true)) } }
