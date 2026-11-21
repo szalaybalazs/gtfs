@@ -58,13 +58,15 @@ struct LineBadges: View {
 struct MarkerIcon: View {
     @Environment(AppSettings.self) private var settings
     let marker: Marker
+    /// Overrides the legend wording: on one trip the icon says that trip is accessible, not that every vehicle is.
+    var label: String?
 
     var body: some View {
         if settings.shows(marker) {
             Image(systemName: marker.symbol)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-                .accessibilityLabel(marker.title)
+                .accessibilityLabel(label ?? marker.title)
         }
     }
 }

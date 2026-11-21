@@ -18,7 +18,7 @@ enum Marker: String, CaseIterable, Identifiable {
         switch self {
         case .frontDoor: return tr("Front-door boarding")
         case .replacement: return tr("Replacement bus")
-        case .lowFloor: return tr("All vehicles low-floor")
+        case .lowFloor: return tr("Accessible")
         case .demand: return tr("Demand-responsive (stops on request)")
         case .circular: return tr("Circular line")
         case .bikes: return tr("Bikes allowed")
@@ -29,10 +29,10 @@ enum Marker: String, CaseIterable, Identifiable {
         switch self {
         case .frontDoor: return "1.circle"
         case .replacement: return "p.circle"
-        case .lowFloor: return "figure.roll"
+        case .lowFloor: return "figure.roll.circle"
         case .demand: return "phone.circle"
         case .circular: return "arrow.triangle.2.circlepath.circle"
-        case .bikes: return "bicycle"
+        case .bikes: return "bicycle.circle"
         }
     }
 }

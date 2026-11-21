@@ -59,6 +59,7 @@ struct StationsView: View {
             .padding(16)
         }
         .background(Theme.canvas)
+        .scrollsToTopOnReselect(tab: 1)
         .navigationTitle("Stops")
         .searchable(text: $searchText, prompt: "Search stops")
         .transitDestinations()

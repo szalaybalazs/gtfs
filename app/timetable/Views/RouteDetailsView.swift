@@ -15,6 +15,8 @@ struct RouteDetailsView: View {
     @Environment(AppSettings.self) private var settings
     @State private var model: RouteDetailsViewModel
     @State private var departures = DeparturesViewModel()
+    /// Each "More" reaches another 90 minutes further.
+    @State private var more = 0
 
     init(id: String, shortName: String? = nil, line: LineRef? = nil) {
         self.id = id
@@ -24,7 +26,7 @@ struct RouteDetailsView: View {
     }
 
     private var request: DeparturesRequest? {
-        model.stop.map { DeparturesRequest(stopIds: [$0.stopId], routeIds: [id], limit: 60) }
+        model.stop.map { DeparturesRequest(stopIds: [$0.stopId], routeIds: [id], limit: 60 * (1 + more)) }
     }
 
     private var favoriteOptions: [Favorite] {
@@ -51,7 +53,6 @@ struct RouteDetailsView: View {
                             directionRow(direction)
                         }
                         departuresSection(stop: stop)
-                        stops(direction)
                     }
                 } else {
                     // Same layout as the loaded page, greyed out and shimmering until the data arrives
@@ -65,7 +66,6 @@ struct RouteDetailsView: View {
                         SectionTitle("Departures")
                         Card { SkeletonDepartureRows(count: 5) }
                     }
-                    stops(placeholder.directions[0]).skeleton()
                 }
             }
             .padding(16)
@@ -151,7 +151,7 @@ struct RouteDetailsView: View {
                     ErrorView(message: message) { if let r = request { await departures.load(r) } }
                 } else {
                     TimelineView(.periodic(from: .now, by: 1)) { context in
-                        let end = context.date.addingTimeInterval(90 * 60)
+                        let end = context.date.addingTimeInterval(Double(90 * (1 + more)) * 60)
                         let list = departures.departures.filter { $0.route?.routeId == id && $0.time <= end && $0.stopId == stop.stopId }
                         if list.isEmpty {
                             Text("No departures").foregroundStyle(Theme.secondary).frame(maxWidth: .infinity).padding(24)
@@ -162,7 +162,14 @@ struct RouteDetailsView: View {
                                 }
                                 .buttonStyle(RowButtonStyle())
                             }
+
                         }
+                        Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
+                        Button { more += 1 } label: {
+                            Text("Show more").font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
+                                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        }
+                        .buttonStyle(RowButtonStyle())
                     }
                 }
             }
@@ -184,32 +191,5 @@ struct RouteDetailsView: View {
         }
         .buttonStyle(.plain)
         .disabled(model.otherDirection == nil)
-    }
-
-    private func stops(_ d: RouteDirection) -> some View {
-        VStack(spacing: 0) {
-            SectionTitle("Stops")
-            Card {
-                VStack(spacing: 0) {
-                    ForEach(Array(d.stops.enumerated()), id: \.element.id) { i, stop in
-                        Button { withAnimation { model.pick(stop.stopId) } } label: {
-                            HStack(spacing: 0) {
-                                ZStack {
-                                    Rectangle().fill(color).frame(width: 8)
-                                        .padding(.top, i == 0 ? 24 : 0).padding(.bottom, i == d.stops.count - 1 ? 24 : 0)
-                                    Circle().fill(Theme.surface).overlay(Circle().strokeBorder(color, lineWidth: 2)).frame(width: 10, height: 10)
-                                }
-                                .frame(width: 28, height: 48)
-                                .padding(.leading, 12).padding(.trailing, 6)
-                                Text(stop.name).font(.system(size: 17)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                                if stop.stopId == model.stop?.stopId { Image(systemName: "checkmark").foregroundStyle(color).padding(.trailing, 16) } else { Color.clear.frame(width: 16).padding(.trailing, 16) }
-                            }
-                        }
-                        .buttonStyle(RowButtonStyle())
-                    }
-                }
-                .padding(.vertical, 8)
-            }
-        }
     }
 }

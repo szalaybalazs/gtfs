@@ -85,6 +85,8 @@ struct RoutesView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
+                Text("Routes").font(.system(size: 34, weight: .bold)).padding(.horizontal, 4).padding(.bottom, -8)
+                    .accessibilityAddTraits(.isHeader)
                 chips
                 if let message = model.state.errorMessage {
                     ErrorView(message: message) { await model.load() }
@@ -142,9 +144,18 @@ struct RoutesView: View {
             .padding(.horizontal, 16).padding(.bottom, 16).padding(.top, 8)
         }
         .background(Theme.canvas)
+        .scrollsToTopOnReselect(tab: 2)
+        // The big title is drawn in the content: on iOS 18 a large nav-bar title over this scroll view kept collapsing
+        // and re-expanding by itself; an inline bar has a fixed height
         .navigationTitle("Routes")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .principal) { Text(" ") } } // the title is in the content; the name still labels Back buttons
         .searchable(text: $searchText, prompt: "Search lines")
-        .task { if !model.loaded { await model.load() } }
+        .task {
+            if !model.loaded { await model.load() }
+            // Favourite lines are the likeliest next tap: have their pages ready
+            for f in store.ofKind(.line) { if let r = f.route { RouteCache.prefetch(r.line.routeId) } }
+        }
         .refreshable { await model.load() }
         .transitDestinations()
     }
@@ -172,6 +183,13 @@ struct RoutesView: View {
         return c.tintHex
     }
 
+    /// Yellow, red, blue, green: the four metro lines' own colours, in line order.
+    private var metroGradient: LinearGradient? {
+        let colors = model.routes.filter { replacesCategory($0.line) == nil && LineCategory.of($0.line) == .metro }
+            .sorted { lineOrder($0.line, $1.line) }.compactMap { $0.line.color }.map { Color(hex: $0) }
+        return colors.count > 1 ? LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing) : nil
+    }
+
     private var chips: some View {
         let types = LineCategory.allCases.filter { c in c == category || model.routes.contains { groupOf($0) == c } }
         return HFlow(itemSpacing: 8, rowSpacing: 8) {
@@ -184,14 +202,22 @@ struct RoutesView: View {
             ForEach(types, id: \.self) { c in
                 let on = category == c
                 let bg = chipColor(c)
+                // Metro lines each have their own colour: when picked, the chip runs through all of them
+                let gradient = c == .metro ? metroGradient : nil
+                // Metro: the small icon carries the gradient too when not picked. The pictogram keeps its own colour; picked, it sits on that same colour, so it flips to black / white
+                let icon: Color = !on ? c.tint : gradient != nil ? .white : onColor(bg)
                 Button { category = c } label: {
                     HStack(spacing: 6) {
-                        Image(c.asset).renderingMode(.template).resizable().scaledToFit().frame(width: 20, height: 20)
+                        ModeIcon(category: c, size: 20, flat: on ? icon : nil)
                         Text(c.title).font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(!on ? Color.primary : gradient != nil ? Color.white : onColor(bg))
                     }
-                    .foregroundStyle(on ? onColor(bg) : Color.primary)
-                    .padding(.leading, 6).padding(.trailing, 12).padding(.vertical, 4)
-                    .background(on ? Color(hex: bg) : Theme.fill, in: Capsule())
+                    // Same inset on the left, top and bottom: the 20 pt icon is concentric with the pill's round end
+                    .padding(.leading, 4).padding(.trailing, 12).padding(.vertical, 4)
+                    .background {
+                        if on, let gradient { Capsule().fill(gradient) }
+                        else { Capsule().fill(on ? Color(hex: bg) : Theme.fill) }
+                    }
                 }
             }
         }

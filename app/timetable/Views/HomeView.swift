@@ -51,6 +51,7 @@ struct HomeView: View {
             .padding(16)
         }
         .background(Theme.canvas)
+        .scrollsToTopOnReselect(tab: 0)
         .navigationTitle("Home")
         .transitDestinations()
         .task(id: settings.nearbyRadius) { await model.loadNearby(radius: settings.nearbyRadius) }

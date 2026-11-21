@@ -58,7 +58,7 @@ struct DepartureRow: View {
                     if d.terminates { ArrivesTag() }
                     if d.frontDoor { MarkerIcon(marker: .frontDoor) }
                     if d.onRequest { MarkerIcon(marker: .demand) }
-                    if d.wheelchairAccessible { MarkerIcon(marker: .lowFloor) }
+                    if d.wheelchairAccessible { MarkerIcon(marker: .lowFloor, label: tr("Accessible")) }
                     if d.bikesAllowed { MarkerIcon(marker: .bikes) }
                     if status == .late || status == .early, let delay = d.delay {
                         Text(TimeFormat.clock(d.time.addingTimeInterval(-Double(delay))))

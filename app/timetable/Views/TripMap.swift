@@ -35,7 +35,7 @@ struct TripVehicleCard: View {
                     }
                     .font(.system(size: 13, weight: .medium))
                     Text(vehicleName(vehicle.model) ?? vehicle.plate ?? "").font(.system(size: 20, weight: .semibold))
-                    let sub = [vehicle.model != nil ? vehicle.plate : nil, vehicle.wheelchair ? tr("Wheelchair accessible") : nil].compactMap { $0 }
+                    let sub = [vehicle.model != nil ? vehicle.plate : nil, vehicle.wheelchair ? tr("Accessible") : nil].compactMap { $0 }
                     if !sub.isEmpty {
                         Text(sub.joined(separator: " · ")).font(.system(size: 15)).foregroundStyle(Theme.secondary)
                     }

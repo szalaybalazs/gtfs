@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="top" x1="280" y1="0" x2="744" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD800"/><stop offset="1" stop-color="#E41F18"/>
+    </linearGradient>
+    <linearGradient id="bottom" x1="280" y1="0" x2="744" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4E9E34"/><stop offset="1" stop-color="#005CA5"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="280" x2="0" y2="744" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="m"><rect width="1024" height="1024" fill="url(#fade)"/></mask>
+    <path id="icon" fill-rule="evenodd" d="M512 0Q406 0 313 40Q219 80 149.5 149.5Q80 219 40 313Q0 406 0 512Q0 618 40 711Q80 805 149.5 874.5Q219 944 313 984Q406 1024 512 1024Q618 1024 711 984Q805 944 874.5 874.5Q944 805 984 711Q1024 618 1024 512Q1024 406 984 313Q944 219 874.5 149.5Q805 80 711 40Q618 0 512 0ZM768 768H692V547L512 728L371 587V486L512 627L768 371ZM768 306 512 562 331 382V768H256V256H306L512 462L718 256H768Z"/>
+    <clipPath id="c"><use href="#icon" clip-rule="evenodd"/></clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+    <rect width="1024" height="1024" fill="url(#top)"/>
+    <rect width="1024" height="1024" fill="url(#bottom)" mask="url(#m)"/>
+  </g>
+</svg>

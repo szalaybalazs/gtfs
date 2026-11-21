@@ -9,28 +9,41 @@ import SwiftUI
 import TimetableAPI
 
 struct ContentView: View {
-    @State private var path = NavigationPath()
+    @State private var paths = Array(repeating: NavigationPath(), count: 5)
     @State private var tab = 0
+    @State private var reselect = TabReselect()
     @State private var settings = AppSettings.shared
 
+    /// Tapping the current tab again pops to its first screen; already there, it scrolls to the top.
+    private var selection: Binding<Int> {
+        Binding(get: { tab }, set: { new in
+            if new == tab {
+                if !paths[new].isEmpty { withAnimation { paths[new] = NavigationPath() } }
+                else { reselect = TabReselect(tab: new, count: reselect.count + 1) }
+            }
+            tab = new
+        })
+    }
+
     var body: some View {
-        TabView(selection: $tab) {
-            NavigationStack { HomeView() }
+        TabView(selection: selection) {
+            NavigationStack(path: $paths[0]) { HomeView() }
                 .tabItem { Label { Text("Home") } icon: { Image(tab == 0 ? "tab_home_solid" : "tab_home") } }.tag(0)
-            NavigationStack { StationsView() }
+            NavigationStack(path: $paths[1]) { StationsView() }
                 .tabItem { Label { Text("Stops") } icon: { Image(tab == 1 ? "tab_pin_solid" : "tab_pin") } }.tag(1)
-            NavigationStack(path: $path) {
+            NavigationStack(path: $paths[2]) {
                 RoutesView()
                     .navigationDestination(for: TimetableQuery.Data.Timetable.self) { event in
                         Text("EVENT")
                     }
             }
             .tabItem { Label { Text("Routes") } icon: { Image(tab == 2 ? "tab_routes_solid" : "tab_routes") } }.tag(2)
-            NavigationStack { MapView() }
+            NavigationStack(path: $paths[3]) { MapView() }
                 .tabItem { Label { Text("Map") } icon: { Image(tab == 3 ? "tab_map_solid" : "tab_map") } }.tag(3)
-            NavigationStack { SettingsView() }
+            NavigationStack(path: $paths[4]) { SettingsView() }
                 .tabItem { Label { Text("Settings") } icon: { Image(tab == 4 ? "tab_settings_solid" : "tab_settings") } }.tag(4)
         }
+        .environment(\.tabReselect, reselect)
         .environment(settings)
         .preferredColorScheme(settings.appearance.scheme)
         .environment(\.locale, settings.language == .auto ? Locale.current : L10n.locale)

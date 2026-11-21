@@ -304,8 +304,7 @@ struct MapView: View {
     }
 
     private func groupMarker(_ c: LineCategory, selected: Bool) -> some View {
-        Image(c.asset).renderingMode(.template).resizable().scaledToFit()
-            .frame(width: selected ? 20 : 15, height: selected ? 20 : 15).foregroundStyle(c.tint)
+        ModeIcon(category: c, size: selected ? 20 : 15)
             .padding(5).background(Theme.surface, in: Circle()).overlay(Circle().stroke(selected ? Color.primary : Theme.separator, lineWidth: selected ? 2 : 1))
             .padding(4)
     }
