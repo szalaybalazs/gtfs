@@ -8,35 +8,43 @@
 import SwiftUI
 import WidgetKit
 
-/// A line's next departures, merged into one row.
+/// One row: a line (and direction) with its next departures.
 private struct LineRow: Identifiable {
     let line: LineRef
     let headsign: String?
     let times: [Departure]
-    var id: String { line.routeId }
+    var id: String { "\(line.routeId)|\(headsign ?? "")|\(times.first?.id ?? "")" }
 }
 
-/// Lines in order of their next departure, each with its next `times` departures still to come at `now`.
-private func rows(_ departures: [Departure], now: Date, lines: Int, times: Int) -> [LineRow] {
+/// Rows in order of their next departure, each with its next `times` departures still to come at `now`.
+/// By line: one row per line. By route: one per line and destination. By time: one departure per row.
+private func rows(_ departures: [Departure], now: Date, lines: Int, times: Int, grouping: DepartureGrouping = .byLine) -> [LineRow] {
+    let upcoming = departures.filter { $0.departure >= now && $0.route != nil }.sorted { $0.departure < $1.departure }
+    if grouping == .byTime {
+        return upcoming.prefix(lines).map { LineRow(line: $0.route!, headsign: $0.headsign, times: [$0]) }
+    }
     var order: [String] = []
     var groups: [String: [Departure]] = [:]
-    for d in departures where d.departure >= now {
-        guard let id = d.route?.routeId else { continue }
-        if groups[id] == nil { order.append(id) }
-        groups[id, default: []].append(d)
+    for d in upcoming {
+        let key = grouping == .byRoute ? "\(d.route!.routeId)|\(d.headsign ?? "")" : d.route!.routeId
+        if groups[key] == nil { order.append(key) }
+        groups[key, default: []].append(d)
     }
-    return order.prefix(lines).map { id in
-        let list = Array(groups[id]!.prefix(times))
+    return order.prefix(lines).map { key in
+        let list = Array(groups[key]!.prefix(times))
         return LineRow(line: list[0].route!, headsign: list[0].headsign, times: list)
     }
 }
 
-/// "Now", "5'" or "17:23" (an hour or more away).
-private func timeText(_ d: Departure, now: Date) -> String {
+/// "Now", "5'", "17:23" or "5' 17:23", by the chosen style (a countdown past an hour is the clock time).
+private func timeText(_ d: Departure, now: Date, style: DepartureTimeStyle = .countdown) -> String {
     let s = d.departure.timeIntervalSince(now)
-    if s < 60 { return tr("Now") }
-    if s >= 3600 { return TimeFormat.clock(d.departure) }
-    return "\(Int(s / 60))'"
+    let countdown = s < 60 ? tr("Now") : s >= 3600 ? TimeFormat.clock(d.departure) : "\(Int(s / 60))'"
+    switch style {
+    case .countdown: return countdown
+    case .clock: return TimeFormat.clock(d.departure)
+    case .both: return s >= 3600 ? TimeFormat.clock(d.departure) : "\(countdown) \(TimeFormat.clock(d.departure))"
+    }
 }
 
 private func isLive(_ d: Departure) -> Bool {
@@ -47,10 +55,11 @@ private struct TimeText: View {
     let departure: Departure
     let now: Date
     var size: CGFloat = 16
+    var style: DepartureTimeStyle = .countdown
 
     var body: some View {
         HStack(alignment: .top, spacing: 1) {
-            Text(timeText(departure, now: now)).font(.system(size: size, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
+            Text(timeText(departure, now: now, style: style)).font(.system(size: size, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
             if isLive(departure) { LiveIcon(size: size * 0.6).foregroundStyle(.secondary).padding(.top, 1) }
         }
     }
@@ -64,9 +73,13 @@ private struct FavoriteBlock: View {
     let times: Int
     var showHeadsign = false
     var showSubtitle = false
+    var grouping: DepartureGrouping = .byLine
+    var style: DepartureTimeStyle = .countdown
 
     var body: some View {
-        let list = rows(fav.departures, now: now, lines: lines, times: times)
+        // By route and by time say where each is headed; one time per row makes a plain list, so it gets more rows
+        let showHeadsign = showHeadsign || grouping != .byLine
+        let list = rows(fav.departures, now: now, lines: grouping == .byTime ? lines + 2 : lines, times: times, grouping: grouping)
         VStack(alignment: .leading, spacing: 4) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(fav.title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
@@ -90,7 +103,7 @@ private struct FavoriteBlock: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         HStack(spacing: 7) {
-                            ForEach(row.times) { TimeText(departure: $0, now: now) }
+                            ForEach(row.times) { TimeText(departure: $0, now: now, style: style) }
                         }
                         .minimumScaleFactor(0.7)
                         if !showHeadsign { Spacer(minLength: 0) }
@@ -129,8 +142,8 @@ struct FavoritesWidgetView: View {
         let now = entry.date
         switch family {
         case .accessoryInline:
-            if let fav = entry.favorites.first, let row = rows(fav.departures, now: now, lines: 1, times: 2).first {
-                Text("\(row.line.shortName ?? row.line.routeId) \(row.times.map { timeText($0, now: now) }.joined(separator: " · "))")
+            if let fav = entry.favorites.first, let row = rows(fav.departures, now: now, lines: 1, times: 2, grouping: entry.grouping).first {
+                Text("\(row.line.shortName ?? row.line.routeId) \(row.times.map { timeText($0, now: now, style: entry.timeStyle) }.joined(separator: " · "))")
             } else {
                 Text(entry.noFavorites ? tr("No favourites yet") : tr("No departures"))
             }
@@ -140,13 +153,13 @@ struct FavoritesWidgetView: View {
             } else if let fav = entry.favorites.first {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(fav.title).font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                    let list = rows(fav.departures, now: now, lines: 2, times: 3)
+                    let list = rows(fav.departures, now: now, lines: 2, times: entry.grouping == .byTime ? 1 : 3, grouping: entry.grouping)
                     if list.isEmpty { Text(tr("No departures")).font(.system(size: 12)) }
                     ForEach(list) { row in
                         HStack(spacing: 5) {
                             Text(row.line.shortName ?? row.line.routeId).font(.system(size: 12, weight: .bold)).monospacedDigit()
                                 .padding(.horizontal, 4).background(.white.opacity(0.25), in: RoundedRectangle(cornerRadius: 3))
-                            Text(row.times.map { timeText($0, now: now) }.joined(separator: "  ")).font(.system(size: 13, weight: .semibold)).monospacedDigit().lineLimit(1)
+                            Text(row.times.map { timeText($0, now: now, style: entry.timeStyle) }.joined(separator: "  ")).font(.system(size: 13, weight: .semibold)).monospacedDigit().lineLimit(1)
                         }
                     }
                 }
@@ -154,28 +167,28 @@ struct FavoritesWidgetView: View {
             }
         case .systemSmall:
             if entry.noFavorites { EmptyState() }
-            else if let fav = entry.favorites.first { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2) }
+            else if let fav = entry.favorites.first { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2, grouping: entry.grouping, style: entry.timeStyle) }
         case .systemMedium:
             if entry.noFavorites { EmptyState() }
             else if entry.favorites.count == 1 {
-                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 3, times: 4, showHeadsign: true, showSubtitle: true)
+                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 3, times: 4, showHeadsign: true, showSubtitle: true, grouping: entry.grouping, style: entry.timeStyle)
             } else {
                 HStack(alignment: .top, spacing: 14) {
                     ForEach(entry.favorites, id: \.id) { fav in
-                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2) }
+                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: 3, times: 2, grouping: entry.grouping, style: entry.timeStyle) }
                     }
                 }
             }
         default: // large
             if entry.noFavorites { EmptyState() }
             else if entry.favorites.count == 1 {
-                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 8, times: 4, showHeadsign: true, showSubtitle: true)
+                FavoriteBlock(fav: entry.favorites[0], now: now, lines: 8, times: 4, showHeadsign: true, showSubtitle: true, grouping: entry.grouping, style: entry.timeStyle)
             } else {
                 let lines = entry.favorites.count <= 2 ? 4 : 2
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(entry.favorites.enumerated()), id: \.element.id) { i, fav in
                         if i > 0 { Divider() }
-                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: lines, times: 4, showHeadsign: true) }
+                        Link(destination: fav.url) { FavoriteBlock(fav: fav, now: now, lines: lines, times: 4, showHeadsign: true, grouping: entry.grouping, style: entry.timeStyle) }
                     }
                     Spacer(minLength: 0)
                 }
