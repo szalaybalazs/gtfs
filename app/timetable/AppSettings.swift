@@ -15,12 +15,12 @@ enum Marker: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .frontDoor: return "Front-door boarding"
-        case .replacement: return "Replacement bus"
-        case .lowFloor: return "All vehicles low-floor"
-        case .demand: return "Demand-responsive (stops on request)"
-        case .circular: return "Circular line"
-        case .bikes: return "Bikes allowed"
+        case .frontDoor: return tr("Front-door boarding")
+        case .replacement: return tr("Replacement bus")
+        case .lowFloor: return tr("All vehicles low-floor")
+        case .demand: return tr("Demand-responsive (stops on request)")
+        case .circular: return tr("Circular line")
+        case .bikes: return tr("Bikes allowed")
         }
     }
 
@@ -39,7 +39,7 @@ enum Marker: String, CaseIterable, Identifiable {
 enum DeparturesView: String, CaseIterable, Identifiable {
     case lines, timeline
     var id: String { rawValue }
-    var title: String { self == .lines ? "Lines" : "Timeline" }
+    var title: String { self == .lines ? tr("Lines view") : tr("Timeline") }
     var symbol: String { self == .lines ? "square.grid.2x2" : "list.bullet" }
 }
 
@@ -60,6 +60,10 @@ final class AppSettings {
         didSet { defaults.set(departuresView.rawValue, forKey: "departures-view") }
     }
 
+    var language: AppLanguage {
+        didSet { defaults.set(language.rawValue, forKey: L10n.key) }
+    }
+
     var nearbyRadius: Int {
         didSet { defaults.set(nearbyRadius, forKey: "nearby-radius") }
     }
@@ -68,6 +72,7 @@ final class AppSettings {
         self.defaults = defaults
         hiddenMarkers = Set((defaults.stringArray(forKey: "hidden-marks") ?? []).compactMap(Marker.init(rawValue:)))
         departuresView = defaults.string(forKey: "departures-view").flatMap(DeparturesView.init(rawValue:)) ?? .lines
+        language = defaults.string(forKey: L10n.key).flatMap(AppLanguage.init(rawValue:)) ?? .auto
         let radius = defaults.integer(forKey: "nearby-radius")
         nearbyRadius = Self.radii.contains(radius) ? radius : 1000
     }

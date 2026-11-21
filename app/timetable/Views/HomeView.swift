@@ -57,7 +57,7 @@ struct HomeView: View {
         .refreshable { await model.loadNearby(radius: settings.nearbyRadius) }
     }
 
-    private func section(_ title: String, _ items: [Favorite]) -> some View {
+    private func section(_ title: LocalizedStringKey, _ items: [Favorite]) -> some View {
         VStack(spacing: 0) {
             SectionTitle(title)
             Card { RowList(data: items, id: \.id) { FavoriteCard(fav: $0) } }
@@ -75,7 +75,7 @@ struct HomeView: View {
                     ErrorView(message: message) { await model.loadNearby(radius: settings.nearbyRadius) }
                 } else if model.nearby.isEmpty {
                     if model.nearbyState.isLoading { ProgressView() }
-                    else { Text("No stops within \(settings.nearbyRadius) m.").foregroundStyle(Theme.secondary) }
+                    else { Text(tr("No stops within \(settings.nearbyRadius) m.")).foregroundStyle(Theme.secondary) }
                 } else {
                     Card { RowList(data: Array(model.nearby.prefix(5)), id: \.station.stationId) { StationRow(station: $0.station, distance: $0.distance) } }
                 }

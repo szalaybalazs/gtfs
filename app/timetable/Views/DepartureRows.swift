@@ -40,9 +40,9 @@ struct DepartureRow: View {
         let justLeft = seconds < 0 && seconds >= -60
         let left = seconds < -60
         let count: CountdownText = fixed && seconds < 0
-            ? CountdownText(value: String(Int((-seconds / 60).rounded(.up))), unit: "min before")
-            : left ? CountdownText(value: String(Int((-seconds / 60).rounded())), unit: "min ago")
-            : justLeft ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: "sec")
+            ? CountdownText(value: String(Int((-seconds / 60).rounded(.up))), unit: tr("min before"))
+            : left ? CountdownText(value: String(Int((-seconds / 60).rounded())), unit: tr("min ago"))
+            : justLeft ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: tr("sec"))
             : Countdown.upcoming(seconds)
         HStack(spacing: 12) {
             if let route = d.route { LineBadge(line: route) }
@@ -112,8 +112,8 @@ struct BoardCountdown: View {
         let clock = abs(seconds) >= 3600
         let text: CountdownText = clock
             ? CountdownText(value: TimeFormat.clock(d.time), unit: nil)
-            : left && fixed ? CountdownText(value: "-\(Int((-seconds / 60).rounded(.up)))", unit: "min")
-            : left ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: "sec")
+            : left && fixed ? CountdownText(value: "-\(Int((-seconds / 60).rounded(.up)))", unit: tr("min"))
+            : left ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: tr("sec"))
             : Countdown.upcoming(seconds)
         let size: CGFloat = clock ? (small ? 12 : 15) : (small ? 16 : 24)
         VStack(alignment: .trailing, spacing: 0) {

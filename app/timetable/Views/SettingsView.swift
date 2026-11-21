@@ -25,6 +25,11 @@ struct SettingsView: View {
             } footer: {
                 Text("Choose which markers show on departures and lines.")
             }
+            Section("Language") {
+                Picker("Language", selection: $settings.language) {
+                    ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
+                }
+            }
             Section("Nearby stops") {
                 Picker("Radius", selection: $settings.nearbyRadius) {
                     ForEach(AppSettings.radii, id: \.self) { Text("\($0) m").tag($0) }
@@ -38,13 +43,13 @@ struct SettingsView: View {
             Section {
                 Button("Copy as JSON") {
                     UIPasteboard.general.string = favorites.exportJSON()
-                    message = "Copied \(favorites.favorites.count) favourites."
+                    message = tr("Copied \(favorites.favorites.count) favourites.")
                 }
                 Button("Paste JSON") {
                     if let text = UIPasteboard.general.string, let added = favorites.importJSON(text) {
-                        message = added == 0 ? "Nothing new: those favourites are already here." : "Added \(added) favourites."
+                        message = added == 0 ? tr("Nothing new: those favourites are already here.") : tr("Added \(added) favourites.")
                     } else {
-                        message = "The clipboard doesn't hold favourites JSON."
+                        message = tr("The clipboard doesn't hold favourites JSON.")
                     }
                 }
             } header: {

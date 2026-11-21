@@ -29,6 +29,8 @@ struct ContentView: View {
                 .tabItem { Label("Settings", systemImage: "gear") }
         }
         .environment(settings)
+        .environment(\.locale, settings.language == .auto ? Locale.current : L10n.locale)
+        .id(settings.language)
     }
 }
 

@@ -129,12 +129,12 @@ struct StationDetailView: View {
                 if let platform = fromPlatform {
                     Text(platform.name ?? station.name).font(.system(size: 22, weight: .bold))
                     if !platform.headsigns.isEmpty {
-                        Text("towards " + platform.headsigns.joined(separator: " / ")).font(.system(size: 15)).foregroundStyle(Theme.secondary)
+                        Text(tr("towards \(platform.headsigns.joined(separator: " / "))")).font(.system(size: 15)).foregroundStyle(Theme.secondary)
                     }
                     LineBadges(lines: platform.routes.filter { !multi || target.lines.contains($0.routeId) })
                 } else {
                     Text(station.name).font(.system(size: 22, weight: .bold))
-                    Text(multi ? "Selected lines" : "\(platforms.count) \(platforms.count == 1 ? "stop" : "stops") here")
+                    Text(multi ? tr("Selected lines") : tr("\(platforms.count) stops here"))
                         .font(.system(size: 15)).foregroundStyle(Theme.secondary)
                     if multi {
                         LineBadges(lines: station.routes.filter { target.lines.contains($0.routeId) })
@@ -142,7 +142,7 @@ struct StationDetailView: View {
                         // Whole group: kinds of transport as pictograms, not dozens of badges
                         HStack(spacing: 6) {
                             ForEach(LineCategory.allCases.filter { c in station.routes.contains { LineCategory.of($0) == c } }, id: \.self) { ModeIcon(category: $0, size: 24) }
-                            Text(station.routes.count == 1 ? "1 line" : "\(station.routes.count) lines")
+                            Text(tr("\(station.routes.count) lines"))
                                 .font(.system(size: 15)).foregroundStyle(Theme.secondary).padding(.leading, 2)
                         }
                     }
@@ -239,12 +239,12 @@ struct StationDetailView: View {
     }
 
     private var timeLabel: String {
-        guard chooseTime else { return "Now" }
+        guard chooseTime else { return tr("Now") }
         let at = Self.minute(picked)
         var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeFormat.budapest
-        let time = "From " + TimeFormat.clock(at)
+        let time = tr("From \(TimeFormat.clock(at))")
         if cal.isDateInToday(at) { return time }
-        let f = DateFormatter(); f.timeZone = TimeFormat.budapest; f.dateFormat = "EEE d MMM"
+        let f = DateFormatter(); f.locale = L10n.locale; f.timeZone = TimeFormat.budapest; f.dateFormat = "EEE d MMM"
         return f.string(from: at) + ", " + time
     }
 
@@ -342,7 +342,7 @@ struct PlatformRow: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(platform.headsigns.isEmpty ? "Terminus · arrivals only" : "towards " + platform.headsigns.joined(separator: " / "))
+                Text(platform.headsigns.isEmpty ? tr("Terminus · arrivals only") : tr("towards \(platform.headsigns.joined(separator: " / "))"))
                     .font(.system(size: 15, weight: highlighted ? .bold : .medium)).lineLimit(2)
                 LineBadges(lines: platform.routes)
             }
@@ -371,9 +371,9 @@ struct TimePickerSheet: View {
     private var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.timeZone = TimeFormat.budapest; return c }
 
     private func dayLabel(_ d: Foundation.Date) -> String {
-        if calendar.isDateInToday(d) { return "Today" }
-        if calendar.isDateInTomorrow(d) { return "Tomorrow" }
-        let f = DateFormatter(); f.timeZone = TimeFormat.budapest; f.dateFormat = "EEEE d MMM"
+        if calendar.isDateInToday(d) { return tr("Today") }
+        if calendar.isDateInTomorrow(d) { return tr("Tomorrow") }
+        let f = DateFormatter(); f.locale = L10n.locale; f.timeZone = TimeFormat.budapest; f.dateFormat = "EEEE d MMM"
         return f.string(from: d)
     }
 

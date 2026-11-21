@@ -33,9 +33,9 @@ private struct ShortTime: View {
     var body: some View {
         let s = departure.departure.timeIntervalSince(now)
         let live = RealtimeStatus(realtime: departure.realtime, delay: departure.delay) != .scheduled
-        let text = s < 0 ? "-\(Int((-s).rounded(.up)))s"
+        let text = s < 0 ? tr("-\(Int((-s).rounded(.up)))s")
             : s >= 3600 ? TimeFormat.clock(departure.departure)
-            : s < 60 ? "\(Int(s.rounded()))s"
+            : s < 60 ? tr("\(Int(s.rounded()))s")
             : "\(Countdown.upcoming(s).value)'"
         HStack(alignment: .top, spacing: 2) {
             Text(text).font(.system(size: 17, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
@@ -210,12 +210,12 @@ struct FavoriteCard: View {
                     var seen = Set<String>()
                     let derived = model.departures.compactMap(\.headsign).filter { seen.insert($0).inserted }.joined(separator: " / ")
                     let h = fav.headsign ?? derived
-                    return h.isEmpty ? nil : "towards " + h
+                    return h.isEmpty ? nil : tr("towards \(h)")
                 }
                 let hs = fav.headsigns ?? []
-                return hs.isEmpty ? nil : "towards " + hs.joined(separator: " / ")
+                return hs.isEmpty ? nil : tr("towards \(hs.joined(separator: " / "))")
             }()
-            let subtitle = towards ?? (fav.kind == .lines ? "\((fav.routes ?? []).count) lines" : nil)
+            let subtitle = towards ?? (fav.kind == .lines ? tr("\((fav.routes ?? []).count) lines") : nil)
             let fallback = fav.kind == .lineStop ? (fav.route.map { [$0.line] } ?? []) : (fav.routes ?? []).map(\.line)
             let card = FavoriteCardBody(title: title, subtitle: subtitle, link: link, alertsFor: (routeIds ?? [], stopIds)) {
                 LineTimesRow(departures: model.departures, pending: !model.loaded, only: routeIds.map(Set.init), fallback: fallback)
@@ -240,10 +240,10 @@ struct FavoriteSheet: View {
 
     private func title(_ k: Favorite.Kind) -> String {
         switch k {
-        case .line: return "Just the line"
-        case .lineStop: return "This line from this stop"
-        case .stop: return "The whole stop"
-        case .lines: return "These lines from here"
+        case .line: return tr("Just the line")
+        case .lineStop: return tr("This line from this stop")
+        case .stop: return tr("The whole stop")
+        case .lines: return tr("These lines from here")
         }
     }
 
@@ -258,7 +258,7 @@ struct FavoriteSheet: View {
                                 HStack {
                                     Text(title(option.kind).uppercased()).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.secondary)
                                     Spacer()
-                                    Label(saved ? "Saved" : "Add", systemImage: saved ? "star.fill" : "star")
+                                    Label(saved ? tr("Saved") : tr("Add"), systemImage: saved ? "star.fill" : "star")
                                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(saved ? Theme.accent : Theme.secondary)
                                 }
                                 .padding(.horizontal, 16).padding(.top, 12)

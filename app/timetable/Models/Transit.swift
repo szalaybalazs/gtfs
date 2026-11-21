@@ -40,13 +40,13 @@ enum LineCategory: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .metro: return "Metro"
-        case .tram: return "Tram"
-        case .trolleybus: return "Trolleybus"
-        case .bus: return "Bus"
-        case .night: return "Night"
-        case .boat: return "Boat"
-        case .other: return "Other"
+        case .metro: return tr("Metro")
+        case .tram: return tr("Tram")
+        case .trolleybus: return tr("Trolleybus")
+        case .bus: return tr("Bus")
+        case .night: return tr("Night")
+        case .boat: return tr("Boat")
+        case .other: return tr("Other")
         }
     }
 }

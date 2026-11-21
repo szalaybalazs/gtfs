@@ -70,7 +70,7 @@ struct RowList<Data: RandomAccessCollection, ID: Hashable, Row: View>: View {
 
 /// Section heading: 20 pt bold, small side inset.
 struct SectionTitle<Trailing: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder var trailing: Trailing
     var body: some View {
         HStack {
@@ -84,7 +84,7 @@ struct SectionTitle<Trailing: View>: View {
 }
 
 extension SectionTitle where Trailing == EmptyView {
-    init(_ title: String) { self.init(title: title) { EmptyView() } }
+    init(_ title: LocalizedStringKey) { self.init(title: title) { EmptyView() } }
 }
 
 /// Fill flash on press, like the web rows' `active:bg-fill`.

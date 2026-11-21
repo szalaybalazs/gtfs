@@ -96,9 +96,9 @@ struct TripView: View {
                 }
                 if let last = stops.last, finished {
                     Text("Past trip").font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.top, 4)
-                        .accessibilityLabel("Past trip, ended \(TimeFormat.clock(last.arrival))")
+                        .accessibilityLabel(tr("Past trip, ended \(TimeFormat.clock(last.arrival))"))
                 } else if let first = stops.first, !started {
-                    Text("Upcoming · starts \(TimeFormat.clock(first.departure))").font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.top, 4)
+                    Text(tr("Upcoming · starts \(TimeFormat.clock(first.departure))")).font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.top, 4)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -117,7 +117,7 @@ struct TripView: View {
     static func stats(_ stops: [TripStop]) -> String? {
         guard stops.count >= 2, let a = stops.first, let b = stops.last else { return nil }
         let minutes = Int((b.arrival.timeIntervalSince(a.departure) / 60).rounded())
-        return "\(minutes) min · \(stops.count) stops"
+        return tr("\(minutes) min · \(stops.count) stops")
     }
 
     private var skeleton: some View {

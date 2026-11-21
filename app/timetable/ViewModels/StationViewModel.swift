@@ -24,7 +24,7 @@ final class StationViewModel {
         do {
             let data = try await client.fetch(StationQuery(id: id))
             guard !Task.isCancelled else { return }
-            guard let station = data.station else { state = .failed("Stop not found."); return }
+            guard let station = data.station else { state = .failed(tr("Stop not found.")); return }
             self.station = Station(station)
             state = .idle
         } catch is CancellationError {

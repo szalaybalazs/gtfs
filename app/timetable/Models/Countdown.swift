@@ -20,13 +20,13 @@ enum Countdown {
     /// Seconds under a minute, half minutes under 3 minutes, whole minutes under an hour.
     static func upcoming(_ seconds: Double) -> CountdownText {
         let s = Int(max(0, seconds).rounded())
-        if s < 60 { return CountdownText(value: String(s), unit: "sec") }
+        if s < 60 { return CountdownText(value: String(s), unit: tr("sec")) }
         if s < 180 {
             let halves = s / 30
             let whole = halves / 2
-            return CountdownText(value: halves % 2 == 1 ? "\(whole)½" : String(whole), unit: "min")
+            return CountdownText(value: halves % 2 == 1 ? "\(whole)½" : String(whole), unit: tr("min"))
         }
-        return CountdownText(value: String(s / 60), unit: "min")
+        return CountdownText(value: String(s / 60), unit: tr("min"))
     }
 
     /// What a row shows for a time `seconds` from the reference.
@@ -39,11 +39,11 @@ enum Countdown {
         if seconds < 0 {
             if fixed {
                 let minutes = Int((-seconds / 60).rounded(.up))
-                return board ? CountdownText(value: "-\(minutes)", unit: "min")
-                             : CountdownText(value: String(minutes), unit: "min before")
+                return board ? CountdownText(value: "-\(minutes)", unit: tr("min"))
+                             : CountdownText(value: String(minutes), unit: tr("min before"))
             }
-            if seconds >= -60 { return CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: "sec") }
-            return CountdownText(value: String(Int((-seconds / 60).rounded())), unit: "min ago")
+            if seconds >= -60 { return CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: tr("sec")) }
+            return CountdownText(value: String(Int((-seconds / 60).rounded())), unit: tr("min ago"))
         }
         return upcoming(seconds)
     }

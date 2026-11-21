@@ -49,7 +49,7 @@ final class RouteDetailsViewModel {
                 lon: location.map { .some($0.longitude) } ?? .null
             ))
             guard let route = data.route else {
-                state = .failed("Route not found.")
+                state = .failed(tr("Route not found."))
                 return
             }
             self.route = route

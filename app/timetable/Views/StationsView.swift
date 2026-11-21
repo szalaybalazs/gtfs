@@ -18,10 +18,10 @@ struct LocationBar: View {
             HStack(spacing: 8) {
                 Image(systemName: model.locationAvailable ? "location.fill" : "location.slash")
                     .foregroundStyle(Theme.accent)
-                Text(model.nearbyState.isLoading ? "Finding your location…" : model.locationAvailable ? "Using your location" : "Location off")
+                Text(model.nearbyState.isLoading ? tr("Finding your location…") : model.locationAvailable ? tr("Using your location") : tr("Location off"))
                     .foregroundStyle(Theme.secondary)
                 Spacer()
-                Text(model.locationAvailable ? "Update" : "Use my location").fontWeight(.medium).foregroundStyle(Theme.accent)
+                Text(model.locationAvailable ? tr("Update") : tr("Use my location")).fontWeight(.medium).foregroundStyle(Theme.accent)
             }
             .font(.system(size: 15))
             .padding(.horizontal, 16).padding(.vertical, 10)
@@ -93,7 +93,7 @@ struct StationsView: View {
             ErrorView(message: message) { await model.loadNearby(radius: settings.nearbyRadius) }
         } else if model.nearby.isEmpty {
             if model.nearbyState.isLoading { ProgressView().frame(maxWidth: .infinity) }
-            else { Text("No stops within \(settings.nearbyRadius) m.").foregroundStyle(Theme.secondary) }
+            else { Text(tr("No stops within \(settings.nearbyRadius) m.")).foregroundStyle(Theme.secondary) }
         } else {
             // The group (opens its departures) with its platforms under it
             Card {
@@ -139,7 +139,7 @@ struct StationRow: View {
                                     ForEach(LineCategory.allCases.filter { c in station.routes.contains { LineCategory.of($0) == c } }, id: \.self) { c in
                                         ModeIcon(category: c)
                                     }
-                                    Text("\(platforms.count) platforms · \(station.routes.count) lines")
+                                    Text(tr("\(platforms.count) platforms · \(station.routes.count) lines"))
                                         .font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.leading, 2)
                                 }
                                 .padding(.top, 4)
@@ -165,7 +165,7 @@ struct StationRow: View {
                             NavigationLink(value: StationTarget(stationId: station.stationId, from: platform.stopId)) {
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(platform.headsigns.isEmpty ? "Terminus · arrivals only" : "towards " + platform.headsigns.joined(separator: " / "))
+                                        Text(platform.headsigns.isEmpty ? tr("Terminus · arrivals only") : tr("towards \(platform.headsigns.joined(separator: " / "))"))
                                             .font(.system(size: 15, weight: .medium)).lineLimit(1)
                                         HFlow(itemSpacing: 4, rowSpacing: 4) {
                                             ForEach(platform.routes.sorted(by: lineOrder), id: \.routeId) { LineBadge(line: $0) }
