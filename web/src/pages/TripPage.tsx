@@ -57,7 +57,10 @@ export default function TripPage() {
   const delay = latestDelay(stops, nextIndex)
   // More than 10 greyed-out stops: keep the first stop and the last 2 before the vehicle, fold what is between (unless it hides the stop you came from)
   const fromIndex = stops.findIndex((x) => x.stop.stopId === from)
-  const hiddenPassed = !showAllPassed && started && !finished && nextIndex > 10 && !(fromIndex >= 1 && fromIndex <= nextIndex - 3) ? nextIndex - 3 : 0
+  const folding = !showAllPassed && started && !finished && nextIndex > 10
+  // How many folded stops in a row start at i
+  const foldedRun = (i: number) => { let n = 0; while (isFolded(i + n)) n++; return n }
+  const isFolded = (i: number) => folding && i >= 1 && i <= nextIndex - 3 && i !== fromIndex
   const vehicle = trip?.vehicle
   // Reference for the relative-minutes column: the stop you came from
   const reference = stops.find((x) => x.stop.stopId === from)
@@ -161,7 +164,7 @@ export default function TripPage() {
             <section>
               <h2 className="px-1 pb-heading text-xl font-bold">{t('common.stops')}</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
-                {stops.map((s, i) => (i >= 1 && i <= hiddenPassed ? (i === 1 ? <li key="fold">
+                {stops.map((s, i) => (isFolded(i) ? (!isFolded(i - 1) ? <li key={`fold${i}`}>
                       <button type="button" onClick={() => setShowAllPassed(true)} className={`flex w-full items-center pr-3 text-left active:bg-fill ${referenceTime != null ? 'pl-2' : ''}`}>
                         {referenceTime != null && <span className="w-[3.5ch] shrink-0 font-mono text-[13px]" aria-hidden />}
                         {/* The line, dashed where stops are folded away */}
@@ -171,7 +174,7 @@ export default function TripPage() {
                             style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${color} 0 6px, transparent 6px 10px)` }}
                           />
                         </span>
-                        <span className="text-[15px] font-medium text-accent">{t('trip.earlierStops', { n: hiddenPassed })}</span>
+                        <span className="text-[15px] font-medium text-accent">{t('trip.earlierStops', { n: foldedRun(i) })}</span>
                       </button>
                     </li> : null) : (
                   <TripStopRow
