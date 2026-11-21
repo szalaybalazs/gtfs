@@ -10,8 +10,8 @@ import { BikeIcon, ChevronIcon, LiveIcon } from './Icons'
 import { MarkIcon } from './LineMarks'
 import RouteBadge from './RouteBadge'
 
-/** Departed times keep counting (-1, -2… s) this long, like the departures list */
-const LINGER_S = 30
+/** Departed times show (-1… -5 s) only briefly here; the board is about what comes next */
+const LINGER_S = 5
 
 /**
  * A stop group's departures as a board: one row per line + direction, metro
