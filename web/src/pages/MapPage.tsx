@@ -6,7 +6,7 @@ import { useT } from '../lib/i18n'
 export default function MapPage() {
   const t = useT()
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-[calc(100dvh-var(--tabbar-total,0px))] flex-col">
       <NavBar
         menu
         leading={<span className="text-[17px] font-semibold">{t('map.title')}</span>}

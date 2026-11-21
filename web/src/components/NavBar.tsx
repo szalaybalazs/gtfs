@@ -30,7 +30,7 @@ export default function NavBar({
           <div className="flex min-w-0 flex-1 items-center">
             {/* The menu lives on Home only; every other page (Routes, Map, … included) has Back, so Back and the menu never swap places */}
             {pathname === '/' ? (
-              <button type="button" onClick={openMenu} aria-label={t('nav.openMenu')} className="-ml-2 rounded-md p-2 active:opacity-50">
+              <button type="button" onClick={openMenu} aria-label={t('nav.openMenu')} className="-ml-2 hidden rounded-md p-2 active:opacity-50 md:block">
                 <MenuIcon className="h-6 w-6" />
               </button>
             ) : (
@@ -42,7 +42,7 @@ export default function NavBar({
             {trailing}
             {/* Always one tap back to Home (favourites), from anywhere */}
             {pathname !== '/' && (
-              <Link to="/" aria-label={t('nav.home')} className="rounded-md p-2 active:opacity-50">
+              <Link to="/" aria-label={t('nav.home')} className="hidden rounded-md p-2 active:opacity-50 md:block">
                 <HomeIcon className="h-6 w-6" />
               </Link>
             )}

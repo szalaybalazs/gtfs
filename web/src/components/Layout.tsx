@@ -19,6 +19,15 @@ const LINKS: { to: string; label: MessageKey; icon: ReactNode }[] = [
   { to: '/settings', label: 'nav.settings', icon: <GearIcon className="h-5 w-5" /> },
 ]
 
+/** The five tabs along the bottom on phones. `also` are other paths that belong to the same tab. */
+const TABS: { to: string; label: MessageKey; icon: ReactNode; also?: string[] }[] = [
+  { to: '/', label: 'nav.home', icon: <HomeIcon className="h-6 w-6" /> },
+  { to: '/stops', label: 'tab.stops', icon: <PinIcon className="h-6 w-6" />, also: ['/stations', '/nearby'] },
+  { to: '/routes', label: 'nav.routes', icon: <BusIcon className="h-6 w-6" />, also: ['/lines'] },
+  { to: '/map', label: 'nav.map', icon: <MapIcon className="h-6 w-6" /> },
+  { to: '/settings', label: 'nav.settings', icon: <GearIcon className="h-6 w-6" /> },
+]
+
 export const TOP_LEVEL = new Set(LINKS.map((l) => l.to))
 const standalone = () =>
   window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
@@ -93,6 +102,8 @@ export default function Layout() {
       // Not while panning the map (the very edge still works, for Back)
       if (t.clientX >= 24 && (e.target as Element | null)?.closest?.('.maplibregl-map')) return
       if (!open && !standalone()) return
+      // Phones have the tab bar, no side menu to swipe open
+      if (!open && !window.matchMedia('(min-width: 768px)').matches && !standalone()) return
       if (open || t.clientX < 24) swipe.current = { x: t.clientX, y: t.clientY, opening: !open }
     }
     const onMove = (e: TouchEvent) => {
@@ -102,7 +113,7 @@ export default function Layout() {
       const dy = e.touches[0].clientY - s.y
       if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) swipe.current = null
       else if (s.opening && dx > 50) {
-        if (isHome) setOpen(true)
+        if (isHome) { if (window.matchMedia('(min-width: 768px)').matches) setOpen(true) }
         else if (historyIdx() > 0) navigate(-1)
         else navigate('/')
         swipe.current = null
@@ -126,11 +137,39 @@ export default function Layout() {
 
   return (
     <MenuContext.Provider value={() => setOpen(true)}>
+      {/* On phones the tab bar sits after the page and sticks to the bottom of the screen; --tabbar-total is its height (0 on wide screens,
+          which keep the side menu). Pages that fill the screen use it. */}
+      <div className="flex min-h-dvh flex-col [--tabbar-total:calc(3.25rem+1px+env(safe-area-inset-bottom))] md:[--tabbar-total:0px]">
       {/* Slide transitions only in the installed app: a browser tab already animates its own back swipe */}
-      <div key={page.key} className={!slides ? undefined : page.dir === 'forward' ? 'page-forward' : page.dir === 'back' ? 'page-back' : undefined}>
+      <div key={page.key} className={`flex-1 ${!slides ? '' : page.dir === 'forward' ? 'page-forward' : page.dir === 'back' ? 'page-back' : ''}`}>
         <Suspense fallback={<div className="min-h-dvh bg-canvas" />}>
           <Outlet />
         </Suspense>
+      </div>
+      <nav
+        aria-label={t('nav.mainMenu')}
+        className="sticky bottom-0 z-[1000] border-t border-separator bg-canvas/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      >
+        <ul className="mx-auto flex max-w-2xl">
+          {TABS.map((tab) => (
+            <li key={tab.to} className="flex-1">
+              <NavLink
+                to={tab.to}
+                end={tab.to === '/'}
+                onPointerDown={tab.to === '/map' ? preloadMap : undefined}
+                onPointerEnter={tab.to === '/map' ? preloadMap : undefined}
+                className={({ isActive }) => {
+                  const on = isActive || (tab.also ?? []).some((p) => location.pathname.startsWith(p))
+                  return `flex h-[3.25rem] flex-col items-center justify-center gap-0.5 text-[10px] font-medium active:opacity-60 ${on ? 'text-accent' : 'text-secondary'}`
+                }}
+              >
+                {tab.icon}
+                {t(tab.label)}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
       </div>
       <div
         className={`fixed inset-0 z-[1100] touch-none bg-black/30 transition-opacity ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}

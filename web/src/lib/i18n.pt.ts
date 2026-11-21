@@ -13,6 +13,7 @@ export const pt: Record<MessageKey, Message> = {
   'nav.map': 'Mapa',
   'nav.settings': 'Definições',
   'nav.mainMenu': 'Menu principal',
+  'tab.stops': 'Paragens',
   'nav.openMenu': 'Abrir menu',
   'nav.closeMenu': 'Fechar menu',
   'common.retry': 'Tentar novamente',

@@ -167,7 +167,7 @@ export default function RoutesPage() {
       </main>
 
       {selecting && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-separator bg-canvas/95 px-gutter pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur">
+        <div className="fixed inset-x-0 bottom-[var(--tabbar-total,0px)] z-30 border-t border-separator bg-canvas/95 px-gutter pt-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] backdrop-blur">
           <div className="mx-auto flex max-w-2xl items-center gap-3">
             <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
               {selected.map((r) => (

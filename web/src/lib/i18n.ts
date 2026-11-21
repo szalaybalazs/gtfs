@@ -31,6 +31,7 @@ const en = {
   'nav.map': 'Map',
   'nav.settings': 'Settings',
   'nav.mainMenu': 'Main menu',
+  'tab.stops': 'Stops',
   'nav.openMenu': 'Open menu',
   'nav.closeMenu': 'Close menu',
 
@@ -329,6 +330,7 @@ const hu: Record<MessageKey, Message> = {
   'nav.nearby': 'Közeli megállók',
   'nav.map': 'Térkép',
   'nav.settings': 'Beállítások',
+  'tab.stops': 'Megállók',
   'nav.mainMenu': 'Főmenü',
   'nav.openMenu': 'Menü megnyitása',
   'nav.closeMenu': 'Menü bezárása',
