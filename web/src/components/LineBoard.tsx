@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import type { Departure } from '../lib/api'
 import { compareLines } from '../lib/categories'
 import { countdown } from '../lib/countdown'
@@ -87,7 +87,10 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
     }
     last.current = next
   }, [order])
-  const to = `${stationPath}?from=${encodeURIComponent(d.stopId)}${d.route ? `&lines=${encodeURIComponent(d.route.routeId)}` : ''}`
+  // The chosen time (?after / ?at / ?earlier) carries over, so the line's own list counts from it too
+  const [params] = useSearchParams()
+  const carry = ['after', 'at', 'earlier'].map((k) => (params.get(k) ? `&${k}=${encodeURIComponent(params.get(k)!)}` : '')).join('')
+  const to = `${stationPath}?from=${encodeURIComponent(d.stopId)}${d.route ? `&lines=${encodeURIComponent(d.route.routeId)}` : ''}${carry}`
   return (
     <li>
       <Link to={to} className="flex items-center gap-2.5 px-gutter py-row active:bg-fill">
