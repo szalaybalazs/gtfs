@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { CheckIcon, ChevronIcon, LiveIcon } from '../components/Icons'
 import Alerts from '../components/Alerts'
@@ -28,8 +28,8 @@ export default function TripPage() {
   const date = params.get('date') || undefined
   const from = params.get('from')
   const now = useNow(1_000)
-  // Many stops already behind it fold into one row; one tap opens them for good
-  const [showAllPassed, setShowAllPassed] = useState(false)
+  // Stops 1…foldEnd are folded away. Decided once, when the trip first loads (the vehicle moving on doesn't fold more); one tap opens them for good
+  const [foldEnd, setFoldEnd] = useState<number | null | undefined>(undefined)
 
   const query = useQuery({
     queryKey: tripKey(tripId, date),
@@ -55,12 +55,20 @@ export default function TripPage() {
   const started = nextIndex !== 0 && stops.length > 0
   const finished = nextIndex === -1 && stops.length > 0
   const delay = latestDelay(stops, nextIndex)
-  // More than 10 greyed-out stops: keep the first stop and the last 2 before the vehicle, fold what is between (unless it hides the stop you came from)
+  // More than 10 greyed-out stops: keep the first and the last two before the vehicle, fold what is between (the stop you came from stays)
   const fromIndex = stops.findIndex((x) => x.stop.stopId === from)
-  const folding = !showAllPassed && started && !finished && nextIndex > 10
+  const currentFoldEnd = started && !finished && nextIndex > 10 ? nextIndex - 3 : null
+  useEffect(() => {
+    if (foldEnd === undefined && stops.length > 0) setFoldEnd(currentFoldEnd)
+  }, [foldEnd, stops.length, currentFoldEnd])
+  const end = foldEnd === undefined ? currentFoldEnd : foldEnd
+  const isFolded = (i: number) => end != null && i >= 1 && i <= end && i !== fromIndex
   // How many folded stops in a row start at i
-  const foldedRun = (i: number) => { let n = 0; while (isFolded(i + n)) n++; return n }
-  const isFolded = (i: number) => folding && i >= 1 && i <= nextIndex - 3 && i !== fromIndex
+  const foldedRun = (i: number) => {
+    let n = 0
+    while (isFolded(i + n)) n++
+    return n
+  }
   const vehicle = trip?.vehicle
   // Reference for the relative-minutes column: the stop you came from
   const reference = stops.find((x) => x.stop.stopId === from)
@@ -165,13 +173,13 @@ export default function TripPage() {
               <h2 className="px-1 pb-heading text-xl font-bold">{t('common.stops')}</h2>
               <ol className="overflow-hidden rounded-2xl bg-surface py-2">
                 {stops.map((s, i) => (isFolded(i) ? (!isFolded(i - 1) ? <li key={`fold${i}`}>
-                      <button type="button" onClick={() => setShowAllPassed(true)} className={`flex w-full items-center pr-3 text-left active:bg-fill ${referenceTime != null ? 'pl-2' : ''}`}>
+                      <button type="button" onClick={() => setFoldEnd(null)} className={`flex w-full items-center pr-3 text-left active:bg-fill ${referenceTime != null ? 'pl-2' : ''}`}>
                         {referenceTime != null && <span className="w-[3.5ch] shrink-0 font-mono text-[13px]" aria-hidden />}
                         {/* The line, dashed where stops are folded away */}
-                        <span className="relative mr-1.5 flex h-10 w-7 shrink-0 justify-center">
+                        <span className="relative mr-1.5 flex h-11 w-7 shrink-0 justify-center">
                           <span
                             className="absolute top-0 bottom-0 w-2 opacity-45"
-                            style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${color} 0 6px, transparent 6px 10px)` }}
+                            style={{ backgroundImage: `repeating-linear-gradient(to bottom, transparent 0 4px, ${color} 4px 10px)` }}
                           />
                         </span>
                         <span className="text-[15px] font-medium text-accent">{t('trip.earlierStops', { n: foldedRun(i) })}</span>

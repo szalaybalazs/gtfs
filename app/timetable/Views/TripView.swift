@@ -12,8 +12,9 @@ struct TripView: View {
     let target: TripTarget
     @State private var model = TripViewModel()
     @State private var retry = 0
-    /// Many stops already behind the vehicle fold into rows; one tap opens them for good.
-    @State private var showAllPassed = false
+    /// Stops 1...foldEnd are folded away. Decided once, when the trip first loads (the vehicle moving on doesn't fold more); a tap opens them for good.
+    @State private var foldEnd: Int?
+    @State private var foldChecked = false
 
     var body: some View {
         ScrollView {
@@ -34,6 +35,11 @@ struct TripView: View {
         }
         .background(Theme.canvas)
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: model.trip?.tripId, initial: true) { _, id in
+            guard id != nil, !foldChecked, let trip = model.trip else { return }
+            foldChecked = true
+            foldEnd = Self.foldEnd(trip.stops, now: Date())
+        }
         .task(id: retry) { await model.run(tripId: target.tripId, serviceDate: target.serviceDate) }
         .refreshable { await model.load(tripId: target.tripId, serviceDate: target.serviceDate) }
     }
@@ -51,9 +57,24 @@ struct TripView: View {
         // Seconds only when the data has them (like the web)
         let hasSeconds = stops.contains { TimeFormat.hasSeconds($0.arrival) || TimeFormat.hasSeconds($0.departure) }
         // More than 10 greyed-out stops: keep the first and the last two before the vehicle (and the stop you came from), fold the rest
-        let folding = !showAllPassed && started && !finished && nextIndex > 10
+        // (Before it is decided, the current position stands in for it so the first frame is already folded.)
+        let end = foldChecked ? foldEnd : Self.foldEnd(stops, now: now)
         let fromIndex = stops.firstIndex { $0.stopId == target.from }
-        func isFolded(_ i: Int) -> Bool { folding && i >= 1 && i <= nextIndex - 3 && i != fromIndex }
+        func isFolded(_ i: Int) -> Bool { if let end { return i >= 1 && i <= end && i != fromIndex } else { return false } }
+        // How far along the vehicle is between the stop it left and the next one, 0...1; the line is faded up to that point
+        let p: Double = {
+            guard started && !finished, nextIndex > 0 else { return 0 }
+            let span = stops[nextIndex].arrival.timeIntervalSince(stops[nextIndex - 1].departure)
+            return span > 0 ? min(1, max(0, now.timeIntervalSince(stops[nextIndex - 1].departure) / span)) : 0.5
+        }()
+        func greyTo(_ i: Int) -> CGFloat {
+            if finished { return 48 }
+            if !started { return 0 }
+            if i < nextIndex - 1 { return 48 }
+            if i == nextIndex - 1 { return min(48, 24 + 48 * p) }
+            if i == nextIndex { return max(0, 48 * p - 24) }
+            return 0
+        }
         func run(_ i: Int) -> Int { var n = 0; while isFolded(i + n) { n += 1 }; return n }
         return VStack(spacing: 24) {
             header(trip, stops: stops, started: started, finished: finished,
@@ -66,15 +87,15 @@ struct TripView: View {
                         ForEach(Array(stops.enumerated()), id: \.element.id) { i, stop in
                             if isFolded(i) {
                                 if !isFolded(i - 1) {
-                                    FoldRow(count: run(i), color: color, indented: reference != nil) { withAnimation { showAllPassed = true } }
+                                    FoldRow(count: run(i), color: color, indented: reference != nil) { withAnimation { foldEnd = nil; foldChecked = true } }
                                 }
                             } else {
                                 TripStopRow(
                                     stop: stop, trip: trip, first: i == 0, last: i == stops.count - 1,
                                     passed: nextIndex == -1 || i < nextIndex,
                                     highlighted: stop.stopId == target.from,
-                                    color: color, referenceTime: reference?.departure, showSeconds: hasSeconds,
-                                    vehicle: started && !finished && i == nextIndex ? vehicleMark(trip, stops: stops, next: i, now: now, color: color) : nil
+                                    color: color, referenceTime: reference?.departure, showSeconds: hasSeconds, greyTo: greyTo(i),
+                                    vehicle: started && !finished && i == nextIndex ? VehicleMark(line: trip.route, color: color, progress: p) : nil
                                 )
                                 .zIndex(started && !finished && i == nextIndex ? 1 : 0)
                             }
@@ -95,12 +116,10 @@ struct TripView: View {
         }
     }
 
-    /// The vehicle as a disc on the line, between the stop it left and the next one by how far along the timetable it is.
-    private func vehicleMark(_ trip: Trip, stops: [TripStop], next: Int, now: Date, color: Color) -> VehicleMark {
-        let leaves = stops[max(next - 1, 0)].departure, arrives = stops[next].arrival
-        let span = arrives.timeIntervalSince(leaves)
-        let progress = span > 0 ? min(1, max(0, now.timeIntervalSince(leaves) / span)) : 0.5
-        return VehicleMark(line: trip.route, color: color, progress: progress)
+    /// Stops 1...n are folded when more than 10 are behind the vehicle: the first stop and the last two before it stay.
+    static func foldEnd(_ stops: [TripStop], now: Date) -> Int? {
+        guard let next = stops.firstIndex(where: { $0.departure > now }), next > 10 else { return nil }
+        return next - 3
     }
 
     private func header(_ trip: Trip, stops: [TripStop], started: Bool, finished: Bool, delay: Int?, now: Date) -> some View {
@@ -198,6 +217,8 @@ private struct TripStopRow: View {
     let color: Color
     let referenceTime: Date?
     var showSeconds = false
+    /// The line is faded from the top of the row down to here (0...48); the rest is in colour.
+    var greyTo: CGFloat = 0
     var vehicle: VehicleMark? = nil
 
     var body: some View {
@@ -218,22 +239,32 @@ private struct TripStopRow: View {
                         .font(.system(size: 13, design: .monospaced)).foregroundStyle(Theme.secondary)
                         .frame(width: 34, alignment: .trailing)
                         .padding(.leading, 8)
+                        .opacity(passed ? 0.45 : 1)
                 }
                 ZStack {
-                    Rectangle().fill(color).frame(width: 8)
-                        .padding(.top, first ? 24 : 0).padding(.bottom, last ? 24 : 0)
+                    let top: CGFloat = first ? 24 : 0, bottom: CGFloat = last ? 24 : 48
+                    let cut = min(max(greyTo, top), bottom)
+                    VStack(spacing: 0) {
+                        Color.clear.frame(height: top)
+                        color.opacity(0.45).frame(height: cut - top)
+                        color.frame(height: bottom - cut)
+                        Color.clear.frame(height: 48 - bottom)
+                    }
+                    .frame(width: 8)
                     Circle().fill(Theme.surface)
                         .overlay(Circle().strokeBorder(highlighted ? Color.primary : color, lineWidth: 2))
                         .frame(width: highlighted ? 16 : 10, height: highlighted ? 16 : 10)
+                        .opacity(passed ? 0.45 : 1)
                 }
                 .frame(width: 28, height: 48)
                 .overlay(alignment: .top) {
                     // Above this stop, by how far the vehicle is from the previous one
-                    if let vehicle { vehicle.offset(y: -(1 - vehicle.progress) * 48 - 14) }
+                    if let vehicle { vehicle.offset(y: 48 * vehicle.progress - 38) }
                 }
                 .padding(.trailing, 6)
                 Text(s.name).font(.system(size: 17, weight: highlighted ? .bold : .regular)).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.trailing, 8)
+                    .opacity(passed ? 0.45 : 1)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     if (status == .late || status == .early), let delay {
                         Text(TimeFormat.clock(main.addingTimeInterval(-Double(delay))))
@@ -247,10 +278,10 @@ private struct TripStopRow: View {
                 .monospacedDigit()
                 .foregroundStyle(Theme.color(status))
                 .padding(.trailing, 12)
-                Chevron()
+                .opacity(passed ? 0.45 : 1)
+                Chevron().opacity(passed ? 0.45 : 1)
             }
             .padding(.trailing, 12)
-            .opacity(passed ? 0.45 : 1)
             .background(highlighted ? Theme.accent.opacity(0.08) : Color.clear)
         }
         .buttonStyle(RowButtonStyle())
@@ -285,10 +316,12 @@ private struct FoldRow: View {
         Button(action: open) {
             HStack(spacing: 0) {
                 if indented { Color.clear.frame(width: 34).padding(.leading, 8) }
+                // Dashes with the same gap at both ends as between them: 4 + 4 x 6 + 3 x 4 + 4
                 VStack(spacing: 4) {
                     ForEach(0..<4, id: \.self) { _ in Rectangle().fill(color.opacity(0.45)).frame(width: 8, height: 6) }
                 }
-                .frame(width: 28, height: 40)
+                .padding(.vertical, 4)
+                .frame(width: 28, height: 44)
                 .padding(.trailing, 6)
                 Text(tr("\(count) earlier stops")).font(.system(size: 15, weight: .medium)).foregroundStyle(Theme.accent)
                     .frame(maxWidth: .infinity, alignment: .leading)
