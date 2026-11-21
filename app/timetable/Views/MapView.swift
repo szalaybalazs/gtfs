@@ -317,13 +317,11 @@ struct MapView: View {
             .overlay(Circle().stroke(selected ? Color.primary : Theme.secondary, lineWidth: 2)).padding(8)
     }
 
-    /// Zoomed out: a coloured circle in the category's colour with its pictogram in white (no outer ring).
+    /// Zoomed out: the same dot as a platform, in the category's colour.
     private func groupMarker(_ c: LineCategory, selected: Bool) -> some View {
-        let d: CGFloat = selected ? 26 : 22
-        return Circle().fill(c.tint).frame(width: d, height: d)
+        Circle().fill(c.tint).frame(width: selected ? 14 : 10, height: selected ? 14 : 10)
             .overlay(Circle().stroke(Color.white, lineWidth: 2))
-            .overlay(ModeIcon(category: c, size: d * 0.55, flat: .white))
-            .padding(4)
+            .padding(10)
     }
 
     // MARK: Controls

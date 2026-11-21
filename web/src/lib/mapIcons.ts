@@ -17,13 +17,6 @@ export function mainCategory(routes: RouteRef[]): Category {
 
 const esc = (s: string) => s.replace(/[<>&"]/g, '')
 
-/** CSS mask for a pictogram inside an HTML string (inlined data URLs contain quotes). */
-const maskCss = (url: string) => {
-  const u = url.replace(/"/g, '%22').replace(/'/g, '%27')
-  return `-webkit-mask:url('${u}') center/contain no-repeat;mask:url('${u}') center/contain no-repeat`
-}
-
-/** Tiny badges (HTML, for map markers): one row up to four, else two even rows; a grey "…" badge when there are more than fit. */
 /** Variants (56A, 56É…) are left out when the base line (56) is there too. */
 export function baseLines(routes: RouteRef[]): RouteRef[] {
   const names = new Set(routes.map((r) => r.shortName))
@@ -36,6 +29,7 @@ export function baseLines(routes: RouteRef[]): RouteRef[] {
   })
 }
 
+/** Tiny badges (HTML, for map markers): one row up to four, else two even rows; a grey "…" badge when there are more than fit. */
 function badgesHtml(allRoutes: RouteRef[], max = 8, justify = 'center') {
   const routes = baseLines(allRoutes)
   const shown = routes.slice(0, max)
@@ -55,24 +49,19 @@ function badgesHtml(allRoutes: RouteRef[], max = 8, justify = 'center') {
 export type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>
 
 /**
- * Stop group or platform, like the iOS map: zoomed out a pictogram dot; closer in a small dot with its first few
+ * Stop group or platform, like the iOS map: zoomed out just the dot; closer in a small dot with its first few
  * line badges under it (the name and direction are on the card once tapped). Coloured by the main kind of vehicle there.
  */
 export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false): Icon {
   const c = mainCategory(station.routes)
-  if (!withBadges)
-    return {
-      html: `<div style="width:28px;height:28px;box-sizing:border-box;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 3px rgb(0 0 0/.3);display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;background:#fff;${maskCss(c.icon)}"></span></div>`,
-      size: [28, 28],
-      anchor: [14, 14],
-    }
   const d = selected ? 20 : 15
   return {
+    // Zoomed out the badges are left off: just the dot
     html:
       // Invisible larger tap area around the dot (the dot alone is too small to hit)
       `<div style="position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%"></div>` +
       `<div style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>` +
-      `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%);padding:4px">${badgesHtml(station.routes)}</div>`,
+      (withBadges ? `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%);padding:4px">${badgesHtml(station.routes)}</div>` : ''),
   }
 }
 
