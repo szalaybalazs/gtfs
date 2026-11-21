@@ -5,6 +5,7 @@ import { useT } from '../lib/i18n'
 import { useDepartures } from '../lib/useDepartures'
 import { useNow } from '../lib/useTimetable'
 import { ChevronIcon, LiveIcon } from './Icons'
+import { splitAlerts, useAlerts } from './Alerts'
 import RouteBadge from './RouteBadge'
 import { countdown } from '../lib/countdown'
 import { realtimeStatus } from '../lib/realtimeStatus'
@@ -63,12 +64,47 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
   )
 }
 
-function Card({ title, subtitle, to, link, children }: { title: string; subtitle?: string | null; to: string; link: boolean; children: React.ReactNode }) {
+/** A small "Disruption" tag when any of these lines / stops has an ongoing service alert */
+function DisruptionTag({ routeIds, stopIds }: { routeIds: string[]; stopIds: string[] }) {
+  const t = useT()
+  const alerts = useAlerts(routeIds, stopIds)
+  const { ongoing } = splitAlerts(alerts.data?.alerts ?? [])
+  if (ongoing.length === 0) return null
+  return (
+    <span className="alert-card inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 text-[12px] leading-[20px] font-semibold text-alert-text">
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M12 3 2.5 20h19L12 3Z" />
+        <path d="M12 10v4M12 17.2v.1" />
+      </svg>
+      {t('fav.disruption')}
+    </span>
+  )
+}
+
+function Card({
+  title,
+  subtitle,
+  to,
+  link,
+  children,
+  alertsFor,
+}: {
+  title: string
+  subtitle?: string | null
+  to: string
+  link: boolean
+  children: React.ReactNode
+  /** Lines and stops to check for service alerts (shows a small tag by the title) */
+  alertsFor?: { routeIds: string[]; stopIds: string[] }
+}) {
   const body = (
     <div className="px-gutter py-row">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-semibold">{title}</p>
+          <p className="flex items-center gap-2 text-[17px] font-semibold">
+            <span className="truncate">{title}</span>
+            {alertsFor && <DisruptionTag {...alertsFor} />}
+          </p>
           {subtitle && <p className="truncate text-[13px] text-secondary">{subtitle}</p>}
         </div>
         {link && <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />}
@@ -115,6 +151,7 @@ export function LineStopCard({ fav, link = true }: { fav: Extract<FavoriteDraft,
       subtitle={towards ? t('common.towards', { to: towards }) : null}
       to={`/routes/${encodeURIComponent(fav.route.routeId)}?stop=${encodeURIComponent(fav.stopId)}`}
       link={link}
+      alertsFor={{ routeIds: [fav.route.routeId], stopIds: [fav.stopId] }}
     >
       <LineTimesRow departures={query.data?.departures ?? []} pending={query.isPending} fallback={[fav.route]} />
     </Card>
@@ -131,6 +168,7 @@ export function StopCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { k
       subtitle={fav.headsigns.length ? t('common.towards', { to: fav.headsigns.join(' / ') }) : null}
       to={`/stations/${encodeURIComponent(fav.stationId)}?from=${encodeURIComponent(fav.stopId)}`}
       link={link}
+      alertsFor={{ routeIds: fav.routes.map((r) => r.routeId), stopIds: [fav.stopId] }}
     >
       <LineTimesRow departures={query.data?.departures ?? []} pending={query.isPending} fallback={fav.routes} />
     </Card>
@@ -150,6 +188,7 @@ export function LinesCard({ fav, link = true }: { fav: Extract<FavoriteDraft, { 
       subtitle={fav.headsigns.length ? t('common.towards', { to: fav.headsigns.join(' / ') }) : t('fav.lineCount', { n: fav.routes.length })}
       to={`/stations/${encodeURIComponent(fav.stationId)}?${params}`}
       link={link}
+      alertsFor={{ routeIds: ids, stopIds: fav.stopIds }}
     >
       <LineTimesRow departures={query.data?.departures ?? []} pending={query.isPending} fallback={fav.routes} />
     </Card>
