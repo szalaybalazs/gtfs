@@ -74,3 +74,64 @@ export const RouteBadgeStory: Story = {
     )
   },
 }
+
+/**
+ * Countdown edge cases on the board, one row each: seconds, half minutes, just left,
+ * live marks, an hour or more away (clock time), sparse lines with fewer departures,
+ * long destinations, and a chosen time with rows before it. Every value must fit its
+ * column (the "fits" check below the board lists any that overflow).
+ */
+export const LineBoardEdgeCases: Story = {
+  name: 'LineBoard · edge cases',
+  // Full width with only the app's own gutter, like the real page on a phone
+  parameters: { layout: 'fullscreen' },
+  render: () => {
+    const { board } = fresh()
+    const base = board.departures[0]
+    const now = Date.now()
+    let n = 0
+    const dep = (headsign: string, routeIdx: number, mins: number[], live: boolean[] = []) =>
+      mins.map((m, i) => ({
+        ...base,
+        route: board.departures[routeIdx % board.departures.length].route,
+        tripId: `edge-${n++}`,
+        headsign,
+        terminates: false,
+        departure: new Date(now + m * 60_000).toISOString(),
+        arrival: new Date(now + m * 60_000).toISOString(),
+        realtime: !!live[i],
+        departureDelay: live[i] ? 30 : null,
+        arrivalDelay: null,
+      }))
+    const rows = [
+      ...dep('Seconds, then 59 min', 0, [0.6, 59, 59.5, 59.9], [true, true, true, true]),
+      ...dep('Half minutes', 3, [2.5, 2, 1.5, 1], [true, false, true, false]),
+      ...dep('Just left (−4 s), live next', 6, [-0.07, 4, 12, 30], [true, true, false, false]),
+      ...dep('Sparse: clock times, live', 9, [70, 130, 190, 250], [true, true, true, true]),
+      ...dep('One coming only', 12, [8]),
+      ...dep('Two coming, second far', 15, [45, 115]),
+      ...dep('A very long destination name that has to wrap onto two lines and then get cut', 18, [3, 13, 23, 33], [true]),
+    ]
+    const fixedRows = [
+      ...dep('Chosen time: before it', 0, [-3, -45, 5, 15]),
+      ...dep('Chosen time: far before', 3, [-90, -61, 2, 80]),
+    ]
+    const check = (el: HTMLDivElement | null) => {
+      if (!el) return
+      requestAnimationFrame(() => {
+        // Each value's own width against its fixed column
+        const bad = [...el.querySelectorAll<HTMLElement>('[data-value]')].filter((v) => v.offsetParent !== null && v.offsetWidth > (v.closest('p') as HTMLElement).clientWidth)
+        const out = el.querySelector('[data-fits]')
+        if (out) out.textContent = bad.length ? `Overflow: ${bad.map((p) => p.textContent).join(', ')}` : 'All values fit their columns'
+      })
+    }
+    return frame(
+      <div ref={check} className="space-y-4">
+        <LineBoard departures={rows} stationPath={`/stations/${STATION_ID}`} />
+        <p className="text-[13px] font-semibold text-secondary">Counting from a chosen time (now):</p>
+        <LineBoard departures={fixedRows} stationPath={`/stations/${STATION_ID}`} reference={new Date(now)} />
+        <p data-fits className="text-[13px] font-semibold" />
+      </div>,
+    )
+  },
+}

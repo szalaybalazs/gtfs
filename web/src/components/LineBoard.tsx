@@ -105,7 +105,7 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
         {/* The next departure big, then the following ones smaller to its right. How many depends only on
             the screen (two more on a phone, three from 640 px), and the columns have fixed widths so they line up.
             One list keyed by trip, so a time keeps its element as it moves from small to big */}
-        <div className="-mr-1 flex shrink-0 items-center">
+        <div className="-mr-1 flex shrink-0 items-center gap-1.5">
           {shown.map((n, i) => (
             <div key={n.tripId} ref={(el) => void (el ? boxes.current.set(n.tripId, el) : boxes.current.delete(n.tripId))} className={i === 3 ? 'hidden sm:block' : ''}>
               <Countdown d={n} now={now} small={i > 0} fixed={fixed} />
@@ -123,25 +123,37 @@ function BoardRow({ list, now, stationPath, fixed }: { list: Departure[]; now: D
 }
 
 /** Minutes / seconds until a departure, negative seconds just after it leaves; the live mark in its own corner */
+/**
+ * One countdown column. Fixed width, so every row lines up; nothing may overflow it:
+ * - under an hour: minutes / ½ minutes / seconds at full size ("59", "2½", "-10")
+ * - an hour or more either way (sparse lines, far "Earlier" rows): the clock time, set smaller to fit
+ * - the live mark sits on the unit line, never over the digits
+ */
 function Countdown({ d, now, small = false, fixed = false }: { d: Departure; now: Date; small?: boolean; fixed?: boolean }) {
   const t = useT()
-  const seconds = (new Date(d.terminates ? d.arrival : d.departure).getTime() - now.getTime()) / 1000
+  const at = new Date(d.terminates ? d.arrival : d.departure)
+  const seconds = (at.getTime() - now.getTime()) / 1000
   const left = seconds < 0
   const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
-  // An hour or more away: the clock time reads better than "74 min"
-  const far = seconds >= 60 * 60
-  const { value, unit } = left && fixed
-    ? { value: `-${Math.ceil(-seconds / 60)}`, unit: 'unit.min' as const }
-    : left
-    ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
-    : far
-      ? { value: formatTime(new Date(new Date(d.terminates ? d.arrival : d.departure))), unit: null }
-      : countdown(seconds)
+  const clock = Math.abs(seconds) >= 60 * 60
+  const { value, unit } = clock
+    ? { value: formatTime(at), unit: null }
+    : left && fixed
+      ? { value: `-${Math.ceil(-seconds / 60)}`, unit: 'unit.min' as const }
+      : left
+        ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
+        : countdown(seconds)
+  const size = clock ? (small ? 'text-[12px]' : 'text-[15px]') : small ? 'text-[16px]' : 'text-2xl'
   return (
-    <div className={`relative text-right ${small ? 'w-9 pr-1.5 text-secondary' : 'w-11 pr-2.5 text-label'} ${left ? 'opacity-45' : ''}`}>
-      {live && !left && <LiveIcon className={`absolute top-0 right-0 text-secondary ${small ? 'h-2.5 w-2.5' : 'h-3 w-3'}`} aria-hidden />}
-      <p className={`leading-none font-bold tabular-nums ${small ? 'text-[16px]' : 'text-2xl'}`}>{value}</p>
-      <p className={`font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>{unit ? t(unit) : '\u00a0'}</p>
+    <div className={`text-right whitespace-nowrap ${small ? 'w-9 text-secondary' : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
+      {/* Same line height for clock times and countdowns, so the unit lines stay level */}
+      <p className={`flex items-end justify-end font-bold tabular-nums ${small ? 'h-4' : 'h-6'} leading-none ${size}`}>
+        <span data-value>{value}</span>
+      </p>
+      <p className={`flex items-center justify-end gap-0.5 font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>
+        {live && !left && <LiveIcon className={small ? 'h-2.5 w-2.5' : 'h-3 w-3'} aria-hidden />}
+        {unit ? t(unit) : '\u00a0'}
+      </p>
     </div>
   )
 }
