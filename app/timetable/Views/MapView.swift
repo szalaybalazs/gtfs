@@ -73,12 +73,6 @@ struct MapView: View {
         }
         .navigationTitle("Map")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Text(model.vehiclesLoaded && showVehicles ? tr("\(visibleVehicles.count) vehicles in view") : tr("Loading vehicles…"))
-                    .font(.system(size: 13)).foregroundStyle(Theme.secondary)
-            }
-        }
         .transitDestinations()
         // Vehicles every 10 s while the layer is on; stops when the view moves
         .task(id: showVehicles) {

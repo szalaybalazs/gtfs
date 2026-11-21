@@ -307,7 +307,6 @@ const en = {
   // Map (pages/MapPage.tsx, components/MiniMap.tsx)
   'map.title': 'Map',
   'map.loadingVehicles': 'Loading vehicles…',
-  'map.vehiclesInView': { one: '{n} vehicle in view', other: '{n} vehicles in view' },
   'map.showMyLocation': 'Show my location',
   'map.unknownDestination': 'Unknown destination',
   'map.openTrip': 'Open trip →',
@@ -578,7 +577,6 @@ const hu: Record<MessageKey, Message> = {
 
   'map.title': 'Térkép',
   'map.loadingVehicles': 'Járművek betöltése…',
-  'map.vehiclesInView': '{n} jármű látható',
   'map.showMyLocation': 'Saját helyzet mutatása',
   'map.unknownDestination': 'Ismeretlen úti cél',
   'map.openTrip': 'Járat megnyitása →',

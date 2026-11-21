@@ -63,13 +63,11 @@ export default function TransitMap({
   trip,
   bounds,
   onClose,
-  onVehicleCount,
 }: {
   trip?: TripOverlay
   bounds?: LngLatBoundsLike
   /** Shows a ✕ (top right) that calls this */
   onClose?: () => void
-  onVehicleCount?: (n: number | null) => void
 }) {
   const t = useT()
   const location = useGeolocation()
@@ -344,9 +342,6 @@ export default function TransitMap({
     [trip, selectedTripStop, navigate],
   )
   const allMarkers = useMemo(() => [...stopMarkers, ...tripStopMarkers, ...vehicleMarkers, ...me], [stopMarkers, tripStopMarkers, vehicleMarkers, me])
-  useEffect(() => {
-    onVehicleCount?.(vehicleQuery.data ? vehicles.length : null)
-  }, [onVehicleCount, vehicleQuery.data, vehicles.length])
   useMarkers(map, allMarkers)
 
   // Keep the last known data of the tapped vehicle, so its card stays when it leaves the view
