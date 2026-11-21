@@ -54,7 +54,7 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
               <RouteBadge route={route} fit />
               {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
               <span className="flex items-baseline gap-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
-                {times.slice(0, 4).map((d) => (
+                {times.map((d) => (
                   <ShortTime key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} />
                 ))}
               </span>
