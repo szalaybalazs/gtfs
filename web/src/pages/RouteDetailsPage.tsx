@@ -28,8 +28,8 @@ type Choice = { direction: Direction; stop: Stop; reason: 'chosen' | 'nearest' |
 
 /**
  * Which stop to show. An explicit choice in the URL wins. Otherwise the
- * nearest stop on the route if it is within NEAR_M, else the end stop
- * (first stop of a direction) closest to the user, else the first stop.
+ * nearest stop on the route if it is within NEAR_M, else the first stop
+ * of the first direction.
  */
 function choose(directions: Direction[], dirParam: number | null, stopParam: string | null, here: Coords | null): Choice | null {
   if (directions.length === 0) return null
@@ -56,11 +56,7 @@ function choose(directions: Direction[], dirParam: number | null, stopParam: str
     const nearest = candidates.sort((a, b) => a.m - b.m)[0]
     if (nearest && nearest.m <= NEAR_M) return { direction: nearest.direction, stop: nearest.stop, reason: 'nearest', metres: nearest.m }
 
-    const termini = directions
-      .filter((d) => d.stops[0] && located(d.stops[0]))
-      .map((direction) => ({ direction, stop: direction.stops[0], m: metres(direction.stops[0]) }))
-      .sort((a, b) => a.m - b.m)
-    if (termini[0]) return { direction: termini[0].direction, stop: termini[0].stop, reason: 'terminus', metres: termini[0].m }
+    // Not near the line: stay on the first direction's first end stop (no jump to the closest end; the direction switch moves to the other)
   }
 
   const direction = directions[0]
