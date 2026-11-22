@@ -59,6 +59,9 @@ struct MapView: View {
     private var span: Double { region.span.latitudeDelta }
     /// Group markers from here, single platforms when closer still (web: GROUPS_ZOOM / STOPS_ZOOM).
     private static let platformSpan = 0.004
+    /// Vehicles collapse to dots at this latitude span and wider (live, as the zoom crosses it).
+    private static let compactSpan = 0.02
+    @State private var vehiclesCompact = false
     private var showVehicles: Bool { layers.vehicles && span < 0.25 }
     /// Re-work out the visible lines when the view, the line data or the layer changes.
     private var linesKey: String {
@@ -76,7 +79,7 @@ struct MapView: View {
         return "\(lat)|\(lon)|\(span < MapView.platformSpan)"
     }
 
-    private var vehicleShape: String { "\(showVehicles)|\(span >= 0.02)" }
+    private var vehicleShape: String { "\(showVehicles)|\(vehiclesCompact)" }
     private var stopsKey: String { "\(region.center.latitude)|\(region.center.longitude)|\(span)|\(model.stations.count)" }
 
     private var visibleVehicles: [Vehicle] {
@@ -97,6 +100,7 @@ struct MapView: View {
                        showsUserLocation: true, showsScale: true, handle: handle,
                        onRegionChange: { region = $0 },
                        platformSpan: Self.platformSpan, onPlatformZoom: { platformMode = $0 },
+                       compactSpan: Self.compactSpan, onCompactZoom: { vehiclesCompact = $0 },
                        onTapStop: { selection = $0.selection },
                        onTapVehicle: { selection = $0.selection })
                 // Only under the top: extending the map under the tab bar hid the tab bar's background
@@ -187,8 +191,7 @@ struct MapView: View {
 
     private func rebuildVehicles() {
         guard showVehicles else { vehicleItems = []; return }
-        let compact = span >= 0.02
-        vehicleItems = visibleVehicles.map { MapVehicle(id: $0.id, coordinate: $0.coordinate, bearing: $0.bearing, line: $0.route, compact: compact) }
+        vehicleItems = visibleVehicles.map { MapVehicle(id: $0.id, coordinate: $0.coordinate, bearing: $0.bearing, line: $0.route, compact: vehiclesCompact) }
     }
 
     private var mapStops: [MapStop] {
@@ -198,7 +201,7 @@ struct MapView: View {
             // Zoomed in (and for every single platform): the first few line badges under the dot; further out, a plain dot
             let badges = m.stopId != nil || span < 0.012 || sel
             return MapStop(id: m.id, coordinate: m.coordinate, selection: .station(m.stationId, stopId: m.stopId),
-                           tint: stopPinTint(routes: m.routes, fallback: m.category.tint), dot: 10,
+                           tint: stopPinTint(routes: m.routes, fallback: m.category.tint), dot: 13,
                            routes: badges ? m.routes : [], selected: sel)
         }
     }

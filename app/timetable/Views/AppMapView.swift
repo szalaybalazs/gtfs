@@ -47,7 +47,7 @@ struct MapStop: Identifiable {
     var tint: Color
     /// Filled with the tint and a white rim.
     var filled = true
-    var dot: CGFloat = 10
+    var dot: CGFloat = 13
     var time: String?
     var realtime = false
     var routes: [LineRef] = []
@@ -104,6 +104,9 @@ struct AppMapView: UIViewRepresentable {
     /// Latitude span below which platforms are shown; reported the moment the zoom crosses it (during the gesture, not after).
     var platformSpan: Double = 0
     var onPlatformZoom: ((Bool) -> Void)?
+    /// Latitude span below which vehicles are full discs (at or above it, dots). Reported live, like platformSpan.
+    var compactSpan: Double = 0
+    var onCompactZoom: ((Bool) -> Void)?
     var onTapStop: ((MapStop) -> Void)?
     var onTapVehicle: ((MapVehicle) -> Void)?
     /// Tapped anywhere that isn't a stop or a vehicle.
@@ -242,12 +245,18 @@ struct AppMapView: UIViewRepresentable {
 
         /// Fires continuously while zooming; only reports when the platform/group switch flips.
         var lastPlatformZoom: Bool?
+        var lastCompact: Bool?
         func mapViewDidChangeVisibleRegion(_ map: MKMapView) {
-            guard let parent, parent.platformSpan > 0 else { return }
-            let p = map.region.span.latitudeDelta < parent.platformSpan
-            guard p != lastPlatformZoom else { return }
-            lastPlatformZoom = p
-            parent.onPlatformZoom?(p)
+            guard let parent else { return }
+            let span = map.region.span.latitudeDelta
+            if parent.platformSpan > 0 {
+                let p = span < parent.platformSpan
+                if p != lastPlatformZoom { lastPlatformZoom = p; parent.onPlatformZoom?(p) }
+            }
+            if parent.compactSpan > 0 {
+                let c = span >= parent.compactSpan
+                if c != lastCompact { lastCompact = c; parent.onCompactZoom?(c) }
+            }
         }
 
         // MARK: Views
@@ -348,12 +357,34 @@ final class StopView: MKAnnotationView {
         let content = StopDotContent(tint: s.tint, filled: s.filled, dot: s.dot, time: s.time, realtime: s.realtime, routes: s.routes, selected: s.selected)
         if let host { host.rootView = content } else { host = hostView(content, in: self) }
         alpha = s.opacity
+        badgeHit = StopView.badgeRect(s.routes)
         zPriority = s.selected ? MKAnnotationViewZPriority(rawValue: 500) : .min
     }
 
     /// Only the dot itself takes taps, so the badges and times don't block the map or other stops.
+    /// Where the line badges are (estimated from their text), so a tap just beside them still reaches a vehicle.
+    private var badgeHit: CGRect = .zero
+
+    /// The dot and the badges themselves take taps; the rest of the box doesn't block the map or other stops.
     override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        CGRect(x: StopView.size.width / 2 - 18, y: StopView.dotY - 18, width: 36, height: 36).contains(point)
+        let dotBox = CGRect(x: StopView.size.width / 2 - 18, y: StopView.dotY - 18, width: 36, height: 36)
+        return dotBox.contains(point) || badgeHit.contains(point)
+    }
+
+    /// Same numbers as StopBadges (size 10): badge widths from their text, rows 4 pt apart, the first row 25 pt down.
+    private static func badgeRect(_ routes: [LineRef]) -> CGRect {
+        let base = Array(baseLines(routes).prefix(8))
+        guard !base.isEmpty else { return .zero }
+        let perRow = base.count > 4 ? (base.count + 1) / 2 : base.count
+        let rowsCount = Int((Double(base.count) / Double(perRow)).rounded(.up))
+        var widest: CGFloat = 0
+        for start in stride(from: 0, to: base.count, by: perRow) {
+            let row = base[start..<min(start + perRow, base.count)]
+            let w = row.reduce(CGFloat(0)) { $0 + max(14, CGFloat($1.shortName?.count ?? 1) * 6.5 + 8) } + CGFloat(max(row.count - 1, 0)) * 3
+            widest = max(widest, w)
+        }
+        let height = CGFloat(rowsCount) * 14 + CGFloat(max(rowsCount - 1, 0)) * 4
+        return CGRect(x: StopView.size.width / 2 - widest / 2 - 4, y: 25 - 4, width: widest + 8, height: height + 8)
     }
 }
 
@@ -385,7 +416,7 @@ final class VehicleView: MKAnnotationView {
 struct StopDotContent: View {
     let tint: Color
     var filled = false
-    var dot: CGFloat = 10
+    var dot: CGFloat = 13
     var time: String?
     var realtime = false
     var routes: [LineRef] = []
@@ -401,7 +432,7 @@ struct StopDotContent: View {
                     Circle().fill(Color.white).frame(width: d, height: d).overlay(Circle().stroke(tint, lineWidth: 2))
                 }
             }
-            // Same curve and scale as VehicleDisc's compact dot
+            // A slightly larger dot when selected
             .scaleEffect(selected ? 1.3 : 1)
             .animation(.spring(response: 0.2, dampingFraction: 0.8), value: selected)
             .frame(width: 32, height: 32)
@@ -417,37 +448,52 @@ struct StopDotContent: View {
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 6))
                 }
             }
-            .padding(.top, -9)
+            // Badges start 7 pt above the bottom of the 32 pt dot box: a 4 pt gap to an unselected dot, 2.5 pt to a selected one
+            .padding(.top, -7)
         }
         .frame(width: 128, height: 76, alignment: .top)
     }
 
-    /// Up to two rows of four badges, then an ellipsis. Variants (56A, 56É...) are left out when the base line (56) is there too.
-    private var badges: some View {
-        let names = Set(routes.compactMap(\.shortName))
-        // Custom: with 4, 6 and 4-6 all here, just 4-6
-        let merged46 = names.contains("4") && names.contains("6") && names.contains("4-6")
-        let base = routes.filter { r in
-            if merged46 && (r.shortName == "4" || r.shortName == "6") { return false }
-            guard let n = r.shortName, let last = n.last, last.isLetter, n.count > 1 else { return true }
-            let head = String(n.dropLast())
-            return !(head.allSatisfy(\.isNumber) && names.contains(head))
-        }
+    private var badges: some View { StopBadges(routes: routes, size: 10) }
+}
+
+/// The lines at a stop, with the same clean-up everywhere: variants (56A, 56É…) are left out when the base line (56) is there
+/// too, and 4 / 6 / 4-6 collapse to 4-6 when all three are present.
+func baseLines(_ routes: [LineRef]) -> [LineRef] {
+    let names = Set(routes.compactMap(\.shortName))
+    let merged46 = names.contains("4") && names.contains("6") && names.contains("4-6")
+    return routes.filter { r in
+        if merged46 && (r.shortName == "4" || r.shortName == "6") { return false }
+        guard let n = r.shortName, let last = n.last, last.isLetter, n.count > 1 else { return true }
+        let head = String(n.dropLast())
+        return !(head.allSatisfy(\.isNumber) && names.contains(head))
+    }
+}
+
+/// Line badges for a stop: up to two rows (four to a row), then a grey "…" when more don't fit. Used on the map and on the stop card.
+struct StopBadges: View {
+    let routes: [LineRef]
+    var size: CGFloat = 10
+    var alignment: HorizontalAlignment = .center
+
+    var body: some View {
+        let base = baseLines(routes)
         let shown = Array(base.prefix(8))
-        return VStack(spacing: 2) {
-            let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1) // two even rows, or one
-            ForEach(Array(stride(from: 0, to: shown.count, by: perRow)), id: \.self) { start in
-                HStack(spacing: 2) {
+        let more = base.count > shown.count
+        let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1)
+        let rows = Array(stride(from: 0, to: shown.count, by: perRow))
+        VStack(alignment: alignment, spacing: 4) {
+            ForEach(rows, id: \.self) { start in
+                HStack(spacing: 3) {
                     ForEach(shown[start..<min(start + perRow, shown.count)], id: \.routeId) { r in
-                        Text(r.shortName ?? "").font(.system(size: 10, weight: .bold)).lineLimit(1).fixedSize()
+                        Text(r.shortName ?? "").font(.system(size: size, weight: .bold)).lineLimit(1).fixedSize()
                             .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
-                            .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
+                            .padding(.horizontal, size * 0.4).frame(minHeight: size * 1.4).frame(minWidth: size * 1.4)
                             .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
                     }
-                    // More lines than fit: a grey badge with an ellipsis instead of a count
-                    if start + perRow >= shown.count && base.count > 8 {
-                        Text("…").font(.system(size: 10, weight: .bold)).fixedSize().foregroundStyle(.white)
-                            .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
+                    if start == rows.last && more {
+                        Text("…").font(.system(size: size, weight: .bold)).fixedSize().foregroundStyle(.white)
+                            .padding(.horizontal, size * 0.4).frame(minHeight: size * 1.4).frame(minWidth: size * 1.4)
                             .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
                     }
                 }

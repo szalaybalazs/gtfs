@@ -101,7 +101,7 @@ function MapView({ points = [], line, color = '#2563eb', vehicle, interactive }:
   )
 
   const markers = useMemo<HtmlMarker[]>(
-    () => (vehicle ? [{ key: 'vehicle', at: [vehicle.lon, vehicle.lat], ...vehicleIcon(vehicle.route, vehicle.bearing, 16, false), z: 10 }] : []),
+    () => (vehicle ? [{ key: 'vehicle', at: [vehicle.lon, vehicle.lat], ...vehicleIcon(vehicle.route, vehicle.bearing, false, false), z: 10 }] : []),
     [vehicle],
   )
   useMarkers(map, markers)

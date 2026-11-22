@@ -26,6 +26,14 @@ struct VehicleDisc: View {
     var compact = false
     @Environment(\.colorScheme) private var scheme
 
+    /// The halo behind the disc: always there, grown in from the middle when selected (not shown or hidden at once).
+    private func halo(_ color: Color) -> some View {
+        Circle().fill(color).padding(-7)
+            .scaleEffect(selected ? 1 : 0.6)
+            .opacity(selected ? 1 : 0)
+            .animation(.spring(response: 0.25, dampingFraction: 0.8), value: selected)
+    }
+
     var body: some View {
         let bg = Color(hex: line?.color ?? "#6b7280")
         let fg = Color(hex: line?.textColor ?? "#ffffff")
@@ -36,7 +44,7 @@ struct VehicleDisc: View {
             Circle().fill(bg).frame(width: 14, height: 14)
                 .overlay(Circle().stroke(Color.white, lineWidth: 2))
                 // Selected: a halo in the line's colour and a bigger dot, like the badge
-                .background { if selected { Circle().fill(bg.opacity(0.3)).padding(-7) } }
+                .background { halo(bg.opacity(0.3)) }
                 .scaleEffect(selected ? 1.3 : 1)
                 .animation(.spring(response: 0.2, dampingFraction: 0.8), value: selected)
                 .padding(8)
@@ -51,7 +59,7 @@ struct VehicleDisc: View {
                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
                     .overlay(Text(label).font(.system(size: long ? 10 : 12, weight: .bold)).foregroundStyle(fg)
                         .lineLimit(1).minimumScaleFactor(0.6).padding(.horizontal, 2))
-                    .background { if selected { Circle().fill(bg.opacity(0.25)).padding(-7) } }
+                    .background { halo(bg.opacity(0.25)) }
                     .frame(width: size, height: size)
             }
             .frame(width: size + 28, height: size + 28)

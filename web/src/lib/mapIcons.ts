@@ -54,27 +54,29 @@ export type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>
  */
 export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false): Icon {
   const c = mainCategory(station.routes)
-  // Selection is a scale on the marker (glmap), not a different size, so the marker isn't rebuilt
+  // Coloured by the stop's first line (a metro platform is metro-coloured), else by the main kind of vehicle there
+  const first = baseLines(station.routes)[0]
+  const color = first ? hex(first.color, c.color) : c.color
+  // Selection scales only the dot (glmap, through data-dot), so the dot grows and the labels stay put
   const d = 15
   void selected
   return {
     // Zoomed out the badges are left off: just the dot
     html:
-      // Invisible larger tap area around the dot (the dot alone is too small to hit)
-      `<div style="position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%"></div>` +
-      `<div style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${c.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>` +
+      `<div data-dot="1" style="position:absolute;left:${-d / 2}px;top:${-d / 2}px;width:${d}px;height:${d}px;box-sizing:border-box;border-radius:50%;background:${color};border:2px solid #fff;transition:transform .2s cubic-bezier(.34,1.56,.64,1)"></div>` +
       (withBadges ? `<div style="position:absolute;left:0;top:${d / 2 + 2}px;transform:translateX(-50%);padding:4px">${badgesHtml(station.routes)}</div>` : ''),
   }
 }
 
 /** Vehicle: a round marker in the line's colour with its number; an arrow on the rim shows the heading. */
-export function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom: number, selected: boolean): Icon {
+export function vehicleIcon(route: RouteRef | null, bearing: number | null, compact: boolean, selected: boolean): Icon {
   const c = route ? categoryOf(route) : CATEGORIES[CATEGORIES.length - 1]
   const bg = hex(route?.color, c.color)
   const fg = hex(route?.textColor, '#ffffff')
-  if (zoom < GROUPS_ZOOM)
+  // Collapsed to a dot below the group zoom (the caller passes the live zoom band, not the settled zoom)
+  if (compact)
     return {
-      html: `<div style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;background:${bg};border:2px solid #fff;box-shadow:0 1px 3px rgb(0 0 0/.35)"></div>`,
+      html: `<div style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;background:${bg};border:2px solid #fff"></div>`,
       size: [14, 14],
     }
   const label = esc(route?.shortName ?? '')
@@ -83,11 +85,13 @@ export function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom
     bearing != null
       ? `<div style="position:absolute;inset:-7px;transform:rotate(${Math.round(bearing)}deg)"><div style="margin:0 auto;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:7px solid ${bg}"></div></div>`
       : ''
+  // The halo is always here (hidden); selecting it only changes its style (glmap), so it grows in instead of appearing
+  void selected
   return {
     html:
-      // Selected: a soft halo in the line's own colour and slightly bigger (scaled, so it stays on the GPU)
       `<div style="position:relative;width:${size}px;height:${size}px;">${arrow}` +
-      `<div style="position:absolute;inset:0;border-radius:50%;background:${bg};color:${fg};border:2px solid #fff;box-shadow:${selected ? `0 0 0 7px ${bg}40,0 2px 6px rgb(0 0 0/.35)` : '0 1px 4px rgb(0 0 0/.4)'};display:flex;align-items:center;justify-content:center;font:700 ${label.length > 3 ? 10 : 12}px system-ui">${label}</div></div>`,
+      `<div data-halo="1" style="position:absolute;inset:-7px;border-radius:50%;background:${bg};opacity:0;transform:scale(0.6);transition:transform .25s cubic-bezier(.34,1.56,.64,1),opacity .2s ease;pointer-events:none"></div>` +
+      `<div style="position:absolute;inset:0;border-radius:50%;background:${bg};color:${fg};border:2px solid #fff;display:flex;align-items:center;justify-content:center;font:700 ${label.length > 3 ? 9 : 11}px system-ui">${label}</div></div>`,
     size: [size, size],
   }
 }

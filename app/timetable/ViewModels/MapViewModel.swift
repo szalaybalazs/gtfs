@@ -72,7 +72,7 @@ final class MapViewModel {
             guard let lat = v.latitude, let lon = v.longitude else { continue }
             let to = CLLocationCoordinate2D(latitude: lat, longitude: lon)
             let route = v.trip?.route.map { r in LineRef(routeId: r.routeId, shortName: r.shortName, color: r.color, textColor: r.textColor, type: r.type?.rawValue) }
-            var vehicle = Vehicle(id: v.id, coordinate: to, bearing: v.bearing, label: v.vehicleLabel, plate: v.vehicleLicensePlate, model: v.vehicleModel,
+            var vehicle = Vehicle(id: v.id, coordinate: to, bearing: v.bearing, label: v.vehicleLabel, plate: formatPlate(v.vehicleLicensePlate), model: v.vehicleModel,
                                   tripId: v.trip?.tripId, serviceDate: v.tripStartDate, headsign: v.trip?.headsign, route: route,
                                   updated: v.timestamp.flatMap(APIDate.parse))
             // A vehicle never goes back in time: an older fix than the one already held is ignored

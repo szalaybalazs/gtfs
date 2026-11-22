@@ -247,7 +247,20 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
       entry.inner.style.top = `${-ay}px`
       // Grow around the pin point; `scale` is the fade, `transform` the selection, so they don't fight
       entry.inner.style.transformOrigin = `${ax}px ${ay}px`
-      entry.inner.style.transform = item.selected ? 'scale(1.3)' : 'scale(1)'
+      // A stop scales only its dot (so its labels stay); a vehicle lifts slightly and grows its halo behind it.
+      // Both change in place (not rebuilt), so the transition runs.
+      const dot = entry.inner.querySelector<HTMLElement>('[data-dot]')
+      const halo = entry.inner.querySelector<HTMLElement>('[data-halo]')
+      if (dot) {
+        dot.style.transform = item.selected ? 'scale(1.3)' : 'scale(1)'
+        entry.inner.style.transform = 'scale(1)'
+      } else {
+        entry.inner.style.transform = item.selected ? 'scale(1.15)' : 'scale(1)'
+      }
+      if (halo) {
+        halo.style.transform = item.selected ? 'scale(1)' : 'scale(0.6)'
+        halo.style.opacity = item.selected ? '0.25' : '0'
+      }
       if (w) entry.inner.style.width = `${w}px`
       if (h) entry.inner.style.height = `${h}px`
       entry.el.style.zIndex = String(item.z ?? 0)

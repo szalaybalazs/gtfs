@@ -138,15 +138,19 @@ struct CardLayout<Badge: View, Info: View, Status: View>: View {
 
     var body: some View {
         CardChrome(close: close) {
-            HStack(spacing: 10) {
-                badge
-                Text(loading ? "Placeholder headline" : title).font(.system(size: 17, weight: .semibold)).lineLimit(2)
-                    .redacted(reason: loading ? .placeholder : [])
-                    .padding(.trailing, 48)
+            // Title and its info line sit close together (the card's own spacing is looser)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 10) {
+                    badge
+                    Text(loading ? "Placeholder headline" : title).font(.system(size: 17, weight: .semibold)).lineLimit(2)
+                        .redacted(reason: loading ? .placeholder : [])
+                        .padding(.trailing, 48)
+                }
+                .frame(minHeight: 28, alignment: .leading)
+                if showsInfo { info.frame(minHeight: 20, alignment: .leading) }
             }
-            .frame(minHeight: 28, alignment: .leading)
-            if showsInfo { info.frame(minHeight: 20, alignment: .leading) }
             status.frame(minHeight: 20, alignment: .leading)
+            // No button (an unassigned vehicle, or a stop without a way in): no space is reserved for one
             if let value = buttonValue {
                 CardLink(value: value, open: open) {
                     Text(buttonTitle).font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
@@ -154,8 +158,6 @@ struct CardLayout<Badge: View, Info: View, Status: View>: View {
                         .background(Theme.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .padding(.top, 4)
-            } else {
-                Color.clear.frame(height: 54)
             }
         }
     }
@@ -245,9 +247,9 @@ struct StopCard: View {
                     ForEach(0..<3, id: \.self) { _ in RoundedRectangle(cornerRadius: 6).fill(Theme.secondary.opacity(0.2)).frame(width: 40, height: 22) }
                 }
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) { ForEach(lines, id: \.routeId) { r in LineBadge(line: r) } }
-                }
+                // Up to two rows, the same height as the name and direction above, with the same clean-up as on the map
+                StopBadges(routes: lines, size: 12, alignment: .leading)
+                    .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
             }
         }
         .task {

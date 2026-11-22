@@ -12,6 +12,8 @@ const TTL_MS = { vehicles: 10_000, trips: 20_000 } as const;
 // Older than this, a request waits for a refresh rather than serving the old data (the feed is down, or we are cold).
 const MAX_AGE_MS = 90_000;
 const TIMEOUT_MS = 8_000;
+// How long a request waits for a refresh that is due (the rest of the wait is served from the cache).
+const REFRESH_WAIT_MS = 2_000;
 const BASE_URL = "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full";
 
 const STOP_TIME_UPDATE_COLUMNS = [
@@ -156,11 +158,31 @@ const toStopTimeUpdates = (feed: any, now: number) => {
   return rows;
 };
 
+// TEMP-CODE (remove later?): BKK's feed sometimes drops a vehicle's trip for a moment and then sends it again.
+// So we remember each vehicle's last trip and use it for up to TRIP_MEMORY_S seconds when the feed has none.
+// Lives in memory per Lambda instance, so it's best-effort, not a guarantee.
+const TRIP_MEMORY_S = 120;
+const lastTrip = new Map<string, { tripId: string; startDate: string | null; startTime: string | null; seen: number }>();
+
 const toVehiclePositions = (feed: any, now: number) => {
   const rows: Row[] = [];
   for (const entity of feed.entity) {
     const v = entity.vehicle;
     if (!v) continue;
+    // Trip as sent; if the feed has none, the last one we saw for this vehicle (when it's recent enough)
+    let tripId: string | null = v.trip?.tripId || null;
+    let startDate: string | null = v.trip?.startDate ?? null;
+    let startTime: string | null = v.trip?.startTime ?? null;
+    if (tripId) {
+      lastTrip.set(entity.id, { tripId, startDate, startTime, seen: now });
+    } else {
+      const remembered = lastTrip.get(entity.id);
+      if (remembered && now - remembered.seen <= TRIP_MEMORY_S) {
+        tripId = remembered.tripId;
+        startDate = remembered.startDate;
+        startTime = remembered.startTime;
+      }
+    }
     rows.push([
       entity.id,
       v.position?.bearing ?? null,
@@ -168,9 +190,9 @@ const toVehiclePositions = (feed: any, now: number) => {
       v.position?.longitude ?? null,
       v.position?.speed ?? null,
       v.currentStopSequence ?? null,
-      v.trip?.tripId ?? null,
-      v.trip?.startDate ?? null,
-      v.trip?.startTime ?? null,
+      tripId,
+      startDate,
+      startTime,
       v.congestionLevel ?? null,
       v.occupancyStatus ?? null,
       v.occupancyPercentage ?? null,
@@ -265,8 +287,14 @@ export const ensureRealtime = async () => {
   const now = Date.now();
   for (const kind of ["trips", "vehicles"] as Kind[]) {
     const age = now - feeds[kind].fetchedAt;
-    if (feeds[kind].fetchedAt === 0 || age > MAX_AGE_MS) await refreshFeed(kind);
-    else if (age > TTL_MS[kind]) void refreshFeed(kind);
+    if (feeds[kind].fetchedAt === 0 || age > MAX_AGE_MS) {
+      await refreshFeed(kind);
+    } else if (age > TTL_MS[kind]) {
+      // TEMP-CODE (remove later?): wait briefly for a refresh instead of firing and forgetting. A Lambda can freeze
+      // right after it responds, which stopped background refreshes from ever finishing (data went stale for ~90 s).
+      // If BKK is slow, the request still goes out with the cached rows after REFRESH_WAIT_MS.
+      await Promise.race([refreshFeed(kind), new Promise((r) => setTimeout(r, REFRESH_WAIT_MS))]);
+    }
   }
   if (loadedGeneration !== generation) load();
 };

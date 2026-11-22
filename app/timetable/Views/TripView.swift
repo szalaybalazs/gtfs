@@ -161,12 +161,16 @@ struct TripView: View {
                 if !via.isEmpty {
                     Text(via.joined(separator: " ▸ ")).font(.system(size: 15)).foregroundStyle(Theme.secondary).padding(.top, 4)
                 }
-                if let stats = Self.stats(stops, path: model.path) {
-                    Text(stats).font(.system(size: 15, weight: .medium)).monospacedDigit().padding(.top, 8)
-                }
-                // How old the vehicle's position is: the same stopwatch and age as on the map
-                if started && !finished, let updated = model.vehicle?.updated {
-                    HStack { Spacer(minLength: 0); RefreshedAge(updated: updated) }.padding(.top, 4)
+                // Stops and length on the left; how old the vehicle's position is (the same stopwatch as on the map) on the right
+                let stats = Self.stats(stops, path: model.path)
+                let updated = started && !finished ? model.vehicle?.updated : nil
+                if stats != nil || updated != nil {
+                    HStack(spacing: 8) {
+                        if let stats { Text(stats).font(.system(size: 15, weight: .medium)).monospacedDigit() }
+                        Spacer(minLength: 0)
+                        if let updated { RefreshedAge(updated: updated) }
+                    }
+                    .padding(.top, 8)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

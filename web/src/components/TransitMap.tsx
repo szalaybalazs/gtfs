@@ -32,7 +32,7 @@ function CardLayout({
         {badge}
         <span className="truncate text-[17px] font-semibold">{title}</span>
       </div>
-      {info && <p className="mt-1 truncate text-[15px] text-secondary">{info}</p>}
+      {info && <p className="mt-0.5 truncate text-[15px] text-secondary">{info}</p>}
       <div className="mt-1.5 flex min-h-[20px] items-center gap-2 text-[15px]">{status}</div>
       {action && (
         <Link to={action.to} className="mt-3 block w-full rounded-[14px] bg-accent py-[14px] text-center text-[17px] font-semibold text-white active:opacity-60">
@@ -44,6 +44,7 @@ function CardLayout({
 }
 
 import RouteBadge from './RouteBadge'
+import FitBadges from './FitBadges'
 import { RefreshedAge } from './RefreshedAge'
 import { gql, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, TRIP_QUERY, VEHICLES_QUERY, type NearbyStations, type RouteRef, type TripDetails, type TripStop, type VehiclePosition, type Vehicles } from '../lib/api'
 import { tripKey } from '../lib/prefetch'
@@ -209,6 +210,13 @@ export default function TransitMap({
   })
   // A vehicle never goes back in time: the query is cached per visible area, so panning or zooming back to an
   // earlier area can hand us older positions. Keep the newest fix we've seen per vehicle.
+  // Keep the last known data of the tapped vehicle, so its card stays when it leaves the view
+  const [lastSelected, setLastSelected] = useState<VehiclePosition | null>(null)
+  const fresh = (vehicleQuery.data?.vehiclePositions ?? []).find((v) => v?.id === selected) ?? null
+  useEffect(() => {
+    if (fresh) setLastSelected(fresh)
+  }, [fresh])
+  const selectedVehicle = selected ? (fresh ?? (lastSelected?.id === selected ? lastSelected : null)) : null
   const newest = useRef(new Map<string, VehiclePosition>())
   const vehicles = useMemo(
     () =>
@@ -294,7 +302,7 @@ export default function TransitMap({
             {
               key: 'me',
               at: [location.coords.lon, location.coords.lat],
-              html: '<div style="width:18px;height:18px;box-sizing:border-box;border-radius:50%;background:#2563eb;border:3px solid #fff;box-shadow:0 1px 4px rgb(0 0 0/.35)"></div>',
+              html: '<div style="width:18px;height:18px;box-sizing:border-box;border-radius:50%;background:#2563eb;border:3px solid #fff"></div>',
               size: [18, 18],
               z: 1500,
             },
@@ -334,12 +342,17 @@ export default function TransitMap({
     },
   ])
 
+  // The selected vehicle stays on the map even when the area query no longer includes it (zoomed in past it)
+  const shownVehicles = useMemo(
+    () => (selectedVehicle && selectedVehicle.latitude != null && selectedVehicle.longitude != null && !vehicles.some((v) => v.id === selected) ? [...vehicles, selectedVehicle as (typeof vehicles)[number]] : vehicles),
+    [vehicles, selectedVehicle, selected],
+  )
   const vehicleMarkers = useMemo<HtmlMarker[]>(
     () =>
-      vehicles.map((v) => ({
+      shownVehicles.map((v) => ({
         key: `veh:${v.id}`,
         at: [v.longitude, v.latitude],
-        ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
+        ...vehicleIcon(v.trip?.route ?? null, v.bearing, band === 0, selected === v.id),
         selected: selected === v.id,
         z: selected === v.id ? 2000 : 500,
         // First tap: details card. Tap the same vehicle again: open its trip.
@@ -351,7 +364,7 @@ export default function TransitMap({
           }
         },
       })),
-    [vehicles, zoom, selected, navigate, compact],
+    [shownVehicles, band, selected, navigate, compact],
   )
 
   // The trip: its path as a line in the line's colour, its stops as dots with the time it gets there
@@ -375,10 +388,10 @@ export default function TransitMap({
         // Same dot as the stops on the main map (in the line's colour; the stop you came from is dark), with the time instead of the platform's badges
         const dot =
           `<div style="position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%"></div>` +
-          `<div style="position:absolute;left:-7.5px;top:-7.5px;width:15px;height:15px;box-sizing:border-box;border-radius:50%;background:${s.strong ? '#111' : trip!.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>`
+          `<div style="position:absolute;left:-7.5px;top:-7.5px;width:15px;height:15px;box-sizing:border-box;border-radius:50%;background:${s.strong ? '#111' : trip!.color};border:2px solid #fff"></div>`
         // Coloured like the stop list (late red, early purple, on time green), live mark when it's realtime
         const live = s.status !== 'scheduled'
-        const label = `<div style="position:absolute;left:10px;top:-9px;width:max-content;display:flex;align-items:center;gap:2px;font:600 11px/18px system-ui;padding:0 5px;border-radius:5px;background:rgb(255 255 255/.92);color:${statusCss[s.status] === 'inherit' ? '#111' : statusCss[s.status]};box-shadow:0 1px 2px rgb(0 0 0/.2)">${formatTime(s.time)}${live ? LIVE_ICON_HTML : ''}</div>`
+        const label = `<div style="position:absolute;left:10px;top:-9px;width:max-content;display:flex;align-items:center;gap:2px;font:600 11px/18px system-ui;padding:0 5px;border-radius:5px;background:rgb(255 255 255/.92);color:${statusCss[s.status] === 'inherit' ? '#111' : statusCss[s.status]}">${formatTime(s.time)}${live ? LIVE_ICON_HTML : ''}</div>`
         return {
           key: `tripstop:${s.stopId}:${s.time.getTime()}`,
           at: [s.lon, s.lat] as [number, number],
@@ -394,27 +407,6 @@ export default function TransitMap({
   const allMarkers = useMemo(() => [...stopMarkers, ...tripStopMarkers, ...vehicleMarkers, ...me], [stopMarkers, tripStopMarkers, vehicleMarkers, me])
   useMarkers(map, allMarkers)
 
-  // Keep the last known data of the tapped vehicle, so its card stays when it leaves the view
-  const [lastSelected, setLastSelected] = useState<VehiclePosition | null>(null)
-  const fresh = (vehicleQuery.data?.vehiclePositions ?? []).find((v) => v?.id === selected) ?? null
-  useEffect(() => {
-    if (fresh) setLastSelected(fresh)
-  }, [fresh])
-  const selectedVehicle = selected ? (fresh ?? (lastSelected?.id === selected ? lastSelected : null)) : null
-
-  // A highlighted vehicle that's in view and moves: the map moves with it
-  const followed = selectedVehicle?.latitude != null && selectedVehicle.longitude != null ? ([selectedVehicle.longitude, selectedVehicle.latitude] as [number, number]) : null
-  const followKey = followed ? `${followed[0]},${followed[1]}` : ''
-  const lastFollow = useRef<{ id: string; key: string } | null>(null)
-  useEffect(() => {
-    if (!map || !followed || !selectedVehicle) return
-    const prev = lastFollow.current
-    lastFollow.current = { id: selectedVehicle.id, key: followKey }
-    // Only on a move of the same vehicle, and only while it's on screen
-    if (!prev || prev.id !== selectedVehicle.id || prev.key === followKey) return
-    if (map.getBounds().contains(followed)) map.easeTo({ center: followed, duration: 600 })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, followKey, selectedVehicle?.id])
 
   // The tapped stop (a whole group when zoomed out, a single platform when zoomed in), for its bottom card
   const selectedStopInfo = useMemo(() => {
@@ -504,12 +496,7 @@ export default function TransitMap({
                 {selectedStopInfo.time.status !== 'scheduled' && <span dangerouslySetInnerHTML={{ __html: LIVE_ICON_HTML }} />}
               </span>
             ) : (
-            <div className="flex flex-wrap gap-1">
-              {selectedStopInfo.routes.slice(0, 12).map((r) => (
-                <RouteBadge key={r.routeId} route={r} />
-              ))}
-              {selectedStopInfo.routes.length > 12 && <span className="text-[13px] text-secondary">+{selectedStopInfo.routes.length - 12}</span>}
-            </div>
+            <FitBadges routes={selectedStopInfo.routes} />
             )
           }
           action={{ to: selectedStopInfo.to, label: t('card.departures') }}
@@ -595,8 +582,9 @@ function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }
     <CardLayout
       onClose={onClose}
       badge={v.trip?.route ? <RouteBadge route={v.trip.route} /> : null}
-      title={v.trip?.headsign ?? t('map.unknownDestination')}
-      info={[name, formatPlate(v.vehicleLicensePlate)].filter(Boolean).join(' · ') || null}
+      // No destination: the vehicle's type is the title, and its number the line below
+      title={v.trip?.headsign ?? name ?? t('map.unknownDestination')}
+      info={(v.trip?.headsign ? [name, formatPlate(v.vehicleLicensePlate)] : [formatPlate(v.vehicleLicensePlate)]).filter(Boolean).join(' · ') || null}
       status={
         <>
           {delayMinutes != null ? (

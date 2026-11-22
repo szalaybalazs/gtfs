@@ -114,7 +114,19 @@ extension Trip {
 extension TripVehicle {
     init(_ v: TripVehicleQuery.Data.Trip.Vehicle) {
         self.init(latitude: v.latitude, longitude: v.longitude, bearing: v.bearing, label: v.vehicleLabel,
-                  plate: v.vehicleLicensePlate, model: v.vehicleModel, wheelchair: v.vehicleWheelchairAccessible ?? false,
+                  plate: formatPlate(v.vehicleLicensePlate), model: v.vehicleModel, wheelchair: v.vehicleWheelchairAccessible ?? false,
                   updated: v.timestamp.flatMap { APIDate.parse($0) })
     }
+}
+
+// MARK: Licence plates
+
+func formatPlate(_ plate: String?) -> String? {
+    guard let plate else { return nil }
+    let s = String(plate.uppercased().filter { ("A"..."Z").contains($0) || ("0"..."9").contains($0) })
+    if let m = s.wholeMatch(of: /([A-Z]{3})(\d{3})/) { return "\(m.1)-\(m.2)" }
+    if let m = s.wholeMatch(of: /([A-Z]{2})([A-Z]{2})(\d{3})/) { return "\(m.1)-\(m.2)-\(m.3)" }
+    if let m = s.wholeMatch(of: /OT(\d{2})(\d{2})/) { return "OT-\(m.1)-\(m.2)" }
+    if let m = s.wholeMatch(of: /OT([A-Z]{2})(\d{3})/) { return "OT-\(m.1)-\(m.2)" }
+    return plate
 }

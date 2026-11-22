@@ -48,7 +48,7 @@ struct TripKitMap: View {
             guard let la = s.lat, let lo = s.lon else { return nil }
             let sel = MapSelection.station(s.stationId ?? s.stopId, stopId: s.stopId)
             return MapStop(id: "\(s.stopSequence)-\(s.stopId)", coordinate: CLLocationCoordinate2D(latitude: la, longitude: lo), selection: sel,
-                           tint: tint, dot: big ? 10 : 8,
+                           tint: tint, dot: big ? 13 : 8,
                            time: big ? TimeFormat.clock(s.stopSequence == last ? s.arrival : s.departure) : nil,
                            realtime: s.realtime, selected: selection == sel)
         }
