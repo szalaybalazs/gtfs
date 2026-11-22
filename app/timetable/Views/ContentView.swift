@@ -38,7 +38,7 @@ struct ContentView: View {
                     }
             }
             .tabItem { Label { Text("Routes") } icon: { Image(tab == 2 ? "tab_routes_solid" : "tab_routes") } }.tag(2)
-            NavigationStack(path: $paths[3]) { MapView() }
+            NavigationStack(path: $paths[3]) { MapView(openPage: { paths[3].append($0) }) }
                 .tabItem { Label { Text("Map") } icon: { Image(tab == 3 ? "tab_map_solid" : "tab_map") } }.tag(3)
             NavigationStack(path: $paths[4]) { NearbyDeparturesView() }
                 .tabItem { Label { Text("Nearby") } icon: { Image(systemName: tab == 4 ? "location.fill" : "location") } }.tag(4)

@@ -88,14 +88,13 @@ final class RouteDetailsViewModel {
             hint = tr("Nearest stop on this line, \(Self.distance(n.2)) away")
             return
         }
-        var terminus: (RouteDirection, RouteDirection.StopRef, Double)?
-        for d in route.directions { if let s = d.stops.first, let m = metres(s), m < (terminus?.2 ?? .infinity) { terminus = (d, s, m) } }
-        if let t = terminus {
-            directionId = t.0.directionId; stopId = t.1.stopId
-            hint = tr("Closest end of the line, \(Self.distance(t.2)) away")
-        } else if stopId == nil {
+        // Not near the line: stay on one end stop and don't move the view to the closest end.
+        // The direction button switches to the other end (see swapDirection).
+        if stopId == nil {
+            directionId = route.directions.first?.directionId ?? 0
             stopId = route.directions.first?.stops.first?.stopId
         }
+        hint = ""
     }
 
     /// Back to the automatic choice (the location button).

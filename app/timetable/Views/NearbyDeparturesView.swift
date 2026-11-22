@@ -121,26 +121,22 @@ struct NearbyDeparturesView: View {
         }
     }
 
-    /// Map on the left, on the right where you point and a Freeze button.
+    /// The map at full width, the Freeze toggle full width under it.
     @ViewBuilder private func aimPanel(_ at: CLLocationCoordinate2D) -> some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 10) {
             AimMap(here: at, spots: here.spots, cone: cone)
-                .frame(width: 190, height: 190)
+                .frame(maxWidth: .infinity)
+                .frame(height: 240)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            VStack(alignment: .leading, spacing: 10) {
-                Text(compass.available ? tr("Pointing \(Self.compassName(cone.heading))") : tr("No compass"))
-                    .font(.system(size: 17, weight: .semibold))
-                Text(frozen ? tr("Frozen. Tap to follow your phone again.") : tr("Point your phone at the stop. Freeze to put it down."))
-                    .font(.system(size: 13)).foregroundStyle(Theme.secondary)
-                Button { frozen.toggle() } label: {
-                    Label(frozen ? "Unfreeze" : "Freeze", systemImage: frozen ? "play.fill" : "pause.fill")
-                        .font(.system(size: 16, weight: .semibold)).frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(frozen ? Theme.accent : Color.gray)
+            Button { frozen.toggle() } label: {
+                Label(frozen ? "Unfreeze" : "Freeze", systemImage: "snowflake")
+                    .font(.system(size: 15, weight: .semibold)).frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .foregroundStyle(frozen ? Color.white : Color.primary)
+                    .background(frozen ? Theme.accent : Theme.fill, in: Capsule())
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, 16)
         .padding(.bottom, 12)
     }
 

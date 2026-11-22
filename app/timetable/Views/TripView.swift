@@ -164,11 +164,9 @@ struct TripView: View {
                 if let stats = Self.stats(stops, path: model.path) {
                     Text(stats).font(.system(size: 15, weight: .medium)).monospacedDigit().padding(.top, 8)
                 }
-                // Last update: small and quiet
+                // How old the vehicle's position is: the same stopwatch and age as on the map
                 if started && !finished, let updated = model.vehicle?.updated {
-                    let age = max(0, Int(now.timeIntervalSince(updated)))
-                    Text(age < 60 ? tr("Updated \(age)s ago") : tr("Updated \(age / 60) min ago"))
-                        .font(.system(size: 12)).foregroundStyle(Theme.secondary).monospacedDigit().padding(.top, 4)
+                    HStack { Spacer(minLength: 0); RefreshedAge(updated: updated) }.padding(.top, 4)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

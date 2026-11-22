@@ -5,8 +5,48 @@ import type { LngLatBoundsLike } from 'maplibre-gl'
 import { Link, useNavigate } from 'react-router'
 import { LayersThree } from '@mynaui/icons-react'
 import { CloseIcon, LocationIcon } from './Icons'
+
+/** The bottom card for a vehicle or a stop: title row, info line, status line, and a full-width button. Same layout on iOS. */
+function CardLayout({
+  onClose,
+  badge,
+  title,
+  info,
+  status,
+  action,
+}: {
+  onClose: () => void
+  badge?: ReactNode
+  title: string
+  info: string | null
+  status: ReactNode
+  action: { to: string; label: string } | null
+}) {
+  const t = useT()
+  return (
+    <SheetCard onClose={onClose}>
+      <button type="button" onClick={onClose} aria-label={t('card.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
+        <CloseIcon className="h-4 w-4" />
+      </button>
+      <div className="flex items-center gap-2 pr-16">
+        {badge}
+        <span className="truncate text-[17px] font-semibold">{title}</span>
+      </div>
+      {info && <p className="mt-1 truncate text-[15px] text-secondary">{info}</p>}
+      <div className="mt-1.5 flex min-h-[20px] items-center gap-2 text-[15px]">{status}</div>
+      {action && (
+        <Link to={action.to} className="mt-3 block w-full rounded-[14px] bg-accent py-[14px] text-center text-[17px] font-semibold text-white active:opacity-60">
+          {action.label}
+        </Link>
+      )}
+    </SheetCard>
+  )
+}
+
 import RouteBadge from './RouteBadge'
-import { gql, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, VEHICLES_QUERY, type NearbyStations, type VehiclePosition, type Vehicles } from '../lib/api'
+import { RefreshedAge } from './RefreshedAge'
+import { gql, MAP_STOPS_QUERY, ROUTE_LINES_QUERY, TRIP_QUERY, VEHICLES_QUERY, type NearbyStations, type RouteRef, type TripDetails, type TripStop, type VehiclePosition, type Vehicles } from '../lib/api'
+import { tripKey } from '../lib/prefetch'
 import { distance } from '../lib/geo'
 import { BADGES_ZOOM, groupIcon, GROUPS_ZOOM, STOPS_ZOOM, vehicleIcon } from '../lib/mapIcons'
 import { formatTime } from '../lib/time'
@@ -17,6 +57,7 @@ import LayersMenu from './LayersMenu'
 import { tappedMarker, useGeoJson, useGlMap, useMarkers, type GlMap, type HtmlMarker } from '../lib/glmap'
 import { useGeolocation } from '../lib/useGeolocation'
 import { vehicleName } from '../lib/vehicle'
+import { formatPlate } from '../lib/plate'
 import { useT } from '../lib/i18n'
 
 /**
@@ -63,8 +104,11 @@ export default function TransitMap({
   trip,
   bounds,
   onClose,
+  compact = false,
 }: {
   trip?: TripOverlay
+  /** A small, non-interactive preview of a trip: no cards, buttons or taps (the page wraps it to open the full map) */
+  compact?: boolean
   bounds?: LngLatBoundsLike
   /** Shows a ✕ (top right) that calls this */
   onClose?: () => void
@@ -72,32 +116,38 @@ export default function TransitMap({
   const t = useT()
   const location = useGeolocation()
   const container = useRef<HTMLDivElement>(null)
-  const map = useGlMap(container, bounds ? { bounds, padding: 48 } : { center: DEFAULT_CENTER, zoom: 15 })
+  const map = useGlMap(container, bounds ? { bounds, padding: compact ? 24 : 48, interactive: !compact } : { center: DEFAULT_CENTER, zoom: 15 })
   // With a trip: just that trip until "show everything"
   const [showAll, setShowAll] = useState(!trip)
   const [layers] = useMapLayers()
   const [layersOpen, setLayersOpen] = useState(false)
-  const [selectedTripStop, setSelectedTripStop] = useState<string | null>(null)
   const navigate = useNavigate()
   const [view, setView] = useState<View | null>(null)
+  // Which zoom band the map is in (0 groups off, 1 groups, 2 single stops). Follows the zoom live, and only changes when a threshold is crossed.
+  const [band, setBand] = useState(0)
   const [selectedStop, setSelectedStop] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
     if (!map) return
     setView(viewOf(map))
+    const bandOf = (z: number) => (z >= STOPS_ZOOM ? 2 : z >= GROUPS_ZOOM ? 1 : 0)
+    setBand(bandOf(map.getZoom()))
+    // Live zoom: the stop groups and single stops switch the moment the threshold is crossed, not when the gesture ends
+    const onZoom = () => setBand(bandOf(map.getZoom()))
+    map.on('zoom', onZoom)
     const onMove = () => setView(viewOf(map))
     // Tapping empty map clears the selection
     // Tapping empty map clears a selected stop; the vehicle card stays until its ✕
     const onClick = () => {
       if (tappedMarker()) return
       setSelectedStop(null)
-      setSelectedTripStop(null)
     }
     map.on('moveend', onMove)
     map.on('click', onClick)
     return () => {
       map.off('moveend', onMove)
+      map.off('zoom', onZoom)
       map.off('click', onClick)
     }
   }, [map])
@@ -108,7 +158,7 @@ export default function TransitMap({
 
   // Stop groups around the centre; radius covers the visible area (capped), rounded so small pans reuse the cache
   const zoom = view?.zoom ?? 0
-  const enabled = !!view && zoom >= GROUPS_ZOOM && showAll && layers.stops
+  const enabled = !!view && band >= 1 && showAll && layers.stops
   const round = (n: number) => Math.round(n * 500) / 500
   const center = view ? { lat: round(view.center.lat), lon: round(view.center.lon) } : { lat: 0, lon: 0 }
   // Farthest visible corner from the (rounded) centre, plus slack: a stop group's
@@ -187,7 +237,7 @@ export default function TransitMap({
   const groups = useMemo(() => (stations.data?.stationsByRadius ?? []).filter((s) => s.routes.length > 0), [stations.data])
 
   // Only the zoom thresholds matter for the icons, not the raw zoom (that would rebuild every icon on each zoom gesture)
-  const stopsZoom = zoom >= STOPS_ZOOM
+  const stopsZoom = band >= 2
   const badgesZoom = zoom >= BADGES_ZOOM
   // Markers only near the visible area (the query radius reaches well beyond the screen)
   const cull = useMemo(() => {
@@ -213,6 +263,7 @@ export default function TransitMap({
             key: `stop:${s.stopId}`,
             at: [s.lon!, s.lat!],
             ...groupIcon({ name: s.name ?? station.name, routes }, true, sel),
+            selected: sel,
             z: sel ? 1000 : 0,
             // The card only selects; the popup at the bottom is what opens the stop
             onClick: () => (setSelectedStop(s.stopId), setSelected(null)),
@@ -226,6 +277,7 @@ export default function TransitMap({
           at: [station.lon, station.lat],
           // First tap shows the card (or highlights it); tapping it again opens the stop
           ...groupIcon(station, badgesZoom || sel, sel),
+          selected: sel,
           z: sel ? 1000 : 0,
           onClick: () => (setSelectedStop(station.stationId), setSelected(null)),
         })
@@ -288,9 +340,10 @@ export default function TransitMap({
         key: `veh:${v.id}`,
         at: [v.longitude, v.latitude],
         ...vehicleIcon(v.trip?.route ?? null, v.bearing, zoom, selected === v.id),
+        selected: selected === v.id,
         z: selected === v.id ? 2000 : 500,
         // First tap: details card. Tap the same vehicle again: open its trip.
-        onClick: () => {
+        onClick: compact ? undefined : () => {
           if (selected === v.id && v.trip) navigate(tripUrl(v))
           else {
             setSelected(v.id)
@@ -298,7 +351,7 @@ export default function TransitMap({
           }
         },
       })),
-    [vehicles, zoom, selected, navigate],
+    [vehicles, zoom, selected, navigate, compact],
   )
 
   // The trip: its path as a line in the line's colour, its stops as dots with the time it gets there
@@ -318,30 +371,25 @@ export default function TransitMap({
   const tripStopMarkers = useMemo<HtmlMarker[]>(
     () =>
       (trip?.stops ?? []).map((s) => {
-        const sel = selectedTripStop === s.stopId
-        const dot = `<div style="position:absolute;left:-6px;top:-6px;width:12px;height:12px;box-sizing:border-box;border-radius:50%;background:#fff;border:3px solid ${s.strong ? '#111' : trip!.color}"></div>`
-        // Time label to the right of the dot, like a timetable on the map
+        const sel = selectedStop === s.stopId
+        // Same dot as the stops on the main map (in the line's colour; the stop you came from is dark), with the time instead of the platform's badges
+        const dot =
+          `<div style="position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%"></div>` +
+          `<div style="position:absolute;left:-7.5px;top:-7.5px;width:15px;height:15px;box-sizing:border-box;border-radius:50%;background:${s.strong ? '#111' : trip!.color};border:2px solid #fff;box-shadow:0 1px 2px rgb(0 0 0/.3)"></div>`
         // Coloured like the stop list (late red, early purple, on time green), live mark when it's realtime
         const live = s.status !== 'scheduled'
         const label = `<div style="position:absolute;left:10px;top:-9px;width:max-content;display:flex;align-items:center;gap:2px;font:600 11px/18px system-ui;padding:0 5px;border-radius:5px;background:rgb(255 255 255/.92);color:${statusCss[s.status] === 'inherit' ? '#111' : statusCss[s.status]};box-shadow:0 1px 2px rgb(0 0 0/.2)">${formatTime(s.time)}${live ? LIVE_ICON_HTML : ''}</div>`
-        const card = sel
-          ? `<div style="position:absolute;left:0;top:-14px;transform:translate(-50%,-100%);padding:6px 9px;background:#fff;border-radius:10px;border:2px solid ${trip!.color};box-shadow:0 4px 12px rgb(0 0 0/.3);white-space:nowrap;font:600 13px/16px system-ui;color:#111">${s.name.replace(/[<>&"]/g, '')}<div style="font:500 11px/14px system-ui;color:#555">${formatTime(s.time)}${trip!.headsign ? ` · ▸ ${trip!.headsign.replace(/[<>&"]/g, '')}` : ''}</div></div>`
-          : ''
         return {
           key: `tripstop:${s.stopId}:${s.time.getTime()}`,
           at: [s.lon, s.lat] as [number, number],
-          html: `<div style="opacity:${s.passed && !sel ? 0.5 : 1}">${dot}${label}${card}</div>`,
+          html: `<div style="opacity:${s.passed && !sel ? 0.5 : 1}">${dot}${label}</div>`,
+          selected: sel,
           z: sel ? 3000 : 800,
-          // First tap: name, time and direction. Tap again: open the stop at this trip's time.
-          onClick: () => {
-            if (sel) {
-              const at = new Date(s.time.getTime() - 60_000).toISOString()
-              navigate(`/stations/${encodeURIComponent(s.stationId ?? s.stopId)}?from=${encodeURIComponent(s.stopId)}&trip=${encodeURIComponent(trip!.tripId)}&at=${encodeURIComponent(at)}`)
-            } else setSelectedTripStop(s.stopId)
-          },
+          // Like any stop: the tap selects it, the card at the bottom opens it
+          onClick: compact ? undefined : () => (setSelectedStop(s.stopId), setSelected(null)),
         }
       }),
-    [trip, selectedTripStop, navigate],
+    [trip, selectedStop, compact],
   )
   const allMarkers = useMemo(() => [...stopMarkers, ...tripStopMarkers, ...vehicleMarkers, ...me], [stopMarkers, tripStopMarkers, vehicleMarkers, me])
   useMarkers(map, allMarkers)
@@ -371,20 +419,33 @@ export default function TransitMap({
   // The tapped stop (a whole group when zoomed out, a single platform when zoomed in), for its bottom card
   const selectedStopInfo = useMemo(() => {
     if (!selectedStop) return null
+    // A stop of the trip on show: its time (coloured like the stop list) and where the trip is headed
+    const ts = trip?.stops.find((x) => x.stopId === selectedStop)
+    if (ts) {
+      const at = new Date(ts.time.getTime() - 60_000).toISOString()
+      return {
+        name: ts.name,
+        towards: trip!.headsign ? [trip!.headsign] : [],
+        routes: [] as RouteRef[],
+        time: ts,
+        to: `/stations/${encodeURIComponent(ts.stationId ?? ts.stopId)}?from=${encodeURIComponent(ts.stopId)}&trip=${encodeURIComponent(trip!.tripId)}&at=${encodeURIComponent(at)}`,
+      }
+    }
     for (const st of groups) {
       if (st.stationId === selectedStop)
-        return { name: st.name, towards: [] as string[], routes: st.routes.filter(Boolean), to: `/stations/${encodeURIComponent(st.stationId)}` }
+        return { name: st.name, towards: [] as string[], routes: st.routes.filter(Boolean), time: null, to: `/stations/${encodeURIComponent(st.stationId)}` }
       const p = st.stops?.find((x) => x.stopId === selectedStop)
       if (p)
         return {
           name: p.name ?? st.name,
           towards: p.headsigns ?? [],
+          time: null,
           routes: (p.routes ?? []).filter((r): r is NonNullable<typeof r> => !!r),
           to: `/stations/${encodeURIComponent(st.stationId)}?from=${encodeURIComponent(p.stopId)}`,
         }
     }
     return null
-  }, [selectedStop, groups])
+  }, [selectedStop, groups, trip])
 
   return (
     <div className="relative h-full w-full">
@@ -417,7 +478,7 @@ export default function TransitMap({
         </button>
       )}
       {layersOpen && showAll && <LayersMenu onClose={() => setLayersOpen(false)} top={onClose ? 'calc(env(safe-area-inset-top) + 7.25rem)' : '3.75rem'} />}
-      {trip && (
+      {trip && !compact && (
         <button
           type="button"
           onClick={() => setShowAll((v) => !v)}
@@ -429,27 +490,32 @@ export default function TransitMap({
           {showAll ? t('map.onlyThisTrip') : t('map.showEverything')}
         </button>
       )}
-      {selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
-      {selectedStopInfo && !selectedVehicle && (
+      {!compact && selectedVehicle && <VehicleCard v={selectedVehicle} onClose={() => setSelected(null)} />}
+      {!compact && selectedStopInfo && !selectedVehicle && (
         // Same bottom card as for a vehicle: name, which way, its lines, and a way in
-        <SheetCard onClose={() => setSelectedStop(null)}>
-          <button type="button" onClick={() => setSelectedStop(null)} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
-            <CloseIcon className="h-4 w-4" />
-          </button>
-          <p className="truncate text-[17px] font-semibold">{selectedStopInfo.name}</p>
-          {selectedStopInfo.towards.length > 0 && <p className="truncate text-[15px] text-secondary">{t('common.towards', { to: selectedStopInfo.towards.join(' / ') })}</p>}
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {selectedStopInfo.routes.slice(0, 12).map((r) => (
-              <RouteBadge key={r.routeId} route={r} />
-            ))}
-            {selectedStopInfo.routes.length > 12 && <span className="text-[13px] text-secondary">+{selectedStopInfo.routes.length - 12}</span>}
-          </div>
-          <Link to={selectedStopInfo.to} className="mt-2 inline-block text-[15px] font-medium text-accent active:opacity-60">
-            {t('map.openStop')}
-          </Link>
-        </SheetCard>
+        <CardLayout
+          onClose={() => setSelectedStop(null)}
+          title={selectedStopInfo.name}
+          info={selectedStopInfo.towards.length > 0 ? t('common.towards', { to: selectedStopInfo.towards.join(' / ') }) : null}
+          status={
+            selectedStopInfo.time ? (
+              <span className="flex items-center gap-1 font-semibold tabular-nums" style={{ color: statusCss[selectedStopInfo.time.status] === 'inherit' ? undefined : statusCss[selectedStopInfo.time.status] }}>
+                {formatTime(selectedStopInfo.time.time)}
+                {selectedStopInfo.time.status !== 'scheduled' && <span dangerouslySetInnerHTML={{ __html: LIVE_ICON_HTML }} />}
+              </span>
+            ) : (
+            <div className="flex flex-wrap gap-1">
+              {selectedStopInfo.routes.slice(0, 12).map((r) => (
+                <RouteBadge key={r.routeId} route={r} />
+              ))}
+              {selectedStopInfo.routes.length > 12 && <span className="text-[13px] text-secondary">+{selectedStopInfo.routes.length - 12}</span>}
+            </div>
+            )
+          }
+          action={{ to: selectedStopInfo.to, label: t('card.departures') }}
+        />
       )}
-      <button
+      {!compact && <button
         type="button"
         onClick={location.request}
         aria-label={t('map.showMyLocation')}
@@ -458,7 +524,7 @@ export default function TransitMap({
         }`}
       >
         <LocationIcon filled={!!location.coords} className={`h-5 w-5 ${location.loading ? 'animate-pulse' : ''}`} />
-      </button>
+      </button>}
     </div>
   )
 }
@@ -469,7 +535,7 @@ function SheetCard({ onClose, children }: { onClose: () => void; children: React
   const start = useRef<number | null>(null)
   return (
     <div
-      className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md touch-pan-x rounded-2xl bg-surface p-gutter pr-12 shadow-xl"
+      className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 mx-auto max-w-md touch-pan-x rounded-2xl bg-surface p-gutter shadow-xl"
       style={{ transform: dy ? `translateY(${dy}px)` : undefined, transition: start.current == null ? 'transform 180ms ease-out' : undefined, opacity: dy ? Math.max(0.3, 1 - dy / 200) : undefined }}
       onPointerDown={(e) => {
         if ((e.target as HTMLElement).closest('a,button')) return
@@ -496,35 +562,60 @@ function SheetCard({ onClose, children }: { onClose: () => void; children: React
 }
 
 /** Details of the tapped vehicle, as an app card over the map (tap the vehicle again, or the card, to open its trip). */
+/** Delay at the last stop with realtime data the vehicle has reached (the same rule as the trip page). */
+function reachedDelay(stops: TripStop[], now: number): number | null {
+  let delay: number | null = null
+  for (const s of stops) {
+    const at = Date.parse(s.departure) || Date.parse(s.arrival)
+    if (!Number.isFinite(at) || at > now) break
+    if (s.realtime) delay = s.departureDelay ?? s.arrivalDelay
+  }
+  return delay
+}
+
 function VehicleCard({ v, onClose }: { v: VehiclePosition; onClose: () => void }) {
   const t = useT()
   const age = v.timestamp ? Math.max(0, Math.round((Date.now() - new Date(v.timestamp).getTime()) / 1000)) : null
   const name = vehicleName(v.vehicleModel)
+  // The vehicle's trip, for its delay (refreshed with the vehicle)
+  const tripId = v.trip?.tripId ?? null
+  const d = v.tripStartDate
+  const serviceDate = d && /^\d{8}$/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : undefined
+  const trip = useQuery({
+    queryKey: tripKey(tripId ?? '', serviceDate),
+    queryFn: () => gql<TripDetails>(TRIP_QUERY, { id: tripId, serviceDate }),
+    enabled: !!tripId,
+    staleTime: 10_000,
+    refetchInterval: 10_000,
+  })
+  const delay = trip.data?.trip ? reachedDelay(trip.data.trip.stops, Date.now()) : null
+  const delayMinutes = delay != null ? Math.round(Math.abs(delay) / 60) : null
+  const linked = v.trip ? tripUrl(v) : null
   return (
-    <SheetCard onClose={onClose}>
-      <button type="button" onClick={onClose} aria-label={t('map.close')} className="absolute top-3 right-3 rounded-full bg-fill p-1.5 active:opacity-60">
-        <CloseIcon className="h-4 w-4" />
-      </button>
-      <div className="flex items-center gap-2">
-        {v.trip?.route && <RouteBadge route={v.trip.route} />}
-        <span className="truncate text-[17px] font-semibold">{v.trip?.headsign ?? t('map.unknownDestination')}</span>
-      </div>
-      {/* What it is, then its plate and how fresh the position is */}
-      {name && <p className="mt-1 text-[15px] font-medium">{name}</p>}
-      <p className="text-[13px] text-secondary">
-        {[
-          v.vehicleLicensePlate,
-          age != null ? (age < 60 ? t('trip.positionSecs', { n: age }) : t('trip.positionMins', { n: Math.round(age / 60) })) : t('trip.positionUnknown'),
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-      </p>
-      {v.trip && (
-        <Link to={tripUrl(v)} className="mt-1.5 inline-block text-[15px] font-medium text-accent active:opacity-60">
-          {t('map.openTrip')}
-        </Link>
-      )}
-    </SheetCard>
+    <CardLayout
+      onClose={onClose}
+      badge={v.trip?.route ? <RouteBadge route={v.trip.route} /> : null}
+      title={v.trip?.headsign ?? t('map.unknownDestination')}
+      info={[name, formatPlate(v.vehicleLicensePlate)].filter(Boolean).join(' · ') || null}
+      status={
+        <>
+          {delayMinutes != null ? (
+            delayMinutes === 0 ? (
+              <span className="font-semibold text-live">{t('trip.onTime')}</span>
+            ) : delay! > 0 ? (
+              <span className="font-semibold text-late">{t('trip.late', { n: delayMinutes })}</span>
+            ) : (
+              <span className="font-semibold text-early">{t('trip.early', { n: delayMinutes })}</span>
+            )
+          ) : (
+            <span />
+          )}
+          {/* Stopwatch and how long ago the position was refreshed, on the right */}
+          {age != null ? <RefreshedAge seconds={age} /> : <span className="ml-auto text-secondary">{t('trip.positionUnknown')}</span>}
+        </>
+      }
+      action={linked ? { to: linked, label: t('card.openTrip') } : null}
+    />
   )
 }
 

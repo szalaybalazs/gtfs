@@ -1,8 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
-    " " : {},
+    "" : {
+
+    },
+    " " : {
+
+    },
     "-%llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20,20 +24,78 @@
         }
       }
     },
-    "–" : {},
-    "…" : {},
-    "'" : {},
-    "%@ %@" : {
+    "–" : {
+
+    },
+    "…" : {
+
+    },
+    "'" : {
+
+    },
+    "%lld" : {
       "localizations" : {
-        "en" : {
+        "hu" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@ %2$@"
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
           }
         }
       }
     },
-    "%lld" : {},
+    "%lld earlier stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld earlier stop"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld earlier stops"
+                }
+              }
+            }
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld korábbi megálló"
+          }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paragem anterior"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paragens anteriores"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld lines" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -93,7 +155,45 @@
         }
       }
     },
-    "%lld m" : {},
+    "%lld m" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld m"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld m"
+          }
+        }
+      }
+    },
+    "%lld min · %@ · %lld stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min · %@ · %lld stops"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld perc · %@ · %lld megálló"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min · %@ · %lld paragens"
+          }
+        }
+      }
+    },
     "%lld min · %lld stops" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -267,7 +367,9 @@
         }
       }
     },
-    "%lld'" : {},
+    "%lld'" : {
+
+    },
     "%llds" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -285,7 +387,22 @@
         }
       }
     },
-    "+%lld" : {},
+    "+%lld" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%lld"
+          }
+        }
+      }
+    },
     "⋯ Earlier" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -616,7 +733,22 @@
         }
       }
     },
-    "Clear" : {},
+    "Clear" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törlés"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar"
+          }
+        }
+      }
+    },
     "Close" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -635,6 +767,7 @@
       }
     },
     "Closest end of the line, %@ away" : {
+      "extractionState" : "stale",
       "localizations" : {
         "hu" : {
           "stringUnit" : {
@@ -743,6 +876,22 @@
         }
       }
     },
+    "Couldn't load nearby stops." : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nem sikerült betölteni a közeli megállókat."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível carregar as paragens próximas."
+          }
+        }
+      }
+    },
     "Dark" : {
       "localizations" : {
         "hu" : {
@@ -789,6 +938,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transporte a pedido (paragem mediante pedido)"
+          }
+        }
+      }
+    },
+    "departing at %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "indul: %@"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "parte às %@"
+          }
+        }
+      }
+    },
+    "departing in %lld min" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "indul %lld perc múlva"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "parte daqui a %lld min"
           }
         }
       }
@@ -878,8 +1061,31 @@
         }
       }
     },
+    "Edit favourites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kedvencek szerkesztése"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar favoritos"
+          }
+        }
+      }
+    },
     "EVENT" : {
       "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ESEMÉNY"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -956,6 +1162,22 @@
         }
       }
     },
+    "Freeze" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befagyasztás"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congelar"
+          }
+        }
+      }
+    },
     "from %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1003,6 +1225,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entrada pela porta da frente"
+          }
+        }
+      }
+    },
+    "FROZEN" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BEFAGYASZTVA"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CONGELADO"
+          }
+        }
+      }
+    },
+    "Group by" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Csoportosítás"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrupar por"
           }
         }
       }
@@ -1070,6 +1325,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Claro"
+          }
+        }
+      }
+    },
+    "Line" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vonal"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha"
           }
         }
       }
@@ -1148,6 +1419,22 @@
         }
       }
     },
+    "Location is off. Allow it in Settings to see what leaves near you." : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A helymeghatározás ki van kapcsolva. Engedélyezd a Beállításokban, hogy lásd, mi indul a közeledből."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A localização está desativada. Permita o acesso nas Definições para ver o que parte perto de si."
+          }
+        }
+      }
+    },
     "Location off" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1216,6 +1503,22 @@
         }
       }
     },
+    "Menu" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu"
+          }
+        }
+      }
+    },
     "Metro" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1223,6 +1526,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Metró"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metro"
           }
         }
       }
@@ -1234,6 +1543,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "perc"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
           }
         }
       }
@@ -1285,6 +1600,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ícones Mynaui"
+          }
+        }
+      }
+    },
+    "Nearby" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Körülöttem"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próximas"
           }
         }
       }
@@ -1389,6 +1720,23 @@
         }
       }
     },
+    "No compass" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs iránytű"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem bússola"
+          }
+        }
+      }
+    },
     "No departures" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1474,6 +1822,38 @@
         }
       }
     },
+    "No stops in that direction. Widen the cone or turn it." : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs megálló abban az irányban. Szélesítsd a kúpot, vagy fordítsd el."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem paragens nessa direção. Alargue o cone ou rode-o."
+          }
+        }
+      }
+    },
+    "No stops with departures within %lld m." : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincs olyan megálló %lld m-en belül, ahonnan járat indul."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem paragens com partidas num raio de %lld m."
+          }
+        }
+      }
+    },
     "No stops within %lld m." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1542,7 +1922,22 @@
         }
       }
     },
-    "OK" : {},
+    "OK" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
     "On time" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1556,6 +1951,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A horas"
+          }
+        }
+      }
+    },
+    "One list in time order" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy lista időrendben"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma lista por ordem cronológica"
+          }
+        }
+      }
+    },
+    "One row per line and direction" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy sor vonalanként és irányonként"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma entrada por linha e sentido"
+          }
+        }
+      }
+    },
+    "One row per line, its next times" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egy sor vonalanként, a következő időpontokkal"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma entrada por linha, com as próximas horas"
           }
         }
       }
@@ -1607,6 +2050,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrir no navegador"
+          }
+        }
+      }
+    },
+    "Open trip" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Járat megnyitása"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir viagem"
           }
         }
       }
@@ -1713,6 +2172,22 @@
         }
       }
     },
+    "Pick two favourites. Left empty, the first two in your list are used." : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Válassz két kedvencet. Ha üresen hagyod, a listád első kettőjét használjuk."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha dois favoritos. Se ficar vazio, são usados os dois primeiros da lista."
+          }
+        }
+      }
+    },
     "Planned" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1749,6 +2224,39 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agendado"
+          }
+        }
+      }
+    },
+    "Point at a stop" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irányítsd egy megálló felé"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aponte para uma paragem"
+          }
+        }
+      }
+    },
+    "POINTING" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IRÁNYÍTÁS"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A APONTAR"
           }
         }
       }
@@ -1817,6 +2325,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tentar novamente"
+          }
+        }
+      }
+    },
+    "Route" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vonal"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Percurso"
           }
         }
       }
@@ -1970,6 +2494,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "seg"
+          }
+        }
+      }
+    },
+    "Second favourite" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Második kedvenc"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segundo favorito"
           }
         }
       }
@@ -2195,6 +2736,22 @@
         }
       }
     },
+    "Stop pointing" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irányítás leállítása"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar de apontar"
+          }
+        }
+      }
+    },
     "Stops" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2263,7 +2820,9 @@
         }
       }
     },
-    "Tab bar icons: Mynaui Icons, MIT License, Copyright (c) Praveen Juge.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." : {},
+    "Tab bar icons: Mynaui Icons, MIT License, Copyright (c) Praveen Juge.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." : {
+
+    },
     "Tap the star on a line or a stop to pin it here." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2396,6 +2955,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Esta viagem já não está disponível."
+          }
+        }
+      }
+    },
+    "Time" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idő"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hora"
           }
         }
       }
@@ -2583,6 +3158,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Troleicarro"
+          }
+        }
+      }
+    },
+    "Unfreeze" : {
+      "localizations" : {
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feloldás"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descongelar"
           }
         }
       }
@@ -2816,110 +3407,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A SUA VIAGEM"
-          }
-        }
-      }
-    },
-    "%lld min · %@ · %lld stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min · %@ · %lld stops"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld perc · %@ · %lld megálló"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min · %@ · %lld paragens"
-          }
-        }
-      }
-    },
-    "%lld earlier stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld earlier stop"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld earlier stops"
-                }
-              }
-            }
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld korábbi megálló"
-          }
-        },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragem anterior"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragens anteriores"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "Edit favourites" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kedvencek szerkesztése"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editar favoritos"
-          }
-        }
-      }
-    },
-    "Second favourite" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Második kedvenc"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segundo favorito"
           }
         }
       }

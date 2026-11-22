@@ -54,7 +54,9 @@ export type Icon = Pick<HtmlMarker, 'html' | 'size' | 'anchor'>
  */
 export function groupIcon(station: Pick<Station, 'name' | 'routes'>, withBadges: boolean, selected = false): Icon {
   const c = mainCategory(station.routes)
-  const d = selected ? 20 : 15
+  // Selection is a scale on the marker (glmap), not a different size, so the marker isn't rebuilt
+  const d = 15
+  void selected
   return {
     // Zoomed out the badges are left off: just the dot
     html:
@@ -84,7 +86,7 @@ export function vehicleIcon(route: RouteRef | null, bearing: number | null, zoom
   return {
     html:
       // Selected: a soft halo in the line's own colour and slightly bigger (scaled, so it stays on the GPU)
-      `<div style="position:relative;width:${size}px;height:${size}px;${selected ? 'transform:scale(1.15)' : ''}">${arrow}` +
+      `<div style="position:relative;width:${size}px;height:${size}px;">${arrow}` +
       `<div style="position:absolute;inset:0;border-radius:50%;background:${bg};color:${fg};border:2px solid #fff;box-shadow:${selected ? `0 0 0 7px ${bg}40,0 2px 6px rgb(0 0 0/.35)` : '0 1px 4px rgb(0 0 0/.4)'};display:flex;align-items:center;justify-content:center;font:700 ${label.length > 3 ? 10 : 12}px system-ui">${label}</div></div>`,
     size: [size, size],
   }

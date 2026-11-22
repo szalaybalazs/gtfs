@@ -54,55 +54,6 @@ struct TripDelayText: View {
     }
 }
 
-/// The trip drawn on a map: path in the route colour, stops as dots, the vehicle as the line badge.
-struct TripMapContent: MapContent {
-    let trip: Trip
-    var vehicle: TripVehicle?
-    let path: [CLLocationCoordinate2D]
-    let color: Color
-    let big: Bool
-    /// A stop or the vehicle was tapped.
-    var onSelect: (MapSelection) -> Void = { _ in }
-
-    var body: some MapContent {
-        if path.count > 1 {
-            MapPolyline(coordinates: path).stroke(color, lineWidth: big ? 5 : 4)
-        }
-        // Stop dots are annotations, so they stay the same size on screen however far you zoom
-        ForEach(trip.stops.filter { $0.lat != nil && $0.lon != nil }) { s in
-            Annotation("", coordinate: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), anchor: .center) {
-                Circle().fill(Color.white).frame(width: big ? 10 : 7, height: big ? 10 : 7)
-                    .overlay(Circle().stroke(color, lineWidth: 2))
-                    .padding(8).contentShape(Circle())
-                    .onTapGesture { onSelect(.station(s.stationId ?? s.stopId, stopId: s.stopId)) }
-            }
-        }
-        ForEach(trip.stops.filter { big && $0.lat != nil && $0.lon != nil }) { s in
-            Annotation("", coordinate: CLLocationCoordinate2D(latitude: s.lat!, longitude: s.lon!), anchor: .top) {
-                VStack(spacing: 2) {
-                    Color.clear.frame(width: 1, height: 8)
-                    if big {
-                        let last = s.stopSequence == trip.stops.last?.stopSequence
-                        HStack(spacing: 3) {
-                            Text(TimeFormat.clock(last ? s.arrival : s.departure)).font(.system(size: 11, weight: .semibold)).monospacedDigit()
-                            if s.realtime { LiveIcon() }
-                        }
-                        .fixedSize()
-                        .padding(.horizontal, 5).padding(.vertical, 2)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 6))
-                    }
-                }
-            }
-        }
-        if let v = vehicle, let lat = v.latitude, let lon = v.longitude {
-            Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
-                VehicleDisc(line: trip.route, bearing: v.bearing)
-                    .onTapGesture { onSelect(.vehicle(trip.tripId)) }
-            }
-        }
-    }
-}
-
 private func tripRegion(_ trip: Trip, vehicle: TripVehicle?, path: [CLLocationCoordinate2D]) -> MKCoordinateRegion? {
     var pts = path
     pts += trip.stops.compactMap { s in s.lat.flatMap { la in s.lon.map { CLLocationCoordinate2D(latitude: la, longitude: $0) } } }
@@ -129,20 +80,27 @@ struct TripMiniMap: View {
 
     var body: some View {
         if let region = tripRegion(trip, vehicle: vehicle, path: path) {
-            Map(initialPosition: .region(region), interactionModes: []) {
-                TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: false) { picked = $0; full = true }
+            TripKitMap(trip: trip, vehicle: vehicle, path: path, color: color, big: false, region: region, interactive: false) {
+                picked = $0; full = true
+            } onMapTap: {
+                full = true
             }
-            .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
             .frame(height: 180)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(Color.clear.contentShape(Rectangle()).onTapGesture { full = true })
             .accessibilityLabel(tr("Trip map"))
             .accessibilityAddTraits(.isButton)
-            .fullScreenCover(isPresented: $full) {
+            .sheet(isPresented: $full) {
                 NavigationStack {
                     TripFullMap(trip: trip, vehicle: vehicle, path: path, color: color, region: region, initial: picked)
-                        .transitDestinations().toolbar(.hidden, for: .navigationBar)
+                        .transitDestinations()
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button(tr("Close")) { full = false }
+                            }
+                        }
                 }
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
             }
         }
     }
@@ -155,24 +113,13 @@ private struct TripFullMap: View {
     let color: Color
     let region: MKCoordinateRegion
     @State var initial: MapSelection?
-    @Environment(\.dismiss) private var dismiss
     @State private var selection: MapSelection?
 
     var body: some View {
-        Map(initialPosition: .region(region)) {
-            TripMapContent(trip: trip, vehicle: vehicle, path: path, color: color, big: true) { selection = $0 }
-        }
-        .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
-        .onAppear { selection = initial }
-        .mapCardSheet(selection: $selection) { card($0) }
-        .overlay(alignment: .topTrailing) {
-            Button { dismiss() } label: {
-                Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.accent)
-                    .frame(width: 44, height: 44).background(.regularMaterial, in: Circle())
-            }
-            .accessibilityLabel(tr("Close"))
-            .padding(12)
-        }
+        TripKitMap(trip: trip, vehicle: vehicle, path: path, color: color, big: true, region: region, interactive: true, selection: selection) { selection = $0 }
+            .ignoresSafeArea(edges: .bottom)
+            .onAppear { selection = initial }
+            .mapCardSheet(selection: $selection) { sel, _ in card(sel) }
     }
 
     @ViewBuilder private func card(_ selection: MapSelection) -> some View {

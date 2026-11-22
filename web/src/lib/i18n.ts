@@ -317,6 +317,10 @@ const en = {
   'map.openFullScreen': 'Open the map full screen',
   'map.tapToExplore': 'Tap to explore',
   'map.close': 'Close map',
+  'map.refreshed': 'Frissítve',
+  'card.close': 'Close',
+  'card.openTrip': 'Open trip',
+  'card.departures': 'Departures',
 } satisfies Record<string, Message>
 
 export type MessageKey = keyof typeof en
@@ -568,8 +572,8 @@ const hu: Record<MessageKey, Message> = {
   'trip.vehicle': 'Jármű',
   'trip.number': 'Rendszám: {n}',
   'trip.nextStop': 'Következő megálló:',
-  'trip.positionSecs': 'Pozíció frissítve {n} s ezelőtt',
-  'trip.positionMins': 'Pozíció frissítve {n} perce',
+  'trip.positionSecs': 'Frissítve {n}s ezelőtt',
+  'trip.positionMins': 'Frissítve {n} perccel ezelőtt',
   'trip.positionUnknown': 'A pozíció ideje ismeretlen',
   'trip.minutes': '{n} perc',
   'trip.vehicleHere': 'Itt jár a jármű',
@@ -590,6 +594,10 @@ const hu: Record<MessageKey, Message> = {
   'map.openFullScreen': 'Térkép teljes képernyőn',
   'map.tapToExplore': 'Koppints a nagyításhoz',
   'map.close': 'Térkép bezárása',
+  'map.refreshed': 'Frissítve',
+  'card.close': 'Bezárás',
+  'card.openTrip': 'Járat megnyitása',
+  'card.departures': 'Indulások',
 }
 
 const CATALOGS: Record<Locale, Record<MessageKey, Message>> = { en, hu, pt }

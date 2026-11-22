@@ -11,7 +11,7 @@ import MapKit
 
 
 /// Layers, like the web's layers card: vehicles, stops, and which kinds of line to show.
-private struct MapLayers {
+private struct MapLayers: Equatable {
     var vehicles = true
     var lines = false
     var stops = true
@@ -38,33 +38,46 @@ private struct StopMarker: Identifiable, Hashable, Sendable {
 struct MapView: View {
     private static let center = CLLocationCoordinate2D(latitude: 47.5073, longitude: 19.0236) // Széll Kálmán tér
 
+    /// Opens a trip or stop from a card in the tab's stack (full-screen), not inside the sheet.
+    var openPage: CardOpen = nil
     @State private var model = MapViewModel()
-    @State private var position: MapCameraPosition = .region(MKCoordinateRegion(center: MapView.center, span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)))
+    @State private var handle = MapHandle()
     @State private var region = MKCoordinateRegion(center: MapView.center, span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012))
     @State private var layers = MapLayers()
     @State private var selection: MapSelection?
-    @Namespace private var mapScope
-    /// Stops inside the visible area (plus a margin), capped; computed off the main thread when the view settles.
-    @State private var visibleStops: [StopMarker] = []
+    /// Stops inside the visible area (plus a margin), capped, for both modes; computed off the main thread when the view settles.
+    @State private var groupStops: [StopMarker] = []
+    @State private var platformStops: [StopMarker] = []
+    /// Platforms or groups, switched the instant the zoom crosses the threshold (during the gesture).
+    @State private var platformMode = false
     /// Lines in view, thinned to the zoom: drawing every point of every line exhausts Metal buffers and crashes MapKit.
     @State private var visibleLines: [LineFeature] = []
+    /// What the map is given, derived when its sources change (not in body, which runs on every selection).
+    @State private var lineItems: [MapLine] = []
+    @State private var vehicleItems: [MapVehicle] = []
     private static let maxStops = 150
-    /// Groups spread into platforms (and fold back) over 0.3 s: progress 0...1, the platforms that are folding away.
-    @State private var morphStart: Foundation.Date?
-    @State private var morphT = 1.0
-    @State private var ghosts: [StopMarker] = []
-    private let morphTick = Timer.publish(every: 1.0 / 30, on: .main, in: .common).autoconnect()
-    private static let morphSeconds = 0.3
-
     private var span: Double { region.span.latitudeDelta }
     /// Group markers from here, single platforms when closer still (web: GROUPS_ZOOM / STOPS_ZOOM).
-    private var platformsZoom: Bool { span < 0.004 }
+    private static let platformSpan = 0.004
     private var showVehicles: Bool { layers.vehicles && span < 0.25 }
-
-    private var followed: CLLocationCoordinate2D? {
-        guard case .vehicle(let id) = selection else { return nil }
-        return model.vehicles.first { $0.id == id }?.coordinate
+    /// Re-work out the visible lines when the view, the line data or the layer changes.
+    private var linesKey: String {
+        "\(region.center.latitude)|\(region.center.longitude)|\(span)|\(model.lines.count)|\(layers.lines)"
     }
+    /// Re-fetch vehicles when the view moves (coarsely) or the layer toggles.
+    private var vehiclesKey: String {
+        let lat = Int(region.center.latitude * 1000), lon = Int(region.center.longitude * 1000)
+        let zoom = Int(span * 100 * 10)
+        return "\(lat)|\(lon)|\(zoom)|\(showVehicles)"
+    }
+    /// Re-fetch stations when the view moves to a new area or crosses the platform zoom.
+    private var stationsKey: String {
+        let lat = Int(region.center.latitude * 2000), lon = Int(region.center.longitude * 2000)
+        return "\(lat)|\(lon)|\(span < MapView.platformSpan)"
+    }
+
+    private var vehicleShape: String { "\(showVehicles)|\(span >= 0.02)" }
+    private var stopsKey: String { "\(region.center.latitude)|\(region.center.longitude)|\(span)|\(model.stations.count)" }
 
     private var visibleVehicles: [Vehicle] {
         Array(model.vehicles.filter { v in
@@ -74,57 +87,56 @@ struct MapView: View {
     }
 
     var body: some View {
+        withLoaders(withDerivedData(core))
+    }
+
+    private var core: some View {
         ZStack(alignment: .topTrailing) {
-            Map(position: $position, scope: mapScope) {
-                linesContent
-                userContent
-                stopsContent
-                vehiclesContent
-            }
-            .mapStyle(.standard(elevation: .flat, emphasis: .muted, pointsOfInterest: .excludingAll, showsTraffic: false))
-            .onMapCameraChange(frequency: .onEnd) { region = $0.region }
-            .onReceive(morphTick) { date in
-                guard let start = morphStart else { return }
-                let t = min(1, date.timeIntervalSince(start) / MapView.morphSeconds)
-                morphT = t
-                if t >= 1 { morphStart = nil; ghosts = [] }
-            }
-            .onChange(of: platformsZoom) { _, expanding in
-                ghosts = expanding ? [] : visibleStops.filter { $0.stopId != nil }
-                morphT = 0; morphStart = Foundation.Date()
-            }
-            .mapControls { MapScaleView() }
-            // A highlighted vehicle keeps the map centred on it as it moves
-            .onChange(of: followed.map { [$0.latitude, $0.longitude] }) { _, p in
-                guard let p else { return }
-                let c = CLLocationCoordinate2D(latitude: p[0], longitude: p[1])
-                position = .region(MKCoordinateRegion(center: c, span: region.span))
-            }
+            AppMapView(initialRegion: region, lines: lineItems, stops: mapStops, vehicles: vehicleItems,
+                       selectedVehicleId: { if case .vehicle(let id) = selection { id } else { nil } }(),
+                       showsUserLocation: true, showsScale: true, handle: handle,
+                       onRegionChange: { region = $0 },
+                       platformSpan: Self.platformSpan, onPlatformZoom: { platformMode = $0 },
+                       onTapStop: { selection = $0.selection },
+                       onTapVehicle: { selection = $0.selection })
+                // Only under the top: extending the map under the tab bar hid the tab bar's background
+                .ignoresSafeArea(edges: .top)
 
             VStack(spacing: 10) {
                 VStack(spacing: 0) {
                     layersMenu
                     Divider().frame(width: 36)
-                    MapUserLocationButton(scope: mapScope)
-                        .labelStyle(.iconOnly).frame(width: 44, height: 44)
+                    MapLocationButton(handle: handle).frame(width: 44, height: 44)
                 }
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                MapCompass(scope: mapScope)
+                MapCompassButton(handle: handle).frame(width: 44, height: 44)
             }
             .padding(.trailing, 12).padding(.top, 8)
         }
-        .mapScope(mapScope)
         // An overlay, not a safe-area inset: an inset resizes the map, which made it jump when a card opened or closed
-        .mapCardSheet(selection: $selection) { card(for: $0) }
+        .mapCardSheet(selection: $selection, open: openPage) { card(for: $0, open: $1) }
         .onChange(of: selection) { _, new in
             if case .vehicle(let id) = new { model.pinnedVehicleId = id } else { model.pinnedVehicleId = nil }
         }
         // The map fills the screen; no title bar
         .toolbar(.hidden, for: .navigationBar)
         .transitDestinations()
+    }
+
+    /// The map's inputs are rebuilt whenever their sources change, never in body (which runs on every selection).
+    private func withDerivedData<V: View>(_ v: V) -> some View {
+        v.onChange(of: model.vehicles) { _, _ in rebuildVehicles() }
+            .onChange(of: vehicleShape) { _, _ in rebuildVehicles() }
+            .onChange(of: layers.kinds) { _, _ in rebuildVehicles(); rebuildLines() }
+            .onChange(of: layers.lines) { _, _ in rebuildLines() }
+            .onAppear { rebuildVehicles() }
+    }
+
+    private func withLoaders<V: View>(_ v: V) -> some View {
+        v
         .task(id: layers.lines) { if layers.lines { await model.loadLines() } }
         // Vehicles: right away when the view settles (after a pan or zoom), then every 10 s while the layer is on
-        .task(id: "\(Int(region.center.latitude * 1000))|\(Int(region.center.longitude * 1000))|\(Int(span * 100 * 10))|\(showVehicles)") {
+        .task(id: vehiclesKey) {
             guard showVehicles else { return }
             try? await Task.sleep(nanoseconds: 200_000_000)
             guard !Task.isCancelled else { return }
@@ -139,129 +151,56 @@ struct MapView: View {
             }
         }
         // Stops are fetched whenever the view is close enough (whatever the layer switch says), so switching it on is instant
-        .task(id: "\(Int(region.center.latitude * 2000))|\(Int(region.center.longitude * 2000))|\(span < 0.004)") {
+        .task(id: stationsKey) {
             if span < 0.06 { await model.loadStations(region) }
         }
         // Debounced: the visible subset is worked out off the main thread once the view has settled
-        .task(id: "\(region.center.latitude)|\(region.center.longitude)|\(span)|\(model.lines.count)|\(layers.lines)") {
+        .task(id: linesKey) {
             try? await Task.sleep(nanoseconds: 150_000_000)
             guard !Task.isCancelled else { return }
-            guard layers.lines, span < 0.25 else { visibleLines = []; return }
+            guard layers.lines, span < 0.25 else { visibleLines = []; rebuildLines(); return }
             let lines = model.lines, region = region
             let out = await Task.detached { MapView.thinned(lines, region: region) }.value
-            if !Task.isCancelled { visibleLines = out }
+            if !Task.isCancelled { visibleLines = out; rebuildLines() }
         }
-        .task(id: "\(region.center.latitude)|\(region.center.longitude)|\(span)|\(model.stations.count)") {
-            try? await Task.sleep(nanoseconds: 30_000_000)
-            guard !Task.isCancelled else { return }
-            guard span < 0.06 else { visibleStops = []; return }
-            let stations = model.stations, region = region, platforms = platformsZoom
-            let markers = await Task.detached { MapView.stopMarkers(stations, region: region, platforms: platforms) }.value
-            if !Task.isCancelled { visibleStops = markers }
+        .task(id: stopsKey) {
+            guard span < 0.06 else { groupStops = []; platformStops = []; return }
+            let stations = model.stations, region = region
+            async let groups = Task.detached { MapView.stopMarkers(stations, region: region, platforms: false) }.value
+            async let platforms = Task.detached { MapView.stopMarkers(stations, region: region, platforms: true) }.value
+            let (g, p) = await (groups, platforms)
+            if !Task.isCancelled { groupStops = g; platformStops = p }
         }
     }
 
-    // MARK: Map content
+    // MARK: Map data (plain values for AppMapView)
 
     /// Every line in its own colour, under everything else; thinner when zoomed out, metro a bit bolder.
-    @MapContentBuilder private var linesContent: some MapContent {
-        if layers.lines && span < 0.25 {
-            let base: Double = span > 0.1 ? 1.2 : span > 0.03 ? 2 : 3
-            ForEach(visibleLines.filter { layers.kinds.contains($0.category) }) { l in
-                MapPolyline(coordinates: l.coordinates)
-                    .stroke(Color(hex: l.colorHex).opacity(0.85), lineWidth: l.category == .metro ? base + 1 : base)
-            }
+    /// Rebuilt only when lines, layers or the zoom change, never for a selection.
+    private func rebuildLines() {
+        guard layers.lines && span < 0.25 else { lineItems = []; return }
+        let base: Double = span > 0.1 ? 1.2 : span > 0.03 ? 2 : 3
+        lineItems = visibleLines.filter { layers.kinds.contains($0.category) }.map {
+            MapLine(id: "\($0.id)", coordinates: $0.coordinates, color: Color(hex: $0.colorHex).opacity(0.85), width: $0.category == .metro ? base + 1 : base)
         }
     }
 
-    @MapContentBuilder private var userContent: some MapContent {
-        UserAnnotation()
+    private func rebuildVehicles() {
+        guard showVehicles else { vehicleItems = []; return }
+        let compact = span >= 0.02
+        vehicleItems = visibleVehicles.map { MapVehicle(id: $0.id, coordinate: $0.coordinate, bearing: $0.bearing, line: $0.route, compact: compact) }
     }
 
-    /// Only hides or shows the precomputed markers, so toggling the layer costs nothing.
-    @MapContentBuilder private var stopsContent: some MapContent {
-        if layers.stops {
-            let e = 1 - pow(1 - morphT, 3) // ease out
-            ForEach(visibleStops) { m in
-                // Platforms spread out of their group's spot; groups fade in as the platforms fold back
-                let from: (Double, Double)? = m.stopId != nil && morphStart != nil ? m.homeLat.flatMap { la in m.homeLon.map { (la, $0) } } : nil
-                let at = from.map { CLLocationCoordinate2D(latitude: $0.0 + (m.latitude - $0.0) * e, longitude: $0.1 + (m.longitude - $0.1) * e) } ?? m.coordinate
-                Annotation("", coordinate: at, anchor: .center) {
-                    marker(m).opacity(morphStart != nil ? max(e, 0.01) : 1)
-                        .onTapGesture { selection = .station(m.stationId, stopId: m.stopId) }
-                }
-            }
-            // Platforms folding back into their group
-            ForEach(ghosts) { m in
-                let h = (m.homeLat ?? m.latitude, m.homeLon ?? m.longitude)
-                Annotation("", coordinate: CLLocationCoordinate2D(latitude: m.latitude + (h.0 - m.latitude) * e, longitude: m.longitude + (h.1 - m.longitude) * e), anchor: .center) {
-                    marker(m).opacity(max(1 - e, 0.01)).allowsHitTesting(false)
-                }
-            }
+    private var mapStops: [MapStop] {
+        guard layers.stops else { return [] }
+        return (platformMode ? platformStops : groupStops).map { m in
+            let sel = selection == .station(m.stationId, stopId: m.stopId)
+            // Zoomed in (and for every single platform): the first few line badges under the dot; further out, a plain dot
+            let badges = m.stopId != nil || span < 0.012 || sel
+            return MapStop(id: m.id, coordinate: m.coordinate, selection: .station(m.stationId, stopId: m.stopId),
+                           tint: stopPinTint(routes: m.routes, fallback: m.category.tint), dot: 10,
+                           routes: badges ? m.routes : [], selected: sel)
         }
-    }
-
-    @MapContentBuilder private var vehiclesContent: some MapContent {
-        if showVehicles {
-            ForEach(visibleVehicles) { v in
-                Annotation("", coordinate: v.coordinate) {
-                    VehicleDisc(line: v.route, bearing: v.bearing, selected: selection == .vehicle(v.id), compact: span >= 0.02)
-                        .onTapGesture { selection = .vehicle(v.id) }
-                }
-            }
-        }
-    }
-
-    // MARK: Markers
-
-    @ViewBuilder private func marker(_ m: StopMarker) -> some View {
-        let selected = selection == .station(m.stationId, stopId: m.stopId)
-        // Zoomed in (and for every single platform): a small dot with its first few line badges under it; the name is on the card once tapped.
-        // Further out: a plain pictogram dot
-        if m.stopId != nil || span < 0.012 || selected { stopCard(m, selected: selected) }
-        else { groupMarker(m.category, selected: selected) }
-    }
-
-    private func stopCard(_ m: StopMarker, selected: Bool) -> some View {
-        let tint = m.category.tint
-        return Circle().fill(tint).frame(width: selected ? 14 : 10, height: selected ? 14 : 10)
-            .overlay(Circle().stroke(Color.white, lineWidth: 2))
-            .overlay(alignment: .top) {
-                // Up to two rows of four badges, then "+N"
-                // Variants (56A, 56É…) are left out when the base line (56) is there too
-                let names = Set(m.routes.compactMap(\.shortName))
-                // Custom: with 4, 6 and 4-6 all here, just 4-6
-                let merged46 = names.contains("4") && names.contains("6") && names.contains("4-6")
-                let base = m.routes.filter { r in
-                    if merged46 && (r.shortName == "4" || r.shortName == "6") { return false }
-                    guard let n = r.shortName, let last = n.last, last.isLetter, n.count > 1 else { return true }
-                    let head = String(n.dropLast())
-                    return !(head.allSatisfy(\.isNumber) && names.contains(head))
-                }
-                let shown = Array(base.prefix(8))
-                VStack(spacing: 2) {
-                    let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1) // two even rows, or one
-                    ForEach(Array(stride(from: 0, to: shown.count, by: perRow)), id: \.self) { start in
-                        HStack(spacing: 2) {
-                            ForEach(shown[start..<min(start + perRow, shown.count)], id: \.routeId) { r in
-                                Text(r.shortName ?? "").font(.system(size: 10, weight: .bold)).lineLimit(1).fixedSize()
-                                    .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
-                                    .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
-                                    .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
-                            }
-                            // More lines than fit: a grey badge with an ellipsis instead of a count
-                            if start + perRow >= shown.count && base.count > 8 {
-                                Text("…").font(.system(size: 10, weight: .bold)).fixedSize().foregroundStyle(.white)
-                                    .padding(.horizontal, 4).frame(minHeight: 14).frame(minWidth: 14)
-                                    .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
-                            }
-                        }
-                    }
-                }
-                .fixedSize()
-                .offset(y: 14)
-            }
-            .padding(10)
     }
 
     /// Lines touching the view (with a margin), points closer together than the screen can show dropped.
@@ -312,18 +251,6 @@ struct MapView: View {
         return out.sorted { $0.1 < $1.1 }.prefix(maxStops).map(\.0)
     }
 
-    private func stopDot(selected: Bool) -> some View {
-        Circle().fill(Theme.surface).frame(width: selected ? 16 : 11, height: selected ? 16 : 11)
-            .overlay(Circle().stroke(selected ? Color.primary : Theme.secondary, lineWidth: 2)).padding(8)
-    }
-
-    /// Zoomed out: the same dot as a platform, in the category's colour.
-    private func groupMarker(_ c: LineCategory, selected: Bool) -> some View {
-        Circle().fill(c.tint).frame(width: selected ? 14 : 10, height: selected ? 14 : 10)
-            .overlay(Circle().stroke(Color.white, lineWidth: 2))
-            .padding(10)
-    }
-
     // MARK: Controls
 
     private var layersMenu: some View {
@@ -349,12 +276,12 @@ struct MapView: View {
     // MARK: Bottom cards
 
     @ViewBuilder
-    private func card(for selection: MapSelection) -> some View {
+    private func card(for selection: MapSelection, open: CardOpen) -> some View {
         switch selection {
         case .vehicle(let id):
-            if let v = model.vehicles.first(where: { $0.id == id }) { VehicleCard(vehicle: v) { self.selection = nil } }
+            if let v = model.vehicles.first(where: { $0.id == id }) { VehicleCard(vehicle: v, open: open) { self.selection = nil } }
         case .station(let id, let stopId):
-            if let s = model.stations.first(where: { $0.stationId == id }) { StopCard(stationId: id, stopId: stopId, station: s) { self.selection = nil } }
+            if let s = model.stations.first(where: { $0.stationId == id }) { StopCard(stationId: id, stopId: stopId, station: s, open: open) { self.selection = nil } }
         }
     }
 }

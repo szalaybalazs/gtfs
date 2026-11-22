@@ -119,6 +119,8 @@ export type HtmlMarker = {
   /** Where a new marker starts from, gliding to `at` (stops branching out of their group) */
   from?: LngLat
   glideMs?: number
+  /** Selected: grows a little with a short spring (CSS transition on the existing element, so the marker isn't rebuilt) */
+  selected?: boolean
 }
 
 const GLIDE_MS = 1500
@@ -194,7 +196,7 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
         const inner = document.createElement('div')
         inner.style.position = 'absolute'
         // Fade and grow in from the pin point; reversed on removal
-        inner.style.cssText += `;opacity:0;scale:.6;transition:opacity ${FADE_MS}ms,scale ${FADE_MS}ms;transform-origin:0 0`
+        inner.style.cssText += `;opacity:0;scale:.6;transition:opacity ${FADE_MS}ms,scale ${FADE_MS}ms,transform 200ms cubic-bezier(.34,1.56,.64,1);transform-origin:0 0`
         el.appendChild(inner)
         requestAnimationFrame(() => requestAnimationFrame(() => ((inner.style.opacity = '1'), (inner.style.scale = '1'))))
         const marker = new maplibregl.Marker({ element: el, anchor: 'top-left' }).setLngLat(item.from ?? item.at).addTo(map)
@@ -243,6 +245,9 @@ export function useMarkers(map: GlMap | null, items: HtmlMarker[]) {
       const [ax, ay] = item.anchor ?? [w / 2, h / 2]
       entry.inner.style.left = `${-ax}px`
       entry.inner.style.top = `${-ay}px`
+      // Grow around the pin point; `scale` is the fade, `transform` the selection, so they don't fight
+      entry.inner.style.transformOrigin = `${ax}px ${ay}px`
+      entry.inner.style.transform = item.selected ? 'scale(1.3)' : 'scale(1)'
       if (w) entry.inner.style.width = `${w}px`
       if (h) entry.inner.style.height = `${h}px`
       entry.el.style.zIndex = String(item.z ?? 0)

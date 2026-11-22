@@ -9,7 +9,9 @@ import { useT } from '../lib/i18n'
 export type MapPoint = { lat: number; lon: number; label?: string; strong?: boolean; color?: string }
 
 type Props = {
-  points: MapPoint[]
+  points?: MapPoint[]
+  /** Shown instead of the built-in static map (e.g. the transit map itself in a compact form) */
+  preview?: ReactNode
   line?: [number, number][] // [lat, lon]
   color?: string
   /** The vehicle, drawn exactly like on the main map */
@@ -31,11 +33,11 @@ export default function MiniMap(props: Props) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [full])
-  if (props.points.length === 0 && !(props.line && props.line.length > 0)) return null
+  if (!props.preview && (props.points ?? []).length === 0 && !(props.line && props.line.length > 0)) return null
   return (
     <>
       <div className="relative overflow-hidden rounded-2xl" style={{ height }}>
-        <MapView {...props} interactive={!expandable} />
+        {props.preview ?? <MapView {...props} interactive={!expandable} />}
         {expandable && (
           <button type="button" onClick={() => setFull(true)} aria-label={t('map.openFullScreen')} className="absolute inset-0 z-10 cursor-zoom-in">
             <span className="absolute right-2 bottom-2 rounded-full bg-surface/90 px-3 py-1 text-[13px] font-semibold shadow">{t('map.tapToExplore')}</span>
@@ -49,7 +51,7 @@ export default function MiniMap(props: Props) {
   )
 }
 
-function MapView({ points, line, color = '#2563eb', vehicle, interactive }: Props & { interactive: boolean }) {
+function MapView({ points = [], line, color = '#2563eb', vehicle, interactive }: Props & { interactive: boolean }) {
   const container = useRef<HTMLDivElement>(null)
   // Everything that must be in view
   const all = useMemo<LngLat[]>(

@@ -10,6 +10,8 @@ import RouteBadge from '../components/RouteBadge'
 import { gql, TRIP_PATH_QUERY, TRIP_QUERY, type TripDetails, type TripPath, type TripStop } from '../lib/api'
 import { tripKey, type TripPreview } from '../lib/prefetch'
 import { vehicleName } from '../lib/vehicle'
+import { formatPlate } from '../lib/plate'
+import { RefreshedAge } from '../components/RefreshedAge'
 import { distance } from '../lib/geo'
 import { CATEGORIES, categoryOf, type Category } from '../lib/categories'
 import CategoryIcon from '../components/CategoryIcon'
@@ -115,16 +117,7 @@ export default function TripPage() {
   }
 
   // Built once per data change, not on every 1 s tick: the maps re-upload whatever they're given
-  const miniLine = useMemo(() => tripPath?.coordinates.map(([lon, lat]) => [lat, lon] as [number, number]), [tripPath])
-  const miniPoints = useMemo(
-    () => stops.filter((s) => s.stop.lat != null && s.stop.lon != null).map((s) => ({ lat: s.stop.lat!, lon: s.stop.lon!, strong: s.stop.stopId === from })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [query.data, from],
-  )
-  const miniVehicle = useMemo(
-    () => (vehicle?.latitude != null && vehicle.longitude != null ? { lat: vehicle.latitude, lon: vehicle.longitude, route: route ?? null, bearing: vehicle.bearing } : null),
-    [vehicle, route],
-  )
+  // Built once per data change, not on every 1 s tick: the maps re-upload whatever they're given
   const overlay = useMemo<TripOverlay | null>(
     () =>
       trip
@@ -210,8 +203,8 @@ export default function TripPage() {
               {stats(trip, tripPath, t) && <p className="mt-2 text-[15px] font-medium tabular-nums">{stats(trip, tripPath, t)}</p>}
               {/* Last update: small and quiet, but always there while the trip runs; a past or future trip gets its own note instead */}
               {started && !finished && vehicleAge != null && (
-                <p className="mt-1 flex items-center text-[12px] text-secondary">
-                  <UpdatedAgo seconds={vehicleAge * 60} />
+                <p className="mt-1 flex items-center text-[12px]">
+                  <RefreshedAge seconds={vehicleAge * 60} />
                 </p>
               )}
             </section>
@@ -257,10 +250,10 @@ export default function TripPage() {
                 <h2 className="px-1 pb-heading text-xl font-bold">{t('trip.vehicle')}</h2>
                 {/* What it is, big; its plate / fleet number under it. (BKK's "label" is the destination, so it isn't shown.) */}
                 <div className="rounded-2xl bg-surface p-gutter">
-                  <p className="text-[20px] leading-snug font-semibold">{vehicleName(vehicle.vehicleModel) ?? vehicle.vehicleLicensePlate}</p>
+                  <p className="text-[20px] leading-snug font-semibold">{vehicleName(vehicle.vehicleModel) ?? formatPlate(vehicle.vehicleLicensePlate)}</p>
                   {((vehicle.vehicleModel && vehicle.vehicleLicensePlate) || vehicle.vehicleWheelchairAccessible) && (
                     <p className="mt-0.5 flex items-center gap-2 text-[15px] text-secondary">
-                      {vehicle.vehicleModel && vehicle.vehicleLicensePlate && <span>{vehicle.vehicleLicensePlate}</span>}
+                      {vehicle.vehicleModel && vehicle.vehicleLicensePlate && <span>{formatPlate(vehicle.vehicleLicensePlate)}</span>}
                       {vehicle.vehicleWheelchairAccessible && <MarkIcon mark="lowFloor" label={t('common.wheelchair')} className="h-5 w-5 shrink-0" />}
                     </p>
                   )}
@@ -270,12 +263,10 @@ export default function TripPage() {
 
             <section>
               <h2 className="px-1 pb-heading text-xl font-bold">{t('common.map')}</h2>
+              {/* A small, non-interactive TransitMap with this trip on it; tapping opens the same map full screen */}
               <MiniMap
-                color={color}
-                line={miniLine}
-                points={miniPoints}
-                vehicle={miniVehicle}
-                // Full screen: the same map as the Map page, with this trip drawn on it
+                preview={<TransitMap compact bounds={tripBounds(stops)} trip={overlay ?? undefined} />}
+                height={260}
                 expand={(close) => <TransitMap onClose={close} bounds={tripBounds(stops)} trip={overlay ?? undefined} />}
               />
             </section>
