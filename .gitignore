@@ -149,3 +149,22 @@ dist
 
 # Local secrets (direnv)
 .envrc
+
+### Xcode ###
+# Per-user state, breakpoints and build output (shared schemes stay tracked)
+DerivedData/
+build/
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+.swiftpm/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+### macOS ###
+.DS_Store
+
+### Claude Code ###
+.claude/worktrees/
