@@ -20,8 +20,12 @@ struct RefreshedAge: View {
                 Text(age < 60 ? "\(age)s" : "\(age / 60) \(tr("min"))")
             }
             .font(.system(size: 13)).foregroundStyle(Theme.secondary).monospacedDigit()
-            .contentTransition(settings.animateNumbers ? .numericText(countsDown: false) : .identity)
-            .animation(settings.animateNumbers ? .default : nil, value: age)
+            // Always counts from the top: the new value drops in from above, the old one leaves downward
+            // (numericText would follow the direction of the change, so it's not used here)
+            .id(age)
+            .transition(settings.animateNumbers ? .asymmetric(insertion: .move(edge: .top).combined(with: .opacity),
+                                                              removal: .move(edge: .bottom).combined(with: .opacity)) : .identity)
+            .animation(settings.animateNumbers ? .easeOut(duration: 0.25) : nil, value: age)
         }
     }
 }

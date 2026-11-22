@@ -7,82 +7,76 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		708E0E4130B22B4D00993AD1 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = 708E0E3D30B22B4D00993AD1 /* Flow */; };
-		708E0E4230B22B4D00993AD1 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = 708E0E3930B22B4D00993AD1 /* Apollo */; };
-		708E0E4330B22B4D00993AD1 /* TimetableAPI in Frameworks */ = {isa = PBXBuildFile; productRef = 708E0E3C30B22B4D00993AD1 /* TimetableAPI */; };
-		708E0E4430B22B4D00993AD1 /* ApolloWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = 708E0E3B30B22B4D00993AD1 /* ApolloWebSocket */; };
 		B90CF8BC2D5A38A200DD8FA1 /* Flow in Frameworks */ = {isa = PBXBuildFile; productRef = B90CF8BB2D5A38A200DD8FA1 /* Flow */; };
 		B92D01552D57CEAD00296AF9 /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = B92D01542D57CEAD00296AF9 /* Apollo */; };
 		B92D01572D57CEAD00296AF9 /* ApolloWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = B92D01562D57CEAD00296AF9 /* ApolloWebSocket */; };
 		B92D015F2D57CF9A00296AF9 /* TimetableAPI in Frameworks */ = {isa = PBXBuildFile; productRef = B92D015E2D57CF9A00296AF9 /* TimetableAPI */; };
+		C0DEA11C0DE000000000000C /* Apollo in Frameworks */ = {isa = PBXBuildFile; productRef = C0DEA11C0DE000000000000A /* Apollo */; };
+		C0DEA11C0DE000000000000D /* TimetableAPI in Frameworks */ = {isa = PBXBuildFile; productRef = C0DEA11C0DE000000000000B /* TimetableAPI */; };
+		C0DEA11C0DE0000000000011 /* BudapestGONEWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000002 /* BudapestGONEWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C0DEA11C0DE0000000000013 /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000012 /* Network.swift */; };
+		C0DEA11C0DE0000000000015 /* Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000014 /* Color.swift */; };
+		C0DEA11C0DE0000000000017 /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000016 /* L10n.swift */; };
+		C0DEA11C0DE0000000000019 /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000018 /* SharedDefaults.swift */; };
+		C0DEA11C0DE000000000001B /* Transit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE000000000001A /* Transit.swift */; };
+		C0DEA11C0DE000000000001D /* APIMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE000000000001C /* APIMapping.swift */; };
+		C0DEA11C0DE000000000001F /* Countdown.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE000000000001E /* Countdown.swift */; };
+		C0DEA11C0DE0000000000021 /* Favorites.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000020 /* Favorites.swift */; };
+		C0DEA11C0DE0000000000023 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000022 /* DeepLink.swift */; };
+		C0DEA11C0DE0000000000025 /* FavoriteRequests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000024 /* FavoriteRequests.swift */; };
+		C0DEA11C0DE0000000000027 /* DeparturesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000026 /* DeparturesViewModel.swift */; };
+		C0DEA11C0DE0000000000029 /* LoadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE0000000000028 /* LoadState.swift */; };
+		C0DEA11C0DE000000000002B /* LineBadgeCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE000000000002A /* LineBadgeCore.swift */; };
+		C0DEA11C0DE000000000002D /* LiveIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE000000000002C /* LiveIcon.swift */; };
+		C0DEA11C0DE000000000002F /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C0DEA11C0DE000000000002E /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		C0DEA11C0DE000000000000E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B92D01382D57CE5D00296AF9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C0DEA11C0DE0000000000001;
+			remoteInfo = BudapestGONEWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		C0DEA11C0DE0000000000010 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C0DEA11C0DE0000000000011 /* BudapestGONEWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		708E0E4930B22B4D00993AD1 /* BudapestGONE copy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "BudapestGONE copy.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		708E0E4A30B22B4D00993AD1 /* BudapestGONE copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "BudapestGONE copy-Info.plist"; path = "/Users/akos/Developer/gtfs/app/BudapestGONE copy-Info.plist"; sourceTree = "<absolute>"; };
 		B92D01402D57CE5D00296AF9 /* BudapestGONE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BudapestGONE.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0DEA11C0DE0000000000002 /* BudapestGONEWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BudapestGONEWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C0DEA11C0DE0000000000012 /* Network.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Network.swift; path = timetable/Network.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000014 /* Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Color.swift; path = timetable/Color.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000016 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = L10n.swift; path = timetable/L10n.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000018 /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SharedDefaults.swift; path = timetable/SharedDefaults.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE000000000001A /* Transit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Transit.swift; path = timetable/Models/Transit.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE000000000001C /* APIMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = APIMapping.swift; path = timetable/Models/APIMapping.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE000000000001E /* Countdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Countdown.swift; path = timetable/Models/Countdown.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000020 /* Favorites.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Favorites.swift; path = timetable/Models/Favorites.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000022 /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DeepLink.swift; path = timetable/Models/DeepLink.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000024 /* FavoriteRequests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FavoriteRequests.swift; path = timetable/Models/FavoriteRequests.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000026 /* DeparturesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DeparturesViewModel.swift; path = timetable/ViewModels/DeparturesViewModel.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE0000000000028 /* LoadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LoadState.swift; path = timetable/ViewModels/LoadState.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE000000000002A /* LineBadgeCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LineBadgeCore.swift; path = timetable/Views/LineBadgeCore.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE000000000002C /* LiveIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LiveIcon.swift; path = timetable/Views/LiveIcon.swift; sourceTree = SOURCE_ROOT; };
+		C0DEA11C0DE000000000002E /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = timetable/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		708E0E4B30B22B4E00993AD1 /* Exceptions for "timetable" folder in "BudapestGONE copy" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				AppSettings.swift,
-				Assets.xcassets,
-				Color.swift,
-				gql/Alerts.graphql,
-				gql/AllRoutesQuery.graphql,
-				gql/Departures.graphql,
-				gql/RouteById.graphql,
-				gql/RouteLines.graphql,
-				gql/schema.graphqls,
-				gql/Timetable.graphql,
-				gql/Trip.graphql,
-				gql/TripPath.graphql,
-				gql/TripVehicle.graphql,
-				gql/Vehicles.graphql,
-				Info.plist,
-				L10n.swift,
-				Localizable.xcstrings,
-				LocationManager.swift,
-				Models/APIMapping.swift,
-				Models/Countdown.swift,
-				Models/Favorites.swift,
-				Models/Transit.swift,
-				Network.swift,
-				"Preview Content/Preview Assets.xcassets",
-				timetableApp.swift,
-				ViewModels/DeparturesViewModel.swift,
-				ViewModels/LoadState.swift,
-				ViewModels/MapViewModel.swift,
-				ViewModels/RouteDetailsViewModel.swift,
-				ViewModels/RoutesViewModel.swift,
-				ViewModels/StationsViewModel.swift,
-				ViewModels/StationViewModel.swift,
-				ViewModels/TimetableViewModel.swift,
-				ViewModels/TripViewModel.swift,
-				Views/ContentView.swift,
-				Views/DepartureRows.swift,
-				Views/ErrorView.swift,
-				Views/FavoriteViews.swift,
-				Views/HomeView.swift,
-				Views/LineBadge.swift,
-				Views/MapView.swift,
-				Views/RouteDetailsView.swift,
-				Views/RoutesView.swift,
-				Views/SettingsView.swift,
-				Views/Skeleton.swift,
-				Views/StationDetailView.swift,
-				Views/StationsView.swift,
-				Views/Theme.swift,
-				Views/TimetableView.swift,
-				Views/TripMap.swift,
-				Views/TripView.swift,
-				Views/VehicleDisc.swift,
-				Views/WrappingCollectionView.swift,
-			);
-			target = 708E0E3830B22B4D00993AD1 /* BudapestGONE copy */;
-		};
 		B92D01682D581E5400296AF9 /* Exceptions for "timetable" folder in "BudapestGONE" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -97,25 +91,18 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				B92D01682D581E5400296AF9 /* Exceptions for "timetable" folder in "BudapestGONE" target */,
-				708E0E4B30B22B4E00993AD1 /* Exceptions for "timetable" folder in "BudapestGONE copy" target */,
 			);
 			path = timetable;
+			sourceTree = "<group>";
+		};
+		C0DEA11C0DE0000000000003 /* BudapestGONEWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BudapestGONEWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		708E0E4030B22B4D00993AD1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				708E0E4130B22B4D00993AD1 /* Flow in Frameworks */,
-				708E0E4230B22B4D00993AD1 /* Apollo in Frameworks */,
-				708E0E4330B22B4D00993AD1 /* TimetableAPI in Frameworks */,
-				708E0E4430B22B4D00993AD1 /* ApolloWebSocket in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B92D013D2D57CE5D00296AF9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,16 +114,49 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C0DEA11C0DE0000000000005 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0DEA11C0DE000000000000C /* Apollo in Frameworks */,
+				C0DEA11C0DE000000000000D /* TimetableAPI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		70AA32F430B246D5002B9CF1 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				C0DEA11C0DE0000000000012 /* Network.swift */,
+				C0DEA11C0DE0000000000014 /* Color.swift */,
+				C0DEA11C0DE0000000000016 /* L10n.swift */,
+				C0DEA11C0DE0000000000018 /* SharedDefaults.swift */,
+				C0DEA11C0DE000000000001A /* Transit.swift */,
+				C0DEA11C0DE000000000001C /* APIMapping.swift */,
+				C0DEA11C0DE000000000001E /* Countdown.swift */,
+				C0DEA11C0DE0000000000020 /* Favorites.swift */,
+				C0DEA11C0DE0000000000022 /* DeepLink.swift */,
+				C0DEA11C0DE0000000000024 /* FavoriteRequests.swift */,
+				C0DEA11C0DE0000000000026 /* DeparturesViewModel.swift */,
+				C0DEA11C0DE0000000000028 /* LoadState.swift */,
+				C0DEA11C0DE000000000002A /* LineBadgeCore.swift */,
+				C0DEA11C0DE000000000002C /* LiveIcon.swift */,
+				C0DEA11C0DE000000000002E /* Localizable.xcstrings */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
 		B92D01372D57CE5D00296AF9 = {
 			isa = PBXGroup;
 			children = (
 				B92D01422D57CE5D00296AF9 /* timetable */,
 				B92D01602D57CFC500296AF9 /* Frameworks */,
+				C0DEA11C0DE0000000000003 /* BudapestGONEWidgets */,
 				708E0E4A30B22B4D00993AD1 /* BudapestGONE copy-Info.plist */,
 				B92D01412D57CE5D00296AF9 /* Products */,
+				70AA32F430B246D5002B9CF1 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -144,7 +164,7 @@
 			isa = PBXGroup;
 			children = (
 				B92D01402D57CE5D00296AF9 /* BudapestGONE.app */,
-				708E0E4930B22B4D00993AD1 /* BudapestGONE copy.app */,
+				C0DEA11C0DE0000000000002 /* BudapestGONEWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -159,32 +179,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		708E0E3830B22B4D00993AD1 /* BudapestGONE copy */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 708E0E4630B22B4D00993AD1 /* Build configuration list for PBXNativeTarget "BudapestGONE copy" */;
-			buildPhases = (
-				708E0E3F30B22B4D00993AD1 /* Sources */,
-				708E0E4030B22B4D00993AD1 /* Frameworks */,
-				708E0E4530B22B4D00993AD1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				B92D01422D57CE5D00296AF9 /* timetable */,
-			);
-			name = "BudapestGONE copy";
-			packageProductDependencies = (
-				708E0E3930B22B4D00993AD1 /* Apollo */,
-				708E0E3B30B22B4D00993AD1 /* ApolloWebSocket */,
-				708E0E3C30B22B4D00993AD1 /* TimetableAPI */,
-				708E0E3D30B22B4D00993AD1 /* Flow */,
-			);
-			productName = BudapestGONE;
-			productReference = 708E0E4930B22B4D00993AD1 /* BudapestGONE copy.app */;
-			productType = "com.apple.product-type.application";
-		};
 		B92D013F2D57CE5D00296AF9 /* BudapestGONE */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B92D014E2D57CE5F00296AF9 /* Build configuration list for PBXNativeTarget "BudapestGONE" */;
@@ -192,10 +186,12 @@
 				B92D013C2D57CE5D00296AF9 /* Sources */,
 				B92D013D2D57CE5D00296AF9 /* Frameworks */,
 				B92D013E2D57CE5D00296AF9 /* Resources */,
+				C0DEA11C0DE0000000000010 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				C0DEA11C0DE000000000000F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				B92D01422D57CE5D00296AF9 /* timetable */,
@@ -211,6 +207,30 @@
 			productReference = B92D01402D57CE5D00296AF9 /* BudapestGONE.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C0DEA11C0DE0000000000001 /* BudapestGONEWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C0DEA11C0DE0000000000007 /* Build configuration list for PBXNativeTarget "BudapestGONEWidgets" */;
+			buildPhases = (
+				C0DEA11C0DE0000000000004 /* Sources */,
+				C0DEA11C0DE0000000000005 /* Frameworks */,
+				C0DEA11C0DE0000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C0DEA11C0DE0000000000003 /* BudapestGONEWidgets */,
+			);
+			name = BudapestGONEWidgets;
+			packageProductDependencies = (
+				C0DEA11C0DE000000000000A /* Apollo */,
+				C0DEA11C0DE000000000000B /* TimetableAPI */,
+			);
+			productName = BudapestGONEWidgets;
+			productReference = C0DEA11C0DE0000000000002 /* BudapestGONEWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -222,6 +242,9 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					B92D013F2D57CE5D00296AF9 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					C0DEA11C0DE0000000000001 = {
 						CreatedOnToolsVersion = 16.2;
 					};
 				};
@@ -248,19 +271,12 @@
 			projectRoot = "";
 			targets = (
 				B92D013F2D57CE5D00296AF9 /* BudapestGONE */,
-				708E0E3830B22B4D00993AD1 /* BudapestGONE copy */,
+				C0DEA11C0DE0000000000001 /* BudapestGONEWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		708E0E4530B22B4D00993AD1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		B92D013E2D57CE5D00296AF9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -268,16 +284,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		708E0E3F30B22B4D00993AD1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
+		C0DEA11C0DE0000000000006 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DEA11C0DE000000000002F /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
 		B92D013C2D57CE5D00296AF9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -285,79 +302,38 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C0DEA11C0DE0000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0DEA11C0DE0000000000013 /* Network.swift in Sources */,
+				C0DEA11C0DE0000000000015 /* Color.swift in Sources */,
+				C0DEA11C0DE0000000000017 /* L10n.swift in Sources */,
+				C0DEA11C0DE0000000000019 /* SharedDefaults.swift in Sources */,
+				C0DEA11C0DE000000000001B /* Transit.swift in Sources */,
+				C0DEA11C0DE000000000001D /* APIMapping.swift in Sources */,
+				C0DEA11C0DE000000000001F /* Countdown.swift in Sources */,
+				C0DEA11C0DE0000000000021 /* Favorites.swift in Sources */,
+				C0DEA11C0DE0000000000023 /* DeepLink.swift in Sources */,
+				C0DEA11C0DE0000000000025 /* FavoriteRequests.swift in Sources */,
+				C0DEA11C0DE0000000000027 /* DeparturesViewModel.swift in Sources */,
+				C0DEA11C0DE0000000000029 /* LoadState.swift in Sources */,
+				C0DEA11C0DE000000000002B /* LineBadgeCore.swift in Sources */,
+				C0DEA11C0DE000000000002D /* LiveIcon.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		C0DEA11C0DE000000000000F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C0DEA11C0DE0000000000001 /* BudapestGONEWidgets */;
+			targetProxy = C0DEA11C0DE000000000000E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		708E0E4730B22B4D00993AD1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				API_URL = "http:/$()/localhost:4000";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"timetable/Preview Content\"";
-				DEVELOPMENT_TEAM = 2B3M3B274K;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "BudapestGONE copy-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = BudapestGONE;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to find the nearest stop";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.timetable;
-				PRODUCT_MODULE_NAME = timetable;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		708E0E4830B22B4D00993AD1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				API_URL = "https:/$()/gtfs.szalay.me/graphql";
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"timetable/Preview Content\"";
-				DEVELOPMENT_TEAM = 2B3M3B274K;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "BudapestGONE copy-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = BudapestGONE;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to find the nearest stop";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.timetable;
-				PRODUCT_MODULE_NAME = timetable;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		B92D014C2D57CE5F00296AF9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -481,28 +457,33 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				API_URL = "http:/$()/localhost:4000";
+				APP_GROUP_ID = group.com.actegon.timetable;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/BudapestGONE.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "\"timetable/Preview Content\"";
 				DEVELOPMENT_TEAM = 2B3M3B274K;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = timetable/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudapestGONE;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to find the nearest stop";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to get the nearest stop";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location";
+				INFOPLIST_KEY_NSLocationUsageDescription = "We need your location to get the nearest stop";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to get the nearest stop";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.timetable;
 				PRODUCT_MODULE_NAME = timetable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -516,31 +497,96 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				API_URL = "https:/$()/gtfs.szalay.me/graphql";
+				APP_GROUP_ID = group.com.actegon.budapestgone.app;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Config/BudapestGONE.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "\"timetable/Preview Content\"";
-				DEVELOPMENT_TEAM = 2B3M3B274K;
+				DEVELOPMENT_TEAM = A3CBV5GC7U;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = timetable/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BudapestGONE;
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to find the nearest stop";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location to get the nearest stop";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "We need your location";
+				INFOPLIST_KEY_NSLocationUsageDescription = "We need your location to get the nearest stop";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location to get the nearest stop";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.timetable;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.budapestgone.app;
 				PRODUCT_MODULE_NAME = timetable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C0DEA11C0DE0000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				API_URL = "http:/$()/localhost:4000";
+				APP_GROUP_ID = group.com.actegon.timetable;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/BudapestGONEWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 2B3M3B274K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/BudapestGONEWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = BudapestGONE;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.timetable.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C0DEA11C0DE0000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				API_URL = "https:/$()/gtfs.szalay.me/graphql";
+				APP_GROUP_ID = group.com.actegon.budapestgone.app;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = Config/BudapestGONEWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = A3CBV5GC7U;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/BudapestGONEWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = BudapestGONE;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.actegon.budapestgone.app.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -550,15 +596,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		708E0E4630B22B4D00993AD1 /* Build configuration list for PBXNativeTarget "BudapestGONE copy" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				708E0E4730B22B4D00993AD1 /* Debug */,
-				708E0E4830B22B4D00993AD1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		B92D013B2D57CE5D00296AF9 /* Build configuration list for PBXProject "timetable" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -577,6 +614,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C0DEA11C0DE0000000000007 /* Build configuration list for PBXNativeTarget "BudapestGONEWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0DEA11C0DE0000000000008 /* Debug */,
+				C0DEA11C0DE0000000000009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -587,22 +633,6 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		708E0E3A30B22B4D00993AD1 /* XCRemoteSwiftPackageReference "apollo-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apollographql/apollo-ios.git";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 1.17.0;
-			};
-		};
-		708E0E3E30B22B4D00993AD1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.0.1;
-			};
-		};
 		B90CF8BA2D5A38A200DD8FA1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tevelee/SwiftUI-Flow";
@@ -622,25 +652,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		708E0E3930B22B4D00993AD1 /* Apollo */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 708E0E3A30B22B4D00993AD1 /* XCRemoteSwiftPackageReference "apollo-ios" */;
-			productName = Apollo;
-		};
-		708E0E3B30B22B4D00993AD1 /* ApolloWebSocket */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 708E0E3A30B22B4D00993AD1 /* XCRemoteSwiftPackageReference "apollo-ios" */;
-			productName = ApolloWebSocket;
-		};
-		708E0E3C30B22B4D00993AD1 /* TimetableAPI */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = TimetableAPI;
-		};
-		708E0E3D30B22B4D00993AD1 /* Flow */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 708E0E3E30B22B4D00993AD1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
-			productName = Flow;
-		};
 		B90CF8BB2D5A38A200DD8FA1 /* Flow */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B90CF8BA2D5A38A200DD8FA1 /* XCRemoteSwiftPackageReference "SwiftUI-Flow" */;
@@ -657,6 +668,15 @@
 			productName = ApolloWebSocket;
 		};
 		B92D015E2D57CF9A00296AF9 /* TimetableAPI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TimetableAPI;
+		};
+		C0DEA11C0DE000000000000A /* Apollo */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B92D01532D57CEAD00296AF9 /* XCRemoteSwiftPackageReference "apollo-ios" */;
+			productName = Apollo;
+		};
+		C0DEA11C0DE000000000000B /* TimetableAPI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TimetableAPI;
 		};
