@@ -153,8 +153,8 @@ export default function TransitMap({
     queryKey: ['vehicles', vbox],
     queryFn: () => gql<Vehicles>(VEHICLES_QUERY, { bbox: vbox }),
     enabled: !!vbox,
-    refetchInterval: 30_000,
-    staleTime: 25_000,
+    refetchInterval: 10_000,
+    staleTime: 8_000,
     placeholderData: (prev) => prev,
   })
   // A vehicle never goes back in time: the query is cached per visible area, so panning or zooming back to an

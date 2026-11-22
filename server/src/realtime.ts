@@ -7,7 +7,11 @@ import { connection, generation } from "./db";
 // (empty) tables of the same name in the read-only static database, so the
 // existing SQL joins keep working.
 
-const TTL_MS = 30_000;
+// How old each feed may get before a request starts a refresh (the refresh runs in the background).
+const TTL_MS = { vehicles: 10_000, trips: 20_000 } as const;
+// Older than this, a request waits for a refresh rather than serving the old data (the feed is down, or we are cold).
+const MAX_AGE_MS = 90_000;
+const TIMEOUT_MS = 8_000;
 const BASE_URL = "https://go.bkk.hu/api/query/v1/ws/gtfs-rt/full";
 
 const STOP_TIME_UPDATE_COLUMNS = [
@@ -107,14 +111,9 @@ function readVehicleModels(b: Uint8Array) {
   return out;
 }
 
-let cache: { stopTimeUpdates: Row[]; vehiclePositions: Row[] } | undefined;
-let fetchedAt = 0;
-let loadedGeneration = -1;
-let inflight: Promise<void> | undefined;
-
 const fetchFeed = async (name: string) => {
   const res = await fetch(`${BASE_URL}/${name}.pb?key=${Resource.BkkApiKey.value}`, {
-    signal: AbortSignal.timeout(15_000),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
   const bytes = new Uint8Array(await res.arrayBuffer());
@@ -188,30 +187,42 @@ const toVehiclePositions = (feed: any, now: number) => {
   return rows;
 };
 
-const refresh = async () => {
-  const now = Math.floor(Date.now() / 1000);
-  const [tripUpdates, vehiclePositions] = await Promise.allSettled([
-    fetchFeed("TripUpdates"),
-    fetchFeed("VehiclePositions"),
-  ]);
+let loadedGeneration = -1;
 
-  // A failed feed keeps its last good data (or none), so the API serves
-  // schedule-only times rather than failing
-  const next = cache ?? { stopTimeUpdates: [], vehiclePositions: [] };
-  if (tripUpdates.status === "fulfilled") {
-    next.stopTimeUpdates = toStopTimeUpdates(tripUpdates.value, now);
-  } else {
-    console.error("TripUpdates refresh failed", tripUpdates.reason);
-  }
-  if (vehiclePositions.status === "fulfilled") {
-    next.vehiclePositions = toVehiclePositions(vehiclePositions.value, now);
-  } else {
-    console.error("VehiclePositions refresh failed", vehiclePositions.reason);
-  }
+type Kind = "trips" | "vehicles";
+type Feed = { rows: Row[]; header: number; fetchedAt: number };
+const feeds: Record<Kind, Feed> = {
+  trips: { rows: [], header: 0, fetchedAt: 0 },
+  vehicles: { rows: [], header: 0, fetchedAt: 0 },
+};
+const inflight: Partial<Record<Kind, Promise<void>>> = {};
 
-  cache = next;
-  loadedGeneration = -1;
-  fetchedAt = Date.now();
+/**
+ * Fetch one feed and replace its rows. Each feed is independent, so a slow trip feed doesn't hold up vehicles.
+ * A feed whose header timestamp is older than the one we already have is ignored (BKK's caches don't agree on age).
+ */
+const refreshFeed = (kind: Kind) => {
+  inflight[kind] ??= (async () => {
+    try {
+      const name = kind === "trips" ? "TripUpdates" : "VehiclePositions";
+      const feed = await fetchFeed(name);
+      const header = Number(feed.header?.timestamp ?? 0);
+      const now = Math.floor(Date.now() / 1000);
+      if (header && header < feeds[kind].header) return;
+      feeds[kind] = {
+        rows: kind === "trips" ? toStopTimeUpdates(feed, now) : toVehiclePositions(feed, now),
+        header: header || feeds[kind].header,
+        fetchedAt: Date.now(),
+      };
+      loadedGeneration = -1; // the TEMP tables need rebuilding from the new rows
+    } catch (err) {
+      // A failed refresh keeps the last good rows (until MAX_AGE_MS)
+      console.error(`${kind} refresh failed`, err);
+    } finally {
+      inflight[kind] = undefined;
+    }
+  })();
+  return inflight[kind]!;
 };
 
 const fill = (table: string, columns: string[], rows: Row[]) => {
@@ -223,6 +234,9 @@ const fill = (table: string, columns: string[], rows: Row[]) => {
   for (const row of rows) insert.run(...row);
 };
 
+/** Rows to serve for a feed: none once it is older than MAX_AGE_MS (the API then falls back to schedule-only times). */
+const fresh = (kind: Kind, now: number) => (now - feeds[kind].fetchedAt > MAX_AGE_MS ? [] : feeds[kind].rows);
+
 const load = () => {
   const db = connection();
   db.exec(`
@@ -230,10 +244,11 @@ const load = () => {
     CREATE INDEX IF NOT EXISTS temp.idx_stop_time_updates ON stop_time_updates (trip_id, stop_id);
     CREATE TEMP TABLE IF NOT EXISTS vehicle_positions (${VEHICLE_POSITION_COLUMNS.join(", ")});
   `);
+  const now = Date.now();
   db.exec("BEGIN");
   try {
-    fill("stop_time_updates", STOP_TIME_UPDATE_COLUMNS, cache!.stopTimeUpdates);
-    fill("vehicle_positions", VEHICLE_POSITION_COLUMNS, cache!.vehiclePositions);
+    fill("stop_time_updates", STOP_TIME_UPDATE_COLUMNS, fresh("trips", now));
+    fill("vehicle_positions", VEHICLE_POSITION_COLUMNS, fresh("vehicles", now));
     db.exec("COMMIT");
   } catch (err) {
     db.exec("ROLLBACK");
@@ -242,11 +257,16 @@ const load = () => {
   loadedGeneration = generation;
 };
 
-/** Make sure the realtime TEMP tables are fresh (at most TTL_MS old) */
+/**
+ * Make sure the realtime TEMP tables are ready. Never waits on BKK unless the data is missing or older than MAX_AGE_MS;
+ * otherwise a stale-enough feed is refreshed in the background while this request is served from the cache.
+ */
 export const ensureRealtime = async () => {
-  if (!cache || Date.now() - fetchedAt > TTL_MS) {
-    inflight ??= refresh().finally(() => (inflight = undefined));
-    await inflight;
+  const now = Date.now();
+  for (const kind of ["trips", "vehicles"] as Kind[]) {
+    const age = now - feeds[kind].fetchedAt;
+    if (feeds[kind].fetchedAt === 0 || age > MAX_AGE_MS) await refreshFeed(kind);
+    else if (age > TTL_MS[kind]) void refreshFeed(kind);
   }
   if (loadedGeneration !== generation) load();
 };
