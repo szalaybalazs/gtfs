@@ -397,22 +397,6 @@ function viaStops(stops: TripStop[]) {
   )
 }
 
-/**
- * "updated 42s ago", counting every second, small and always shown. The number sits in a
- * fixed two-digit box (right-aligned, tabular figures) so it doesn't jiggle.
- */
-function UpdatedAgo({ seconds }: { seconds: number }) {
-  const t = useT()
-  const s = Math.floor(seconds)
-  return (
-    <span>
-      {s < 60
-        ? t.rich('trip.updatedSecs', { n: <span className="inline-block min-w-[2ch] text-right tabular-nums">{s}</span> }, s)
-        : t.rich('trip.updatedMins', { n: <span className="tabular-nums">{Math.floor(s / 60)}</span> }, Math.floor(s / 60))}
-    </span>
-  )
-}
-
 /** Coloured delay on the status line: "3 min late" red, "2 min early" purple, ✓ on time. */
 function DelayIndicator({ delay }: { delay: number }) {
   const t = useT()
