@@ -21,7 +21,7 @@ interface GlyphItem {
  * so surrounding row layout never shifts:
  *   [ [prefix] [leading?] [tens] [ones] [half] ] [suffix]
  */
-export default function RollingNumber({ value, className = '', still = false }: RollingNumberProps) {
+export default function RollingNumber({ value, className = '', still = false, fixedWidth = true }: RollingNumberProps & { fixedWidth?: boolean }) {
   const [on] = useAnimateNumbers()
   const reducedMotion = usePrefersReducedMotion()
   const animate = on && !still && !reducedMotion
@@ -66,11 +66,13 @@ export default function RollingNumber({ value, className = '', still = false }: 
   const halfEntryMode: EntryMode = half && !effectiveHalfReserved ? 'horizontal' : 'vertical'
 
   return (
-    <span className={`inline-flex items-baseline justify-end tabular-nums ${className}`} aria-label={value}>
-      <span className="inline-flex min-w-[2.1em] items-baseline justify-end" aria-hidden="true">
-        {prefix && <span className="inline-flex h-[1em] items-center leading-none">{prefix}</span>}
-        {leading && <span className="inline-flex h-[1em] items-center leading-none">{leading}</span>}
-        <Slot glyph={tens} animate={animate} width="w-[0.62em]" />
+    <span className={`inline-flex items-baseline justify-end tabular-nums ${className}`}>
+      <span className="sr-only">{value}</span>
+      <span className={`inline-flex items-baseline justify-end ${fixedWidth ? 'min-w-[2.1em]' : ''}`} aria-hidden="true">
+        {prefix && <TextPiece text={prefix} />}
+        {leading && <TextPiece text={leading} />}
+        {/* Without the fixed core, a single digit has no empty tens slot in front of it */}
+        {(fixedWidth || tens !== '') && <Slot glyph={tens} animate={animate} width="w-[0.62em]" />}
         <Slot glyph={ones} animate={animate} width="w-[0.62em]" />
         <HalfSlot
           glyph={half ? '½' : ''}
@@ -80,9 +82,7 @@ export default function RollingNumber({ value, className = '', still = false }: 
         />
       </span>
       {suffix && (
-        <span className="inline-flex h-[1em] items-center leading-none" aria-hidden="true">
-          {suffix}
-        </span>
+        <TextPiece text={suffix} />
       )}
     </span>
   )
@@ -222,4 +222,18 @@ function usePrefersReducedMotion(): boolean {
   }, [])
 
   return reduced
+}
+
+/** Plain text (a sign, a unit) in the same 1em box as a digit slot, so it shares the digits' baseline. */
+function TextPiece({ text, raise = false }: { text: string; raise?: boolean }) {
+  return (
+    <span
+      className={`relative inline-block h-[1em] leading-none whitespace-pre ${raise ? '-top-[0.08em]' : ''}`}
+      // A minute mark is narrow: give it just its own width, so it sits close to the digits
+      style={{ width: `${text === "'" ? 0.25 : Math.max(0.3, text.length * 0.6)}em` }}
+      aria-hidden="true"
+    >
+      <span className="absolute inset-0 flex items-center justify-center">{text}</span>
+    </span>
+  )
 }

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import RollingNumber from './RollingNumber'
 import { Link } from 'react-router'
 import type { Departure, RouteRef } from '../lib/api'
@@ -19,11 +20,21 @@ const MAX_TIMES = 8
  * Upcoming departures in time order, with back-to-back departures of the same
  * line merged: [1] 1', 5'  [2] 7'  [1] 10'.
  */
-function runs(departures: Departure[], now: Date, onlyRoute?: string | string[]) {
+// A departure that has left stays for LEAVE_S seconds, but only if it was on screen before it left:
+// a later update that still has it in the past doesn't bring it back.
+const LEAVE_S = 10
+const departureKey = (d: Departure) => `${d.tripId}-${d.serviceDate}-${d.stopId}`
+
+function runs(departures: Departure[], now: Date, onlyRoute?: string | string[], shownBefore?: Set<string>) {
   const only = onlyRoute == null ? null : new Set(Array.isArray(onlyRoute) ? onlyRoute : [onlyRoute])
   const out: { route: RouteRef; times: Departure[] }[] = []
   const upcoming = departures
-    .filter((d) => d.route && (!only || only.has(d.route.routeId)) && new Date(d.departure).getTime() >= now.getTime() - 30_000)
+    .filter((d) => {
+      if (!d.route || (only && !only.has(d.route.routeId))) return false
+      const t = new Date(d.departure).getTime()
+      if (t >= now.getTime()) return true
+      return !!shownBefore?.has(departureKey(d)) && t >= now.getTime() - LEAVE_S * 1000
+    })
     .sort((a, b) => a.departure.localeCompare(b.departure))
     .slice(0, MAX_TIMES)
   for (const d of upcoming) {
@@ -38,9 +49,98 @@ function runs(departures: Departure[], now: Date, onlyRoute?: string | string[])
  * The one favourites layout, in time order: [1] 1', 5'  [2] 7'  [1] 10' …
  * Side-scrollable when it doesn't fit. Times are coloured by realtime status.
  */
+/**
+ * Keeps an item on screen for `ms` after it has gone, so it can fade out in place, and puts it back where it was.
+ * Returns every item with a `leaving` flag and a React `k`. If an item goes and comes back, the old copy is dropped and
+ * the new one gets a new `k`, so it appears as a new item (it doesn't reappear in its old place). A swap is only a move.
+ */
+function useLingering<T>(items: T[], key: (t: T) => string, ms = 420): { item: T; leaving: boolean; k: string }[] {
+  const sig = items.map(key).join('|')
+  const prev = useRef<T[]>(items)
+  const generation = useRef(new Map<string, number>())
+  const [gone, setGone] = useState<{ item: T; index: number; k: string }[]>([])
+  useEffect(() => {
+    const cur = new Set(items.map(key))
+    const removed = prev.current
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => !cur.has(key(item)))
+      .map(({ item, index }) => ({ item, index, k: `${key(item)}@${generation.current.get(key(item)) ?? 0}` }))
+    prev.current = items
+    if (removed.length === 0) return
+    // Going again later is a new appearance: a new generation for the key
+    for (const r of removed) generation.current.set(key(r.item), (generation.current.get(key(r.item)) ?? 0) + 1)
+    setGone(removed)
+    const timer = window.setTimeout(() => setGone([]), ms)
+    return () => window.clearTimeout(timer)
+    // Only a change of keys starts a leave
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig])
+  // A leaving copy is dropped as soon as its key is back (the new one takes its place)
+  const present = new Set(items.map(key))
+  const out = items.map((item) => ({ item, leaving: false, k: `${key(item)}@${generation.current.get(key(item)) ?? 0}` }))
+  for (const g of [...gone].filter((g) => !present.has(key(g.item))).sort((x, y) => x.index - y.index)) {
+    out.splice(Math.min(g.index, out.length), 0, { item: g.item, leaving: true, k: g.k })
+  }
+  return out
+}
+
+/**
+ * A piece of the row that fades in from the left (or out to the left) and opens or closes its width,
+ * so the pieces after it slide over. Mounts closed and opens on the next frame, so new ones animate too.
+ */
+function Pop({ leaving, delay = 0, children }: { leaving: boolean; delay?: number; children: ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+  const open = mounted && !leaving
+  return (
+    <span
+      className={`grid shrink-0 transition-[grid-template-columns,opacity,transform] duration-300 ease-out ${
+        open ? 'grid-cols-[1fr] translate-x-0 opacity-100' : 'grid-cols-[0fr] -translate-x-3 opacity-0'
+      }`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <span className="flex min-w-0 items-center overflow-hidden">{children}</span>
+    </span>
+  )
+}
+
+/** One line in the row: its badge and its times, each time popping in (or out) with a stagger. */
+function LineGroup({ route, times, now, leaving }: { route: RouteRef; times: Departure[]; now: Date; leaving: boolean }) {
+  const timesNow = useLingering(times, departureKey)
+  return (
+    <Pop leaving={leaving}>
+      <span className="flex items-center gap-2">
+        <RouteBadge route={route} fit />
+        {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
+        <span className="flex items-baseline gap-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
+          {timesNow.map(({ item: d, leaving: gone, k }) => (
+            <Pop key={k} leaving={gone}>
+              <ShortTime d={d} now={now} />
+            </Pop>
+          ))}
+        </span>
+      </span>
+    </Pop>
+  )
+}
+
 function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures: Departure[]; pending: boolean; onlyRoute?: string | string[]; fallback: RouteRef[] }) {
   const now = useNow(1_000)
-  const groups = runs(departures, now, onlyRoute)
+  const shown = useRef(new Set<string>())
+  const groups = runs(departures, now, onlyRoute, shown.current)
+  // What is on screen now is what may linger after it leaves
+  useEffect(() => {
+    shown.current = new Set(groups.flatMap((g) => g.times.map(departureKey)))
+  })
+  // Keyed by route and occurrence (1#0, 1#1), not by the first departure: its trip ageing out must not look like a new line
+  const keyed = groups.map((g, i) => ({
+    ...g,
+    k: `${g.route.routeId}#${groups.slice(0, i).filter((x) => x.route.routeId === g.route.routeId).length}`,
+  }))
+  const lines = useLingering(keyed, (x) => x.k)
   return (
     <div className="-mx-gutter flex items-center gap-2.5 overflow-x-auto px-gutter pb-0.5 [scrollbar-width:none]">
       {pending || groups.length === 0
@@ -50,16 +150,8 @@ function LineTimesRow({ departures, pending, onlyRoute, fallback }: { departures
               <span className="text-[15px] text-secondary">{pending ? '…' : '–'}</span>
             </span>
           ))
-        : groups.map(({ route, times }) => (
-            <span key={`${route.routeId}-${times[0].tripId}`} className="flex shrink-0 items-center gap-2">
-              <RouteBadge route={route} fit />
-              {/* Countdowns as on the Lines board, all at the small size so a row of several lines stays even */}
-              <span className="flex items-baseline gap-2 text-[17px] font-semibold whitespace-nowrap tabular-nums">
-                {times.map((d) => (
-                  <ShortTime key={`${d.tripId}-${d.serviceDate}`} d={d} now={now} />
-                ))}
-              </span>
-            </span>
+        : lines.map(({ item: { route, times }, leaving, k }) => (
+            <LineGroup key={k} route={route} times={times} now={now} leaving={leaving} />
           ))}
     </div>
   )
@@ -135,10 +227,11 @@ function ShortTime({ d, now }: { d: Departure; now: Date }) {
   const s = (at.getTime() - now.getTime()) / 1000
   const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
   const text =
-    s < 0 ? `${justLeftValue(s)}s` : s >= 3600 ? formatTime(at) : s < 60 ? `${Math.round(s)}s` : `${countdown(s).value}'`
+    s < 0 ? `${justLeftValue(s)}s` : s >= 3600 ? formatTime(at) : s < 60 ? `${Math.min(59, Math.round(s))}s` : `${countdown(s).value}'`
   return (
-    <span className={`inline-flex items-start ${s >= 3600 ? 'px-1' : ''} ${s < 0 ? 'opacity-45' : ''}`}>
-      <RollingNumber value={text} />
+    <span className={`inline-flex items-start whitespace-nowrap ${s >= 3600 ? 'px-1' : ''} ${s < 0 ? 'opacity-45' : ''}`}>
+      {/* No fixed-width core here: the sign and the digits stay together, and the times sit tight in their row */}
+      <RollingNumber value={text} fixedWidth={false} />
       {live && s >= 0 && <LiveIcon className="ml-0.5 h-2.5 w-2.5 text-secondary" aria-hidden />}
     </span>
   )

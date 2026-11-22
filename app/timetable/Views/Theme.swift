@@ -68,10 +68,13 @@ struct RowList<Data: RandomAccessCollection, ID: Hashable, Row: View>: View {
                     }
                     row(item)
                 }
-                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                // Leaving: fade out in place, and the rows below close up (the card clips, so nothing may slide out sideways).
+                // Arriving: slide in from above.
+                .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
             }
         }
         .animation(.easeInOut(duration: 0.35), value: items.map { $0[keyPath: id] })
+        .clipped()
     }
 }
 

@@ -149,11 +149,6 @@ body {
   }
 }
 
-@keyframes roll-in {
-  from { transform: translateY(70%); opacity: 0; }
-  to { transform: none; opacity: 1; }
-}
-
 @keyframes page-from-right {
   from { transform: translateX(100%); }
 }
@@ -202,5 +197,4 @@ html, body { overflow-x: clip; }
 }
 
 @theme {
-  --animate-roll-in: roll-in 0.25s ease-out;
 }

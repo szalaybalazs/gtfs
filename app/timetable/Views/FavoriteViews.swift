@@ -12,10 +12,17 @@ import TimetableAPI
 private let maxTimes = 8
 
 /// Upcoming departures in time order, back-to-back ones of the same line merged: [1] 1', 5'  [2] 7'  [1] 10'.
-private func runs(_ departures: [Departure], now: Foundation.Date, only: Set<String>?) -> [(route: LineRef, times: [Departure])] {
+/// A departure that has left stays for 10 s, but only if it was on screen before it left: an update that still has it in the past doesn't bring it back.
+private let leaveSeconds: TimeInterval = 10
+
+private func runs(_ departures: [Departure], now: Foundation.Date, only: Set<String>?, shownBefore: Set<String>) -> [(route: LineRef, times: [Departure])] {
     var out: [(route: LineRef, times: [Departure])] = []
     let upcoming = departures
-        .filter { d in d.route != nil && (only == nil || only!.contains(d.route!.routeId)) && d.departure >= now.addingTimeInterval(-30) }
+        .filter { d in
+            guard d.route != nil, only == nil || only!.contains(d.route!.routeId) else { return false }
+            if d.departure >= now { return true }
+            return shownBefore.contains(d.id) && d.departure >= now.addingTimeInterval(-leaveSeconds)
+        }
         .sorted { $0.departure < $1.departure }
         .prefix(maxTimes)
     for d in upcoming {
@@ -34,9 +41,11 @@ private struct ShortTime: View {
     var body: some View {
         let s = departure.departure.timeIntervalSince(now)
         let live = RealtimeStatus(realtime: departure.realtime, delay: departure.delay) != .scheduled
-        let text = s < 0 ? tr("-\(Int((-s).rounded(.up)))s")
+        // The first second after leaving reads "0s", as on the web; then "-1s", "-2s"…
+        let gone = Int((-s).rounded(.down))
+        let text = s < 0 ? (gone <= 0 ? "0s" : tr("-\(gone)s"))
             : s >= 3600 ? TimeFormat.clock(departure.departure)
-            : s < 60 ? tr("\(Int(s.rounded()))s")
+            : s < 60 ? tr("\(min(59, Int(s.rounded())))s")
             : "\(Countdown.upcoming(s).value)'"
         HStack(alignment: .top, spacing: 2) {
             Text(text).font(.system(size: 17, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
@@ -51,15 +60,20 @@ private struct ShortTime: View {
 }
 
 /// The one favourites layout, in time order. Side-scrollable when it doesn't fit; times coloured by realtime status.
+/// What was on screen last tick (kept outside SwiftUI state, so updating it doesn't redraw anything).
+private final class OnScreen { var ids = Set<String>() }
+
 private struct LineTimesRow: View {
     let departures: [Departure]
     let pending: Bool
     var only: Set<String>? = nil
     let fallback: [LineRef]
+    @State private var onScreen = OnScreen()
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let groups = runs(departures, now: context.date, only: only)
+            let groups = runs(departures, now: context.date, only: only, shownBefore: onScreen.ids)
+            let _ = { onScreen.ids = Set(groups.flatMap { $0.times.map(\.id) }) }()
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     if pending || groups.isEmpty {
@@ -70,15 +84,18 @@ private struct LineTimesRow: View {
                             }
                         }
                     } else {
-                        ForEach(Array(groups.enumerated()), id: \.offset) { _, g in
+                        ForEach(groups, id: \.route.routeId) { g in
                             HStack(spacing: 8) {
                                 LineBadge(line: g.route, fit: true)
                                 // One-line times with the live mark after them; full colour
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                                     ForEach(Array(g.times.enumerated()), id: \.element.id) { _, d in
+                                        // A time that leaves fades out and the ones after it slide left; one that returns fades in and the rest slide right
                                         ShortTime(departure: d, now: context.date)
+                                            .transition(.opacity)
                                     }
                                 }
+                                .animation(.easeInOut(duration: 0.35), value: g.times.map(\.id))
                             }
                         }
                     }

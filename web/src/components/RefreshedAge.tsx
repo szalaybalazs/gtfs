@@ -19,10 +19,11 @@ export function RefreshedAge({ seconds, className = '' }: { seconds: number; cla
   const t = useT()
   const s = Math.max(0, Math.floor(seconds))
   return (
-    <span className={`ml-auto flex items-center gap-1.5 text-secondary ${className}`}>
-      <ClockIcon />
-      <span className="tabular-nums">
-        <RollingNumber value={s < 60 ? t('short.seconds', { n: s }) : t('short.minutes', { n: Math.floor(s / 60) })} />
+    // The icon and the number share one centre line; the number has no fixed-width box, so there is no gap before the unit
+    <span className={`ml-auto flex items-center gap-1 leading-none text-secondary ${className}`}>
+      <ClockIcon className="shrink-0" />
+      <span className="flex items-center tabular-nums">
+        <RollingNumber value={s < 60 ? t('short.seconds', { n: s }) : t('short.minutes', { n: Math.floor(s / 60) })} fixedWidth={false} />
       </span>
     </span>
   )
