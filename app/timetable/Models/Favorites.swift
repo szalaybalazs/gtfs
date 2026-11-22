@@ -125,6 +125,18 @@ final class FavoritesStore {
         save()
     }
 
+    /// Drag-and-drop: move the favourite with `id` to just before the one with `targetId` (or to the end when nil).
+    func move(id: String, before targetId: String?) {
+        guard id != targetId, let from = favorites.firstIndex(where: { $0.id == id }) else { return }
+        let item = favorites.remove(at: from)
+        if let targetId, let to = favorites.firstIndex(where: { $0.id == targetId }) {
+            favorites.insert(item, at: to)
+        } else {
+            favorites.append(item)
+        }
+        save()
+    }
+
     func remove(at offsets: IndexSet) {
         favorites.remove(atOffsets: offsets)
         save()

@@ -63,6 +63,12 @@ export default $config({
       schedule: "cron(30 3 * * ? *)",
       timezone: "Europe/Budapest",
     });
+    // Every 3 hours too: BKK republishes its timetable during the day, and the job exits at once when nothing changed
+    new sst.aws.CronV2("ImportScheduleHourly", {
+      task: importTask,
+      schedule: "cron(0 */3 * * ? *)",
+      timezone: "Europe/Budapest",
+    });
 
     // GraphQL API: reads the timetable from S3 into /tmp, fetches realtime
     // feeds on demand.

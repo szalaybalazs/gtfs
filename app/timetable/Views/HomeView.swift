@@ -72,7 +72,18 @@ struct HomeView: View {
     private func section(_ title: LocalizedStringKey, _ items: [Favorite]) -> some View {
         VStack(spacing: 0) {
             SectionTitle(title)
-            Card { RowList(data: items, id: \.id) { FavoriteCard(fav: $0) } }
+            Card {
+                RowList(data: items, id: \.id) { fav in
+                    // Drag a favourite onto another to move it there; no edit mode needed
+                    FavoriteCard(fav: fav)
+                        .draggable(fav.id)
+                        .dropDestination(for: String.self) { ids, _ in
+                            guard let dragged = ids.first else { return false }
+                            FavoritesStore.shared.move(id: dragged, before: fav.id)
+                            return true
+                        }
+                }
+            }
         }
     }
 

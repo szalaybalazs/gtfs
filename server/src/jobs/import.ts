@@ -1,6 +1,6 @@
 import { createReadStream, rmSync, statSync } from "node:fs";
 import zlib from "node:zlib";
-import { S3Client } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { importGtfs, openDb } from "gtfs";
 import { Resource } from "sst";
@@ -10,13 +10,35 @@ import { buildRouteLines } from "../common/routeLines";
 // to S3, where the API picks it up. Runs daily as a Fargate task.
 
 const sqlitePath = process.env.SQLITE_PATH ?? "/tmp/timetable.sqlite";
+const BKK_ZIP = "https://go.bkk.hu/api/static/v1/public-gtfs/budapest_gtfs.zip";
+const KEY = "timetable.sqlite.zst";
+
+// Version check: BKK's zip gets a new ETag (or Last-Modified) whenever it republishes. We store that signature
+// with the uploaded database; if the zip still has the same signature, there is nothing new to import.
+// Runs every few hours (see sst.config.ts), so this check is what keeps those runs cheap.
+// Set FORCE_IMPORT=1 to import anyway.
+const s3 = new S3Client({});
+const head = await fetch(BKK_ZIP, { method: "HEAD" });
+const sourceSig = head.headers.get("etag") ?? head.headers.get("last-modified");
+let storedSig: string | undefined;
+try {
+  const meta = await s3.send(new HeadObjectCommand({ Bucket: Resource.Gtfs.name, Key: KEY }));
+  storedSig = meta.Metadata?.["source-sig"];
+} catch {
+  // No database uploaded yet: import
+}
+console.log(`BKK zip signature: ${sourceSig ?? "none"}, stored: ${storedSig ?? "none"}`);
+if (sourceSig && storedSig === sourceSig && !process.env.FORCE_IMPORT) {
+  console.log("Timetable is already up to date; nothing to do.");
+  process.exit(0);
+}
 
 rmSync(sqlitePath, { force: true });
 
 await importGtfs({
   agencies: [
     {
-      url: "https://go.bkk.hu/api/static/v1/public-gtfs/budapest_gtfs.zip",
+      url: BKK_ZIP,
     },
     {
       url: "https://gtfs.kti.hu/public-gtfs/volanbusz_gtfs.zip",
@@ -106,10 +128,11 @@ console.log(`Uploading ${(statSync(sqlitePath).size / 1e6).toFixed(0)} MB (zstd 
 if (process.env.SKIP_UPLOAD) process.exit(0);
 
 await new Upload({
-  client: new S3Client({}),
+  client: s3,
   params: {
     Bucket: Resource.Gtfs.name,
-    Key: "timetable.sqlite.zst",
+    Key: KEY,
+    Metadata: sourceSig ? { "source-sig": sourceSig } : undefined,
     Body: createReadStream(sqlitePath).pipe(
       zlib.createZstdCompress({
         params: { [zlib.constants.ZSTD_c_compressionLevel]: 6 },
