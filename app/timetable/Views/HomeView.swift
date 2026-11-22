@@ -11,6 +11,7 @@ import Flow
 struct HomeView: View {
     @Environment(AppSettings.self) private var settings
     @State private var store = FavoritesStore.shared
+    @State private var reorderKey: String?
     @State private var model = StationsViewModel()
 
     var body: some View {
@@ -42,10 +43,10 @@ struct HomeView: View {
                 }
                 let fromStops = store.ofKind(.lineStop) + store.ofKind(.lines)
                 if !fromStops.isEmpty {
-                    section("Lines from stops", fromStops)
+                    section("Lines from stops", "fromStops", fromStops)
                 }
                 let stops = store.ofKind(.stop)
-                if !stops.isEmpty { section("Stops", stops) }
+                if !stops.isEmpty { section("Stops", "stops", stops) }
                 nearby
             }
             .padding(16)
@@ -69,19 +70,41 @@ struct HomeView: View {
         .refreshable { await model.loadNearby(radius: settings.nearbyRadius) }
     }
 
-    private func section(_ title: LocalizedStringKey, _ items: [Favorite]) -> some View {
-        VStack(spacing: 0) {
-            SectionTitle(title)
+    /// Which section is in reorder mode (only one at a time).
+    private func section(_ title: LocalizedStringKey, _ key: String, _ items: [Favorite]) -> some View {
+        let reordering = reorderKey == key
+        return VStack(spacing: 0) {
+            HStack {
+                SectionTitle(title)
+                if reordering {
+                    Button(tr("Done")) { reorderKey = nil }.font(.system(size: 17, weight: .semibold))
+                }
+            }
             Card {
                 RowList(data: items, id: \.id) { fav in
-                    // Drag a favourite onto another to move it there; no edit mode needed
-                    FavoriteCard(fav: fav)
-                        .draggable(fav.id)
-                        .dropDestination(for: String.self) { ids, _ in
-                            guard let dragged = ids.first else { return false }
-                            FavoritesStore.shared.move(id: dragged, before: fav.id)
-                            return true
+                    HStack(spacing: 10) {
+                        FavoriteCard(fav: fav, link: !reordering)
+                        if reordering {
+                            // The handle on the right: drag it up or down, within this section only
+                            Image(systemName: "line.3.horizontal")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(Theme.secondary)
+                                .padding(.trailing, 4)
+                                .contentShape(Rectangle())
+                                .draggable(fav.id)
                         }
+                    }
+                    // Long press: the system menu, with the background blurred; "Reorder" turns on the handles
+                    .contextMenu {
+                        if !reordering {
+                            Button { reorderKey = key } label: { Label(tr("Reorder"), systemImage: "arrow.up.arrow.down") }
+                        }
+                    }
+                    .dropDestination(for: String.self) { ids, _ in
+                        guard reordering, let dragged = ids.first, items.contains(where: { $0.id == dragged }) else { return false }
+                        FavoritesStore.shared.move(id: dragged, before: fav.id)
+                        return true
+                    }
                 }
             }
         }

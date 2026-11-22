@@ -1,4 +1,5 @@
 import { RADII, useNearbyRadius, type Radius } from '../lib/nearbyRadius'
+import { useAnimateNumbers } from '../lib/animateNumbers'
 import { formatDistance } from '../lib/geo'
 import { CircleHalf, Moon, Sun } from '@mynaui/icons-react'
 import type { ReactNode } from 'react'
@@ -61,6 +62,7 @@ export default function SettingsPage() {
   const [theme, setThemeState] = useState(getTheme)
   const [language, setLanguage] = useLocaleSetting()
   const [radius, setRadius] = useNearbyRadius()
+  const [animateNumbers, setAnimateNumbers] = useAnimateNumbers()
   const { favorites, clear, exportJson, importJson } = useFavorites()
   // Short status under the favourites card ("Copied", "Added 3", …)
   const [favNote, setFavNote] = useState<string | null>(null)
@@ -125,6 +127,10 @@ export default function SettingsPage() {
 
         <section>
           <h2 className="px-1 pb-heading text-xl font-bold">{t('nav.nearby')}</h2>
+          <div className="flex items-center justify-between rounded-2xl bg-surface py-3 pr-4 pl-4">
+            <span className="text-[17px]">{t('settings.animateNumbers')}</span>
+            <input type="checkbox" className="h-6 w-11 accent-accent" checked={animateNumbers} onChange={(e) => setAnimateNumbers(e.target.checked)} aria-label={t('settings.animateNumbers')} />
+          </div>
           {/* How far "Nearby stops" looks; wider helps where stops are sparse */}
           <div className="flex items-center justify-between rounded-2xl bg-surface py-1 pr-1 pl-4">
             <span className="text-[17px]">{t('settings.radius')}</span>

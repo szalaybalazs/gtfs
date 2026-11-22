@@ -60,11 +60,18 @@ struct RowList<Data: RandomAccessCollection, ID: Hashable, Row: View>: View {
     var body: some View {
         let items = Array(data)
         VStack(spacing: 0) {
-            ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                if i > 0 { Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale) }
-                row(item)
+            // Keyed by the data's own id (not the position), so a row keeps its view as others come and go
+            ForEach(items, id: id) { item in
+                VStack(spacing: 0) {
+                    if items.first.map({ $0[keyPath: id] == item[keyPath: id] }) != true {
+                        Rectangle().fill(Theme.separator).frame(height: 1 / UIScreen.main.scale)
+                    }
+                    row(item)
+                }
+                .transition(.opacity.combined(with: .move(edge: .trailing)))
             }
         }
+        .animation(.easeInOut(duration: 0.35), value: items.map { $0[keyPath: id] })
     }
 }
 

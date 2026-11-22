@@ -1,3 +1,4 @@
+import RollingNumber from './RollingNumber'
 import { Link } from 'react-router'
 import type { Departure, RouteRef } from '../lib/api'
 import type { Favorite, FavoriteDraft } from '../lib/favorites'
@@ -7,7 +8,7 @@ import { useNow } from '../lib/useTimetable'
 import { ChevronIcon, LiveIcon } from './Icons'
 import { useAlerts } from './Alerts'
 import RouteBadge from './RouteBadge'
-import { countdown } from '../lib/countdown'
+import { countdown, justLeftValue } from '../lib/countdown'
 import { realtimeStatus } from '../lib/realtimeStatus'
 import { formatTime } from '../lib/time'
 
@@ -134,10 +135,10 @@ function ShortTime({ d, now }: { d: Departure; now: Date }) {
   const s = (at.getTime() - now.getTime()) / 1000
   const live = realtimeStatus(d.realtime, d.departureDelay ?? d.arrivalDelay) !== 'scheduled'
   const text =
-    s < 0 ? `-${Math.ceil(-s)}s` : s >= 3600 ? formatTime(at) : s < 60 ? `${Math.round(s)}s` : `${countdown(s).value}'`
+    s < 0 ? `${justLeftValue(s)}s` : s >= 3600 ? formatTime(at) : s < 60 ? `${Math.round(s)}s` : `${countdown(s).value}'`
   return (
     <span className={`inline-flex items-start ${s >= 3600 ? 'px-1' : ''} ${s < 0 ? 'opacity-45' : ''}`}>
-      {text}
+      <RollingNumber value={text} />
       {live && s >= 0 && <LiveIcon className="ml-0.5 h-2.5 w-2.5 text-secondary" aria-hidden />}
     </span>
   )

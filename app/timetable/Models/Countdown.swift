@@ -29,6 +29,12 @@ enum Countdown {
         return CountdownText(value: String(s / 60), unit: tr("min"))
     }
 
+    /// Just left (up to a minute): "0" for the first second (no jump from 0 to a minus), then "-1", "-2"...
+    static func justLeft(_ seconds: Double) -> CountdownText {
+        let n = Int((-seconds).rounded(.down))
+        return CountdownText(value: n == 0 ? "0" : "-\(n)", unit: tr("sec"))
+    }
+
     /// What a row shows for a time `seconds` from the reference.
     /// - Parameters:
     ///   - fixed: the reference is a chosen time, not the clock: earlier rows read "N min before".
@@ -42,7 +48,7 @@ enum Countdown {
                 return board ? CountdownText(value: "-\(minutes)", unit: tr("min"))
                              : CountdownText(value: String(minutes), unit: tr("min before"))
             }
-            if seconds >= -60 { return CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: tr("sec")) }
+            if seconds >= -60 { return justLeft(seconds) }
             return CountdownText(value: String(Int((-seconds / 60).rounded())), unit: tr("min ago"))
         }
         return upcoming(seconds)

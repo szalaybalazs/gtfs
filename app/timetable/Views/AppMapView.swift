@@ -457,49 +457,71 @@ struct StopDotContent: View {
     private var badges: some View { StopBadges(routes: routes, size: 10) }
 }
 
-/// The lines at a stop, with the same clean-up everywhere: variants (56A, 56É…) are left out when the base line (56) is there
-/// too, and 4 / 6 / 4-6 collapse to 4-6 when all three are present.
+/// The lines at a stop, with the same clean-up everywhere: variants (56A, 56É…) are left out when the base line (56) is there too.
 func baseLines(_ routes: [LineRef]) -> [LineRef] {
     let names = Set(routes.compactMap(\.shortName))
-    let merged46 = names.contains("4") && names.contains("6") && names.contains("4-6")
     return routes.filter { r in
-        if merged46 && (r.shortName == "4" || r.shortName == "6") { return false }
         guard let n = r.shortName, let last = n.last, last.isLetter, n.count > 1 else { return true }
         let head = String(n.dropLast())
         return !(head.allSatisfy(\.isNumber) && names.contains(head))
     }
 }
 
-/// Line badges for a stop: up to two rows (four to a row), then a grey "…" when more don't fit. Used on the map and on the stop card.
+/// Line badges for a stop, ordered metro, tram, trolleybus, bus. The full-size ones (the stop card) show as many as fit
+/// in `rows` rows, then a grey "…" for the rest; the map's small ones show up to eight.
 struct StopBadges: View {
     let routes: [LineRef]
     var size: CGFloat = 10
     var alignment: HorizontalAlignment = .center
+    var full = false
+    var rows = 2
 
     var body: some View {
-        let base = baseLines(routes)
-        let shown = Array(base.prefix(8))
-        let more = base.count > shown.count
-        let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1)
-        let rows = Array(stride(from: 0, to: shown.count, by: perRow))
-        VStack(alignment: alignment, spacing: 4) {
-            ForEach(rows, id: \.self) { start in
-                HStack(spacing: 3) {
-                    ForEach(shown[start..<min(start + perRow, shown.count)], id: \.routeId) { r in
-                        Text(r.shortName ?? "").font(.system(size: size, weight: .bold)).lineLimit(1).fixedSize()
-                            .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
-                            .padding(.horizontal, size * 0.4).frame(minHeight: size * 1.4).frame(minWidth: size * 1.4)
-                            .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
+        let sorted = baseLines(routes).sorted(by: lineOrder)
+        if full {
+            GeometryReader { geo in
+                let perRow = max(1, Int((geo.size.width + 4) / 52)) // 48 pt badge + 4 pt gap
+                let cap = perRow * rows
+                let shown = Array(sorted.prefix(sorted.count <= cap ? cap : cap - 1))
+                let more = sorted.count > cap
+                VStack(alignment: alignment, spacing: 4) {
+                    ForEach(Array(stride(from: 0, to: shown.count, by: perRow)), id: \.self) { start in
+                        HStack(spacing: 4) {
+                            ForEach(shown[start..<min(start + perRow, shown.count)], id: \.routeId) { r in LineBadge(line: r) }
+                            if more && start + perRow >= shown.count {
+                                Text("…").font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                                    .frame(width: 30, height: 24).background(Color.gray, in: RoundedRectangle(cornerRadius: 5))
+                            }
+                        }
                     }
-                    if start == rows.last && more {
-                        Text("…").font(.system(size: size, weight: .bold)).fixedSize().foregroundStyle(.white)
-                            .padding(.horizontal, size * 0.4).frame(minHeight: size * 1.4).frame(minWidth: size * 1.4)
-                            .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
+                }
+                .frame(maxWidth: .infinity, alignment: alignment == .leading ? .leading : .center)
+            }
+            .frame(height: rows == 1 ? 24 : 52)
+        } else {
+            let shown = Array(sorted.prefix(8))
+            let more = sorted.count > shown.count
+            let perRow = shown.count > 4 ? (shown.count + 1) / 2 : max(shown.count, 1)
+            let rowStarts = Array(stride(from: 0, to: shown.count, by: perRow))
+            VStack(alignment: alignment, spacing: 4) {
+                ForEach(rowStarts, id: \.self) { start in
+                    HStack(spacing: 3) {
+                        ForEach(shown[start..<min(start + perRow, shown.count)], id: \.routeId) { r in
+                            Text(r.shortName ?? "").font(.system(size: size, weight: .bold)).lineLimit(1).fixedSize()
+                                .foregroundStyle(Color(hex: r.textColor ?? "#ffffff"))
+                                .padding(.horizontal, size * 0.4).frame(minHeight: size * 1.4).frame(minWidth: size * 1.4)
+                                .background(Color(hex: r.color ?? "#000000"), in: RoundedRectangle(cornerRadius: 3))
+                        }
+                        if start == rowStarts.last && more {
+                            Text("…").font(.system(size: size, weight: .bold)).fixedSize().foregroundStyle(.white)
+                                .padding(.horizontal, size * 0.4).frame(minHeight: size * 1.4).frame(minWidth: size * 1.4)
+                                .background(Color.gray, in: RoundedRectangle(cornerRadius: 3))
+                        }
                     }
                 }
             }
+            .fixedSize()
         }
-        .fixedSize()
     }
 }
 

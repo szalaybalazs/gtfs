@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import RouteBadge from './RouteBadge'
 import { baseLines } from '../lib/mapIcons'
+import { CATEGORIES, categoryOf } from '../lib/categories'
 import type { RouteSummary } from '../lib/api'
 
 type Route = Pick<RouteSummary, 'shortName' | 'routeId' | 'color' | 'textColor'> & { type?: RouteSummary['type'] }
@@ -13,7 +14,11 @@ const TWO_ROWS = 24 * 2 + 4
  * spot is a grey "…". Recomputed when the width changes. The same clean-up as the map (variants, 4/6/4-6).
  */
 export default function FitBadges({ routes }: { routes: Route[] }) {
-  const base = useMemo(() => baseLines(routes as RouteSummary[]), [routes])
+  // Metro, tram, trolleybus, bus, ... (then by number); the same order as the map
+  const base = useMemo(() => {
+    const rank = (r: Route) => CATEGORIES.findIndex((c) => c.key === categoryOf(r as RouteSummary).key)
+    return [...baseLines(routes as RouteSummary[])].sort((a, b) => rank(a) - rank(b))
+  }, [routes])
   const ref = useRef<HTMLDivElement>(null)
   const [count, setCount] = useState(base.length)
 

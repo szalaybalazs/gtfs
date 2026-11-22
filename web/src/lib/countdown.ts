@@ -13,3 +13,12 @@ export function countdown(seconds: number): { value: string; unit: 'unit.sec' | 
   }
   return { value: String(Math.floor(s / 60)), unit: 'unit.min' }
 }
+
+/**
+ * The number for a departure that has just gone: "0" for the first second, then "-1", "-2"…
+ * (the same zero as the countdown itself, so the sequence never jumps from 1 to a minus sign).
+ */
+export function justLeftValue(seconds: number): string {
+  const n = Math.floor(-seconds)
+  return n <= 0 ? '0' : `-${n}`
+}

@@ -28,8 +28,8 @@ final class DeparturesViewModel {
     private(set) var loadedStopIds: [String] = []
 
     private let client: GraphQLClient
-    /// The times refresh this often, like the web app.
-    static let refreshSeconds: UInt64 = 30
+    /// The times refresh this often (the same 10 s as the vehicles).
+    static let refreshSeconds: UInt64 = 10
 
     init(client: GraphQLClient = Network.shared) {
         self.client = client

@@ -85,6 +85,10 @@ final class AppSettings {
     var nearbyRadius: Int {
         didSet { defaults.set(nearbyRadius, forKey: "nearby-radius") }
     }
+    /// Countdowns and "Updated Ns ago" roll their digits when they change (on by default; off for a plain swap).
+    var animateNumbers: Bool {
+        didSet { defaults.set(animateNumbers, forKey: "animate-numbers") }
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -94,6 +98,7 @@ final class AppSettings {
         appearance = defaults.string(forKey: "appearance").flatMap(AppAppearance.init(rawValue:)) ?? .auto
         let radius = defaults.integer(forKey: "nearby-radius")
         nearbyRadius = Self.radii.contains(radius) ? radius : 1000
+        animateNumbers = defaults.object(forKey: "animate-numbers") as? Bool ?? true
         // Older versions kept the language only in the app's own defaults: copy it for the widgets
         if SharedDefaults.suite.string(forKey: L10n.key) == nil { SharedDefaults.suite.set(language.rawValue, forKey: L10n.key) }
     }

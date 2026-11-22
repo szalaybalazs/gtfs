@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import type { Departure } from '../lib/api'
-import { countdown } from '../lib/countdown'
+import { countdown, justLeftValue } from '../lib/countdown'
 import { useT } from '../lib/i18n'
 import { formatTime } from '../lib/time'
 import { prefetchTrip, type TripPreview } from '../lib/prefetch'
@@ -15,6 +15,7 @@ import RouteBadge from './RouteBadge'
 const LINGER_S = 10
 import { MarkIcon } from './LineMarks'
 import { useShownMarks } from '../lib/shownMarks'
+import RollingNumber from './RollingNumber'
 
 /**
  * Departures as tappable rows: line badge, destination, countdown with the
@@ -167,7 +168,7 @@ export function DepartureRow({
     : left
     ? { value: String(Math.round(-seconds / 60)), unit: 'unit.minAgo' as const }
     : justLeft
-      ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
+      ? { value: justLeftValue(seconds), unit: 'unit.sec' as const }
       : countdown(seconds)
   return (
     // grid-rows 1fr → 0fr animates the row's height down so the list slides up
@@ -176,7 +177,8 @@ export function DepartureRow({
         enter === 'top' ? 'row-in-top' : enter === 'bottom' ? 'row-in-bottom' : ''
       }`}
     >
-      <div className="min-h-0 overflow-hidden">
+      {/* A departure that is leaving slides up out of the list while the row closes; coming back, it slides down again */}
+      <div className={`min-h-0 overflow-hidden transition-transform duration-500 ${collapsing ? 'ease-in -translate-y-4' : 'ease-out translate-y-0'}`}>
       <Link
         to={`/trips/${encodeURIComponent(d.tripId)}?date=${d.serviceDate}&from=${encodeURIComponent(d.stopId)}`}
         state={{ route: d.route, headsign: d.headsign } satisfies TripPreview}
@@ -207,8 +209,8 @@ export function DepartureRow({
         </div>
         {/* Countdown stays plain (black, grey once gone); colour lives on the time line. Live mark in its own gutter. */}
         <div className={`relative min-w-14 pr-3.5 text-right ${left ? 'text-secondary' : 'text-label'}`}>
-          {status !== 'scheduled' && !justLeft && !left && <LiveIcon className="absolute top-0 right-0 h-3 w-3 text-secondary" aria-hidden />}
-          <p className="text-2xl leading-none font-bold tabular-nums">{value}</p>
+          {status !== 'scheduled' && <LiveIcon className="absolute top-0 right-0 h-3 w-3 text-secondary" aria-hidden />}
+          <p className="text-2xl leading-none font-bold tabular-nums"><RollingNumber value={value} still={collapsing} /></p>
           <p className="text-[11px] font-medium text-secondary">{t(unit)}</p>
         </div>
         <ChevronIcon className="h-4 w-4 shrink-0 text-secondary/60" />

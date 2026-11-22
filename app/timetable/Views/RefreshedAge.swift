@@ -10,6 +10,7 @@ import SwiftUI
 
 struct RefreshedAge: View {
     let updated: Date
+    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -19,6 +20,8 @@ struct RefreshedAge: View {
                 Text(age < 60 ? "\(age)s" : "\(age / 60) \(tr("min"))")
             }
             .font(.system(size: 13)).foregroundStyle(Theme.secondary).monospacedDigit()
+            .contentTransition(settings.animateNumbers ? .numericText(countsDown: false) : .identity)
+            .animation(settings.animateNumbers ? .default : nil, value: age)
         }
     }
 }

@@ -75,13 +75,11 @@ private struct MapCardSheet<Card: View>: ViewModifier {
     private static var chrome: CGFloat { 0 }
     private var small: PresentationDetent { .height(cardHeight + Self.chrome) }
     /// A link was tapped: the page opens once the sheet has finished dismissing (a push during the dismissal is dropped).
-    @State private var pendingOpen: (() -> Void)?
-
-    /// Closes the sheet; the page opens from `onDismiss`.
+    /// Opens the page and closes the sheet at the same time (the page is ready under the sheet, not after it has slid away).
     private var openFromSheet: CardOpen {
         guard let open else { return nil }
         return { value in
-            pendingOpen = { open(value) }
+            open(value)
             selection = nil
         }
     }
@@ -91,9 +89,6 @@ private struct MapCardSheet<Card: View>: ViewModifier {
             // Reset for the next card, then open the page that was tapped
             path = NavigationPath()
             detent = small
-            let open = pendingOpen
-            pendingOpen = nil
-            open?()
         }) {
             NavigationStack(path: $path) {
                 VStack(spacing: 0) {
@@ -248,8 +243,8 @@ struct StopCard: View {
                 }
             } else {
                 // Up to two rows, the same height as the name and direction above, with the same clean-up as on the map
-                StopBadges(routes: lines, size: 12, alignment: .leading)
-                    .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                StopBadges(routes: lines, alignment: .leading, full: true, rows: platform == nil ? 2 : 1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .task {

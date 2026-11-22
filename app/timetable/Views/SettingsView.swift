@@ -36,6 +36,11 @@ struct SettingsView: View {
                     ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
                 }
             }
+            Section {
+                Toggle("Animate changing numbers", isOn: $settings.animateNumbers)
+            } footer: {
+                Text("Countdowns and \"Updated\" ages roll their digits when they change. Turn off for a plain swap.")
+            }
             Section("Nearby stops") {
                 Picker("Radius", selection: $settings.nearbyRadius) {
                     ForEach(AppSettings.radii, id: \.self) { Text("\($0) m").tag($0) }

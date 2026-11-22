@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import SwiftUI
 import WidgetKit
 
 /// A route as the web stores it in favourites.
@@ -115,7 +116,10 @@ final class FavoritesStore {
     func has(_ id: String) -> Bool { favorites.contains { $0.id == id } }
 
     func toggle(_ f: Favorite) {
-        if has(f.id) { favorites.removeAll { $0.id == f.id } } else { favorites.append(f) }
+        // Animated, so a row leaves (and joins) the list gracefully rather than at once
+        withAnimation(.easeInOut(duration: 0.35)) {
+            if has(f.id) { favorites.removeAll { $0.id == f.id } } else { favorites.append(f) }
+        }
         save()
     }
 
@@ -138,7 +142,7 @@ final class FavoritesStore {
     }
 
     func remove(at offsets: IndexSet) {
-        favorites.remove(atOffsets: offsets)
+        withAnimation(.easeInOut(duration: 0.35)) { favorites.remove(atOffsets: offsets) }
         save()
     }
 

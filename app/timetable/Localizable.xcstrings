@@ -1,104 +1,94 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "" : {
-
-    },
-    " " : {
-
-    },
-    "-%llds" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "-%llds"
+  "sourceLanguage": "en",
+  "strings": {
+    "": {},
+    " ": {},
+    "-%llds": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "-%llds"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "-%llds"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "-%llds"
           }
         }
       }
     },
-    "–" : {
-
-    },
-    "…" : {
-
-    },
-    "'" : {
-
-    },
-    "%lld" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld"
+    "–": {},
+    "…": {},
+    "'": {},
+    "%lld": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld"
           }
         }
       }
     },
-    "%lld %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld %2$@"
+    "%lld %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld %2$@"
           }
         }
       }
     },
-    "%lld earlier stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld earlier stop"
+    "%lld earlier stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld earlier stop"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld earlier stops"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld earlier stops"
                 }
               }
             }
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld korábbi megálló"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld korábbi megálló"
           }
         },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragem anterior"
+        "pt-PT": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld paragem anterior"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragens anteriores"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld paragens anteriores"
                 }
               }
             }
@@ -106,194 +96,58 @@
         }
       }
     },
-    "%lld lines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld line"
+    "%lld lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld line"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld lines"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld lines"
                 }
               }
             }
           }
         },
-        "hu" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld vonal"
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld vonal"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld vonal"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld vonal"
                 }
               }
             }
           }
         },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld linha"
+        "pt-PT": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld linha"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld linhas"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld m" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld m"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld m"
-          }
-        }
-      }
-    },
-    "%lld min · %@ · %lld stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min · %@ · %lld stops"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld perc · %@ · %lld megálló"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min · %@ · %lld paragens"
-          }
-        }
-      }
-    },
-    "%lld min · %lld stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld perc · %lld megálló"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min · %lld paragens"
-          }
-        }
-      }
-    },
-    "%lld min early" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld percet siet"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min adiantado"
-          }
-        }
-      }
-    },
-    "%lld min late" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld percet késik"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min atrasado"
-          }
-        }
-      }
-    },
-    "%lld more ongoing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "még %lld folyamatban"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mais %lld em curso"
-          }
-        }
-      }
-    },
-    "%lld planned" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld tervezett"
-          }
-        },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld agendado"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld agendados"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld linhas"
                 }
               }
             }
@@ -301,255 +155,135 @@
         }
       }
     },
-    "%lld platforms · %lld lines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld peron · %lld vonal"
+    "%lld m": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld plataformas · %lld linhas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld m"
           }
         }
       }
     },
-    "%lld stops here" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld stop here"
+    "%lld min · %@ · %lld stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min · %@ · %lld stops"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld perc · %@ · %lld megálló"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min · %@ · %lld paragens"
+          }
+        }
+      }
+    },
+    "%lld min · %lld stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld perc · %lld megálló"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min · %lld paragens"
+          }
+        }
+      }
+    },
+    "%lld min early": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld percet siet"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min adiantado"
+          }
+        }
+      }
+    },
+    "%lld min late": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld percet késik"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min atrasado"
+          }
+        }
+      }
+    },
+    "%lld more ongoing": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "még %lld folyamatban"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mais %lld em curso"
+          }
+        }
+      }
+    },
+    "%lld planned": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tervezett"
+          }
+        },
+        "pt-PT": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld agendado"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld stops here"
-                }
-              }
-            }
-          }
-        },
-        "hu" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld megálló itt"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld megálló itt"
-                }
-              }
-            }
-          }
-        },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragem aqui"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld paragens aqui"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld'" : {
-
-    },
-    "%llds" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llds"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%llds"
-          }
-        }
-      }
-    },
-    "+%lld" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+%lld"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+%lld"
-          }
-        }
-      }
-    },
-    "⋯ Earlier" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⋯ Korábbiak"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⋯ Anteriores"
-          }
-        }
-      }
-    },
-    "Accessible" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Akadálymentes"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acessível"
-          }
-        }
-      }
-    },
-    "Acknowledgements" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Köszönetnyilvánítás"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agradecimentos"
-          }
-        }
-      }
-    },
-    "Add" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hozzáadás"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar"
-          }
-        }
-      }
-    },
-    "Add to favourites" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hozzáadás a kedvencekhez"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar aos favoritos"
-          }
-        }
-      }
-    },
-    "Added %lld favourites." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Added %lld favourite."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Added %lld favourites."
-                }
-              }
-            }
-          }
-        },
-        "hu" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kedvenc hozzáadva"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kedvenc hozzáadva"
-                }
-              }
-            }
-          }
-        },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld favorito adicionado."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld favoritos adicionados."
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld agendados"
                 }
               }
             }
@@ -557,294 +291,75 @@
         }
       }
     },
-    "Agency" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szolgáltató"
+    "%lld platforms · %lld lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld peron · %lld vonal"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Operador"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld plataformas · %lld linhas"
           }
         }
       }
     },
-    "All" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mind"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Todas"
-          }
-        }
-      }
-    },
-    "Appearance" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megjelenés"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aspeto"
-          }
-        }
-      }
-    },
-    "Arrivals" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Érkezők"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chegadas"
-          }
-        }
-      }
-    },
-    "ARRIVES" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ÉRKEZIK"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CHEGADA"
-          }
-        }
-      }
-    },
-    "Best matches" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Legjobb találatok"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Melhores resultados"
-          }
-        }
-      }
-    },
-    "Bikes allowed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kerékpár szállítható"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bicicletas permitidas"
-          }
-        }
-      }
-    },
-    "Boat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hajó"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Barco"
-          }
-        }
-      }
-    },
-    "Bus" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busz"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autocarro"
-          }
-        }
-      }
-    },
-    "Choose which markers show on departures and lines." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kapcsold ki, ami nem érdekel: eltűnik az indulásokból és a vonalakról."
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha os marcadores a mostrar nas partidas e linhas."
-          }
-        }
-      }
-    },
-    "Circular line" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Körjárat"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linha circular"
-          }
-        }
-      }
-    },
-    "Clear" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Törlés"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Limpar"
-          }
-        }
-      }
-    },
-    "Close" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bezárás"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fechar"
-          }
-        }
-      }
-    },
-    "Closest end of the line, %@ away" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs megálló a közeledben, a végállomást mutatjuk · %@"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal mais próximo da linha, a %@"
-          }
-        }
-      }
-    },
-    "Copied %lld favourites." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Copied %lld favourite."
+    "%lld stops here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld stop here"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Copied %lld favourites."
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld stops here"
                 }
               }
             }
           }
         },
-        "hu" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kedvenc kimásolva"
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld megálló itt"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld kedvenc kimásolva"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld megálló itt"
                 }
               }
             }
           }
         },
-        "pt-PT" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld favorito copiado."
+        "pt-PT": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld paragem aqui"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld favoritos copiados."
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld paragens aqui"
                 }
               }
             }
@@ -852,2575 +367,3094 @@
         }
       }
     },
-    "Copy as JSON" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Másolás JSON-ként"
+    "%lld'": {},
+    "%llds": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%llds"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiar como JSON"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%llds"
           }
         }
       }
     },
-    "Couldn't load" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem sikerült betölteni"
+    "+%lld": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não foi possível carregar"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
           }
         }
       }
     },
-    "Couldn't load nearby stops." : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nem sikerült betölteni a közeli megállókat."
+    "⋯ Earlier": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⋯ Korábbiak"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não foi possível carregar as paragens próximas."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⋯ Anteriores"
           }
         }
       }
     },
-    "Dark" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sötét"
+    "Accessible": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akadálymentes"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escuro"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acessível"
           }
         }
       }
     },
-    "Day" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nap"
+    "Acknowledgements": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Köszönetnyilvánítás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dia"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agradecimentos"
           }
         }
       }
     },
-    "Demand-responsive (stops on request)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Igényvezérelt közlekedés"
+    "Add": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hozzáadás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transporte a pedido (paragem mediante pedido)"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar"
           }
         }
       }
     },
-    "departing at %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "indul: %@"
+    "Add to favourites": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hozzáadás a kedvencekhez"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar aos favoritos"
+          }
+        }
+      }
+    },
+    "Added %lld favourites.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Added %lld favourite."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Added %lld favourites."
+                }
+              }
+            }
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "parte às %@"
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kedvenc hozzáadva"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kedvenc hozzáadva"
+                }
+              }
+            }
           }
+        },
+        "pt-PT": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favorito adicionado."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favoritos adicionados."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Agency": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szolgáltató"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Operador"
+          }
+        }
+      }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mind"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megjelenés"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aspeto"
+          }
+        }
+      }
+    },
+    "Arrivals": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Érkezők"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chegadas"
+          }
+        }
+      }
+    },
+    "ARRIVES": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ÉRKEZIK"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CHEGADA"
+          }
+        }
+      }
+    },
+    "Best matches": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legjobb találatok"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melhores resultados"
+          }
+        }
+      }
+    },
+    "Bikes allowed": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kerékpár szállítható"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bicicletas permitidas"
+          }
+        }
+      }
+    },
+    "Boat": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hajó"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barco"
+          }
+        }
+      }
+    },
+    "Bus": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Busz"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocarro"
+          }
+        }
+      }
+    },
+    "Choose which markers show on departures and lines.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsold ki, ami nem érdekel: eltűnik az indulásokból és a vonalakról."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha os marcadores a mostrar nas partidas e linhas."
+          }
+        }
+      }
+    },
+    "Circular line": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Körjárat"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha circular"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Törlés"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpar"
+          }
+        }
+      }
+    },
+    "Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezárás"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
+          }
+        }
+      }
+    },
+    "Closest end of the line, %@ away": {
+      "extractionState": "stale",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs megálló a közeledben, a végállomást mutatjuk · %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal mais próximo da linha, a %@"
+          }
+        }
+      }
+    },
+    "Copied %lld favourites.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Copied %lld favourite."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Copied %lld favourites."
+                }
+              }
+            }
+          }
+        },
+        "hu": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kedvenc kimásolva"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kedvenc kimásolva"
+                }
+              }
+            }
+          }
+        },
+        "pt-PT": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favorito copiado."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld favoritos copiados."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Copy as JSON": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Másolás JSON-ként"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar como JSON"
+          }
+        }
+      }
+    },
+    "Couldn't load": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült betölteni"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar"
+          }
+        }
+      }
+    },
+    "Couldn't load nearby stops.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült betölteni a közeli megállókat."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar as paragens próximas."
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sötét"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escuro"
+          }
+        }
+      }
+    },
+    "Day": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nap"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dia"
+          }
+        }
+      }
+    },
+    "Demand-responsive (stops on request)": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igényvezérelt közlekedés"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transporte a pedido (paragem mediante pedido)"
+          }
+        }
+      }
+    },
+    "departing at %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "indul: %@"
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parte às %@"
+          }
         }
       }
     },
-    "departing in %lld min" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "indul %lld perc múlva"
+    "departing in %lld min": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "indul %lld perc múlva"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "parte daqui a %lld min"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parte daqui a %lld min"
           }
         }
       }
     },
-    "Departures" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indulások"
+    "Departures": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indulások"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Partidas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partidas"
           }
         }
       }
     },
-    "Departures →" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indulások →"
+    "Departures →": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indulások →"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Partidas →"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partidas →"
           }
         }
       }
     },
-    "Direction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irány"
+    "Direction": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irány"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sentido"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sentido"
           }
         }
       }
     },
-    "Disruption" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Üzemzavar"
+    "Disruption": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üzemzavar"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Perturbação"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perturbação"
           }
         }
       }
     },
-    "Done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kész"
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kész"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Concluído"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluído"
           }
         }
       }
     },
-    "Edit favourites" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kedvencek szerkesztése"
+    "Edit favourites": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kedvencek szerkesztése"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editar favoritos"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar favoritos"
           }
         }
       }
     },
-    "EVENT" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ESEMÉNY"
+    "EVENT": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ESEMÉNY"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "EVENTO"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EVENTO"
           }
         }
       }
     },
-    "Favorite" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kedvenc"
+    "Favorite": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kedvenc"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favorito"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorito"
           }
         }
       }
     },
-    "Favourite" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kedvenc"
+    "Favourite": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kedvenc"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favorito"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorito"
           }
         }
       }
     },
-    "Favourites" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kedvencek"
+    "Favourites": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kedvencek"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favoritos"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoritos"
           }
         }
       }
     },
-    "Finding your location…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Helyzeted meghatározása…"
+    "Finding your location…": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyzeted meghatározása…"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A obter a sua localização…"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A obter a sua localização…"
           }
         }
       }
     },
-    "Freeze" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Befagyasztás"
+    "Freeze": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befagyasztás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Congelar"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Congelar"
           }
         }
       }
     },
-    "from %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "kezdete: %@"
+    "from %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kezdete: %@"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "a partir de %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a partir de %@"
           }
         }
       }
     },
-    "From %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ után"
+    "From %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ után"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A partir de %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir de %@"
           }
         }
       }
     },
-    "Front-door boarding" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Első ajtós felszállási rend"
+    "Front-door boarding": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Első ajtós felszállási rend"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entrada pela porta da frente"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrada pela porta da frente"
           }
         }
       }
     },
-    "FROZEN" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BEFAGYASZTVA"
+    "FROZEN": {
+      "extractionState": "stale",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BEFAGYASZTVA"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CONGELADO"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONGELADO"
           }
         }
       }
     },
-    "Group by" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Csoportosítás"
+    "Group by": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csoportosítás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agrupar por"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agrupar por"
           }
         }
       }
     },
-    "Home" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kezdőlap"
+    "Home": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kezdőlap"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Início"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Início"
           }
         }
       }
     },
-    "Just the line" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Csak a járat"
+    "Just the line": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Csak a járat"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apenas a linha"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apenas a linha"
           }
         }
       }
     },
-    "Language" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nyelv"
+    "Language": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyelv"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Idioma"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma"
           }
         }
       }
     },
-    "Light" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Világos"
+    "Light": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Világos"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claro"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claro"
           }
         }
       }
     },
-    "Line" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vonal"
+    "Line": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vonal"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linha"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha"
           }
         }
       }
     },
-    "Lines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járatok"
+    "Lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járatok"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linhas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linhas"
           }
         }
       }
     },
-    "Lines from stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járatok megállókból"
+    "Lines from stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járatok megállókból"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linhas a partir de paragens"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linhas a partir de paragens"
           }
         }
       }
     },
-    "Lines view" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lines"
+    "Lines view": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lines"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vonalak"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vonalak"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linhas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linhas"
           }
         }
       }
     },
-    "LIVE" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ÉLŐ"
+    "LIVE": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ÉLŐ"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "EM DIRETO"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EM DIRETO"
           }
         }
       }
     },
-    "Location is off. Allow it in Settings to see what leaves near you." : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A helymeghatározás ki van kapcsolva. Engedélyezd a Beállításokban, hogy lásd, mi indul a közeledből."
+    "Location is off. Allow it in Settings to see what leaves near you.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A helymeghatározás ki van kapcsolva. Engedélyezd a Beállításokban, hogy lásd, mi indul a közeledből."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A localização está desativada. Permita o acesso nas Definições para ver o que parte perto de si."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A localização está desativada. Permita o acesso nas Definições para ver o que parte perto de si."
           }
         }
       }
     },
-    "Location off" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Helymeghatározás kikapcsolva"
+    "Location off": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helymeghatározás kikapcsolva"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Localização desativada"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Localização desativada"
           }
         }
       }
     },
-    "Map" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Térkép"
+    "Map": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Térkép"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mapa"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapa"
           }
         }
       }
     },
-    "Map layers" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Térképrétegek"
+    "Map layers": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Térképrétegek"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Camadas do mapa"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camadas do mapa"
           }
         }
       }
     },
-    "Markers" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jelölések"
+    "Markers": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelölések"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Marcadores"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcadores"
           }
         }
       }
     },
-    "Menu" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menü"
+    "Menu": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menü"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menu"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menu"
           }
         }
       }
     },
-    "Metro" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Metró"
+    "Metro": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metró"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Metro"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metro"
           }
         }
       }
     },
-    "min" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "perc"
+    "min": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "perc"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min"
           }
         }
       }
     },
-    "min ago" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "perce"
+    "min ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "perce"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min atrás"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min atrás"
           }
         }
       }
     },
-    "min before" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "perccel előtte"
+    "min before": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "perccel előtte"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min antes"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "min antes"
           }
         }
       }
     },
-    "Mynaui icons" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mynaui ikonok"
+    "Mynaui icons": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mynaui ikonok"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ícones Mynaui"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ícones Mynaui"
           }
         }
       }
     },
-    "Nearby" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Körülöttem"
+    "Nearby": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Körülöttem"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próximas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próximas"
           }
         }
       }
     },
-    "Nearby stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Közeli megállók"
+    "Nearby stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Közeli megállók"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragens próximas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragens próximas"
           }
         }
       }
     },
-    "Nearest stop" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Legközelebbi megálló"
+    "Nearest stop": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legközelebbi megálló"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragem mais próxima"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragem mais próxima"
           }
         }
       }
     },
-    "Nearest stop on this line, %@ away" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Legközelebbi megálló · %@"
+    "Nearest stop on this line, %@ away": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Legközelebbi megálló · %@"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragem mais próxima nesta linha, a %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragem mais próxima nesta linha, a %@"
           }
         }
       }
     },
-    "News" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hírek"
+    "News": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hírek"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notícias"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notícias"
           }
         }
       }
     },
-    "Next departures of your favourites." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Következő indulások a kedvenceidhez."
+    "Next departures of your favourites.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Következő indulások a kedvenceidhez."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próximas partidas dos teus favoritos."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próximas partidas dos teus favoritos."
           }
         }
       }
     },
-    "Night" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Éjszakai"
+    "Night": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Éjszakai"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noturno"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noturno"
           }
         }
       }
     },
-    "No compass" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs iránytű"
+    "No compass": {
+      "extractionState": "stale",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs iránytű"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem bússola"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem bússola"
           }
         }
       }
     },
-    "No departures" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs indulás"
+    "No departures": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs indulás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem partidas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem partidas"
           }
         }
       }
     },
-    "No details." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs részletes leírás."
+    "No details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs részletes leírás."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem detalhes."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem detalhes."
           }
         }
       }
     },
-    "No events" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs esemény"
+    "No events": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs esemény"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem eventos"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem eventos"
           }
         }
       }
     },
-    "No favourites yet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Még nincs kedvenc"
+    "No favourites yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Még nincs kedvenc"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ainda sem favoritos"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda sem favoritos"
           }
         }
       }
     },
-    "No service changes." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs forgalmi változás."
+    "No service changes.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs forgalmi változás."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem alterações de serviço."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem alterações de serviço."
           }
         }
       }
     },
-    "No stops in that direction. Widen the cone or turn it." : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs megálló abban az irányban. Szélesítsd a kúpot, vagy fordítsd el."
+    "No stops in that direction. Widen the cone or turn it.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs megálló abban az irányban. Szélesítsd a kúpot, vagy fordítsd el."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem paragens nessa direção. Alargue o cone ou rode-o."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem paragens nessa direção. Alargue o cone ou rode-o."
           }
         }
       }
     },
-    "No stops with departures within %lld m." : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs olyan megálló %lld m-en belül, ahonnan járat indul."
+    "No stops with departures within %lld m.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs olyan megálló %lld m-en belül, ahonnan járat indul."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem paragens com partidas num raio de %lld m."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem paragens com partidas num raio de %lld m."
           }
         }
       }
     },
-    "No stops within %lld m." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs megálló %lld m-en belül."
+    "No stops within %lld m.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs megálló %lld m-en belül."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem paragens num raio de %lld m."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem paragens num raio de %lld m."
           }
         }
       }
     },
-    "No such line" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs ilyen járat"
+    "No such line": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs ilyen járat"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linha inexistente"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha inexistente"
           }
         }
       }
     },
-    "Nothing new: those favourites are already here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nincs új hozzáadnivaló"
+    "Nothing new: those favourites are already here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nincs új hozzáadnivaló"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nada de novo: esses favoritos já estão guardados."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada de novo: esses favoritos já estão guardados."
           }
         }
       }
     },
-    "Now" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Most"
+    "Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agora"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agora"
           }
         }
       }
     },
-    "OK" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+    "OK": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }
     },
-    "On time" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Időben"
+    "On time": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Időben"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A horas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A horas"
           }
         }
       }
     },
-    "One list in time order" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egy lista időrendben"
+    "One list in time order": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy lista időrendben"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uma lista por ordem cronológica"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma lista por ordem cronológica"
           }
         }
       }
     },
-    "One row per line and direction" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egy sor vonalanként és irányonként"
+    "One row per line and direction": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy sor vonalanként és irányonként"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uma entrada por linha e sentido"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma entrada por linha e sentido"
           }
         }
       }
     },
-    "One row per line, its next times" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egy sor vonalanként, a következő időpontokkal"
+    "One row per line, its next times": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egy sor vonalanként, a következő időpontokkal"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uma entrada por linha, com as próximas horas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma entrada por linha, com as próximas horas"
           }
         }
       }
     },
-    "ongoing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "visszavonásig"
+    "ongoing": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "visszavonásig"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "em curso"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "em curso"
           }
         }
       }
     },
-    "Ongoing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folyamatban"
+    "Ongoing": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folyamatban"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Em curso"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em curso"
           }
         }
       }
     },
-    "Open in browser" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megnyitás böngészőben"
+    "Open in browser": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megnyitás böngészőben"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir no navegador"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir no navegador"
           }
         }
       }
     },
-    "Open trip" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járat megnyitása"
+    "Open trip": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat megnyitása"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir viagem"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir viagem"
           }
         }
       }
     },
-    "Open trip →" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járat megnyitása →"
+    "Open trip →": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat megnyitása →"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir viagem →"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir viagem →"
           }
         }
       }
     },
-    "Other" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egyéb"
+    "Other": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Egyéb"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Outros"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outros"
           }
         }
       }
     },
-    "Past trip" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Múltbéli járat"
+    "Past trip": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Múltbéli járat"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Viagem anterior"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viagem anterior"
           }
         }
       }
     },
-    "Past trip, ended %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Múltbéli járat, véget ért: %@"
+    "Past trip, ended %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Múltbéli járat, véget ért: %@"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Viagem anterior, terminou %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viagem anterior, terminou %@"
           }
         }
       }
     },
-    "Paste JSON" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "JSON beillesztése"
+    "Paste JSON": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JSON beillesztése"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colar JSON"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colar JSON"
           }
         }
       }
     },
-    "Pick a favourite, or leave it empty to show all of them." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válassz egy kedvencet, vagy hagyd üresen az összes megjelenítéséhez."
+    "Pick a favourite, or leave it empty to show all of them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz egy kedvencet, vagy hagyd üresen az összes megjelenítéséhez."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolhe um favorito ou deixa vazio para mostrar todos."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolhe um favorito ou deixa vazio para mostrar todos."
           }
         }
       }
     },
-    "Pick two favourites. Left empty, the first two in your list are used." : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Válassz két kedvencet. Ha üresen hagyod, a listád első kettőjét használjuk."
+    "Pick two favourites. Left empty, the first two in your list are used.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Válassz két kedvencet. Ha üresen hagyod, a listád első kettőjét használjuk."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha dois favoritos. Se ficar vazio, são usados os dois primeiros da lista."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha dois favoritos. Se ficar vazio, são usados os dois primeiros da lista."
           }
         }
       }
     },
-    "Planned" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tervezett"
+    "Planned": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tervezett"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agendados"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agendados"
           }
         }
       }
     },
-    "Planned (one)" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Planned"
+    "Planned (one)": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planned"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tervezett"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tervezett"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agendado"
           }
+        }
+      }
+    },
+    "Point at a stop": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irányítsd egy megálló felé"
+          }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agendado"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aponte para uma paragem"
           }
         }
       }
     },
-    "Point at a stop" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irányítsd egy megálló felé"
+    "POINTING": {
+      "extractionState": "stale",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IRÁNYÍTÁS"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aponte para uma paragem"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A APONTAR"
           }
         }
       }
     },
-    "POINTING" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "IRÁNYÍTÁS"
+    "Radius": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keresési sugár"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A APONTAR"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raio"
           }
         }
       }
     },
-    "Radius" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keresési sugár"
+    "Replacement bus": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pótlóbusz"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raio"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocarro de substituição"
           }
         }
       }
     },
-    "Replacement bus" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pótlóbusz"
+    "Replacement buses": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pótlóbuszok"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autocarro de substituição"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autocarros de substituição"
           }
         }
       }
     },
-    "Replacement buses" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pótlóbuszok"
+    "Retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Újra"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autocarros de substituição"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tentar novamente"
           }
         }
       }
     },
-    "Retry" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Újra"
+    "Route": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vonal"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tentar novamente"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Percurso"
           }
         }
       }
     },
-    "Route" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vonal"
+    "Route not found.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A járat nem található."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Percurso"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha não encontrada."
           }
         }
       }
     },
-    "Route not found." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A járat nem található."
+    "Routes": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járatok"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linha não encontrada."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linhas"
           }
         }
       }
     },
-    "Routes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járatok"
+    "Same format as the web app: copy there, paste here (or the other way round). Existing favourites are kept.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ugyanaz a formátum, mint a webes alkalmazásban: másold ki ott, illeszd be itt (vagy fordítva). A meglévő kedvencek megmaradnak."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linhas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O mesmo formato da aplicação web: copie lá e cole aqui (ou vice-versa). Os favoritos existentes são mantidos."
           }
         }
       }
     },
-    "Same format as the web app: copy there, paste here (or the other way round). Existing favourites are kept." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ugyanaz a formátum, mint a webes alkalmazásban: másold ki ott, illeszd be itt (vagy fordítva). A meglévő kedvencek megmaradnak."
+    "Save a stop or line in the app to see its departures here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentsd el kedvencként egy megálló vagy vonal indulásait az appban, és itt jelennek meg."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O mesmo formato da aplicação web: copie lá e cole aqui (ou vice-versa). Os favoritos existentes são mantidos."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guarda uma paragem ou linha nos favoritos da app para ver aqui as partidas."
           }
         }
       }
     },
-    "Save a stop or line in the app to see its departures here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mentsd el kedvencként egy megálló vagy vonal indulásait az appban, és itt jelennek meg."
+    "Saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentve"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guarda uma paragem ou linha nos favoritos da app para ver aqui as partidas."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado"
           }
         }
       }
     },
-    "Saved" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mentve"
+    "Scheduled": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menetrend szerint"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guardado"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programado"
           }
         }
       }
     },
-    "Scheduled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menetrend szerint"
+    "Search lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat keresése"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Programado"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pesquisar linhas"
           }
         }
       }
     },
-    "Search lines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járat keresése"
+    "Search stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megálló keresése"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pesquisar linhas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pesquisar paragens"
           }
         }
       }
     },
-    "Search stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megálló keresése"
+    "sec": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "s"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pesquisar paragens"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "seg"
           }
         }
       }
     },
-    "sec" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "s"
+    "Second favourite": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Második kedvenc"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "seg"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segundo favorito"
           }
         }
       }
     },
-    "Second favourite" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Második kedvenc"
+    "See all": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Összes"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segundo favorito"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver tudo"
           }
         }
       }
     },
-    "See all" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Összes"
+    "Selected lines": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiválasztott járatok"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ver tudo"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linhas selecionadas"
           }
         }
       }
     },
-    "Selected lines" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kiválasztott járatok"
+    "Service changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forgalmi változások"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linhas selecionadas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alterações de serviço"
           }
         }
       }
     },
-    "Service changes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forgalmi változások"
+    "Settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beállítások"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alterações de serviço"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definições"
           }
         }
       }
     },
-    "Settings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beállítások"
+    "Show": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mutasd"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Definições"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar"
           }
         }
       }
     },
-    "Show" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mutasd"
+    "Show ${favorite}": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mutat: ${favorite}"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar ${favorite}"
           }
         }
       }
     },
-    "Show ${favorite}" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mutat: ${favorite}"
+    "Show departures from": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indulások ettől"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar ${favorite}"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar partidas a partir de"
           }
         }
       }
     },
-    "Show departures from" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indulások ettől"
+    "Show more": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Továbbiak"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar partidas a partir de"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar mais"
           }
         }
       }
     },
-    "Show more" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Továbbiak"
+    "Show my location": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saját helyzet mutatása"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar mais"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar a minha localização"
           }
         }
       }
     },
-    "Show my location" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saját helyzet mutatása"
+    "since %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ óta"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar a minha localização"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desde %@"
           }
         }
       }
     },
-    "since %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ óta"
+    "Stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megálló"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "desde %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragem"
           }
         }
       }
     },
-    "Stop" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megálló"
+    "Stop group view": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megállócsoport nézete"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragem"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista de grupo de paragens"
           }
         }
       }
     },
-    "Stop group view" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megállócsoport nézete"
+    "Stop not found.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A megálló nem található."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vista de grupo de paragens"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragem não encontrada."
           }
         }
       }
     },
-    "Stop not found." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A megálló nem található."
+    "Stop pointing": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irányítás leállítása"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragem não encontrada."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parar de apontar"
           }
         }
       }
     },
-    "Stop pointing" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irányítás leállítása"
+    "Stops": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megállók"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parar de apontar"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragens"
           }
         }
       }
     },
-    "Stops" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megállók"
+    "Stops here": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Megállóhelyek itt"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragens"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paragens aqui"
           }
         }
       }
     },
-    "Stops here" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Megállóhelyek itt"
+    "Swap direction": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irányváltás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paragens aqui"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inverter sentido"
           }
         }
       }
     },
-    "Swap direction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irányváltás"
+    "System": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rendszer"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverter sentido"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistema"
           }
         }
       }
     },
-    "System" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rendszer"
+    "Tab bar icons: Mynaui Icons, MIT License, Copyright (c) Praveen Juge.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.": {},
+    "Tap the star on a line or a stop to pin it here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyomj a csillagra egy járatnál vagy megállónál, hogy kitűzd a kezdőlapra a kedvenceid közé."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sistema"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque na estrela numa linha ou paragem para a fixar aqui."
           }
         }
       }
     },
-    "Tab bar icons: Mynaui Icons, MIT License, Copyright (c) Praveen Juge.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." : {
-
+    "Tap Use my location to try again.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppints a Helyzetem használata gombra az újrapróbáláshoz."
+          }
+        },
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque em Usar a minha localização para tentar novamente."
+          }
+        }
+      }
     },
-    "Tap the star on a line or a stop to pin it here." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nyomj a csillagra egy járatnál vagy megállónál, hogy kitűzd a kezdőlapra a kedvenceid közé."
+    "Terminus · arrivals only": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Végállomás · csak leszállás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque na estrela numa linha ou paragem para a fixar aqui."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal · apenas chegadas"
           }
         }
       }
     },
-    "Tap Use my location to try again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koppints a Helyzetem használata gombra az újrapróbáláshoz."
+    "The clipboard doesn't hold favourites JSON.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A vágólapon nincs kedvencek JSON."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque em Usar a minha localização para tentar novamente."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A área de transferência não contém JSON de favoritos."
           }
         }
       }
     },
-    "Terminus · arrivals only" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Végállomás · csak leszállás"
+    "The whole stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Az egész megálló"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal · apenas chegadas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toda a paragem"
           }
         }
       }
     },
-    "The clipboard doesn't hold favourites JSON." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A vágólapon nincs kedvencek JSON."
+    "These lines from here": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezek a járatok innen"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A área de transferência não contém JSON de favoritos."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas linhas a partir daqui"
           }
         }
       }
     },
-    "The whole stop" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Az egész megálló"
+    "This line from this stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a járat ebből a megállóból"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toda a paragem"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta linha a partir desta paragem"
           }
         }
       }
     },
-    "These lines from here" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ezek a járatok innen"
+    "This trip is no longer available.": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ez a járat már nem létezik."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estas linhas a partir daqui"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta viagem já não está disponível."
           }
         }
       }
     },
-    "This line from this stop" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ez a járat ebből a megállóból"
+    "Time": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idő"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta linha a partir desta paragem"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora"
           }
         }
       }
     },
-    "This trip is no longer available." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ez a járat már nem létezik."
+    "Timeline": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Időrend"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta viagem já não está disponível."
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cronologia"
           }
         }
       }
     },
-    "Time" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Idő"
+    "Timetable": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menetrend"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hora"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horário"
           }
         }
       }
     },
-    "Timeline" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Időrend"
+    "today": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ma"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cronologia"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hoje"
           }
         }
       }
     },
-    "Timetable" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menetrend"
+    "Today": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ma"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Horário"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoje"
           }
         }
       }
     },
-    "today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ma"
+    "tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "holnap"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "hoje"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "amanhã"
           }
         }
       }
     },
-    "Today" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ma"
+    "Tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "holnap"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoje"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amanhã"
           }
         }
       }
     },
-    "tomorrow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "holnap"
+    "Towards": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irány"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "amanhã"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sentido"
           }
         }
       }
     },
-    "Tomorrow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "holnap"
+    "towards %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ felé"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Amanhã"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sentido %@"
           }
         }
       }
     },
-    "Towards" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Irány"
+    "Tram": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Villamos"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sentido"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elétrico"
           }
         }
       }
     },
-    "towards %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ felé"
+    "Trip map": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járat térképe"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sentido %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapa da viagem"
           }
         }
       }
     },
-    "Tram" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Villamos"
+    "Trolleybus": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trolibusz"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elétrico"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Troleicarro"
           }
         }
       }
     },
-    "Trip map" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járat térképe"
+    "Unfreeze": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feloldás"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mapa da viagem"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descongelar"
           }
         }
       }
     },
-    "Trolleybus" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trolibusz"
+    "Unknown destination": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ismeretlen úti cél"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Troleicarro"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino desconhecido"
           }
         }
       }
     },
-    "Unfreeze" : {
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Feloldás"
+    "until %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-ig"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Descongelar"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "até %@"
           }
         }
       }
     },
-    "Unknown destination" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ismeretlen úti cél"
+    "Upcoming · starts %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Későbbi járat · indul %@"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Destino desconhecido"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agendado · começa %@"
           }
         }
       }
     },
-    "until %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@-ig"
+    "Update": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frissítés"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "até %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualizar"
           }
         }
       }
     },
-    "Upcoming · starts %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Későbbi járat · indul %@"
+    "updated %lld min ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "frissítve %lld perccel ezelőtt"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agendado · começa %@"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "atualizado há %lld min"
           }
         }
       }
     },
-    "Update" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frissítés"
+    "Updated %lld min ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %lld min ago"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frissítve %lld perccel ezelőtt"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atualizar"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualizado há %lld min"
           }
         }
       }
     },
-    "updated %lld min ago" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "frissítve %lld perccel ezelőtt"
+    "updated %lld s ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "frissítve %llds ezelőtt"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "atualizado há %lld min"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "atualizado há %llds"
           }
         }
       }
     },
-    "Updated %lld min ago" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updated %lld min ago"
+    "Updated %llds ago": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updated %llds ago"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frissítve %lld perccel ezelőtt"
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frissítve %llds ezelőtt"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atualizado há %lld min"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualizado há %llds"
           }
         }
       }
     },
-    "updated %lld s ago" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "frissítve %llds ezelőtt"
+    "Use my location": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Helyzetem használata"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "atualizado há %llds"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar a minha localização"
           }
         }
       }
     },
-    "Updated %llds ago" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Updated %llds ago"
+    "Vehicle": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jármű"
           }
         },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frissítve %llds ezelőtt"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veículo"
+          }
+        }
+      }
+    },
+    "Vehicles": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Járművek"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atualizado há %llds"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veículos"
           }
         }
       }
     },
-    "Use my location" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Helyzetem használata"
+    "Wheelchair accessible": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akadálymentes"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Usar a minha localização"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acessível a cadeira de rodas"
           }
         }
       }
     },
-    "Vehicle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jármű"
+    "YOUR TRIP": {
+      "extractionState": "manual",
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EZZEL JÖTTÉL"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veículo"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A SUA VIAGEM"
           }
         }
       }
     },
-    "Vehicles" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Járművek"
+    "Reorder": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorrend módosítása"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veículos"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reordenar"
           }
         }
       }
     },
-    "Wheelchair accessible" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Akadálymentes"
+    "Animate changing numbers": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Változó számok animálása"
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acessível a cadeira de rodas"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animar números que mudam"
           }
         }
       }
     },
-    "YOUR TRIP" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "EZZEL JÖTTÉL"
+    "Countdowns and \"Updated\" ages roll their digits when they change. Turn off for a plain swap.": {
+      "localizations": {
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A visszaszámlálók és a \"Frissítve\" idők számjegyei gördülnek, amikor változnak. Kikapcsolva egyszerű cserét látsz."
           }
         },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A SUA VIAGEM"
+        "pt-PT": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As contagens e as idades \"Atualizado\" rodam os dígitos quando mudam. Desligue para uma troca simples."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

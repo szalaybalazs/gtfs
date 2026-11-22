@@ -1,3 +1,4 @@
+import RollingNumber from './RollingNumber'
 import { useT } from '../lib/i18n'
 
 /** A small clock icon, for "last refreshed". */
@@ -20,7 +21,9 @@ export function RefreshedAge({ seconds, className = '' }: { seconds: number; cla
   return (
     <span className={`ml-auto flex items-center gap-1.5 text-secondary ${className}`}>
       <ClockIcon />
-      <span className="tabular-nums">{s < 60 ? t('short.seconds', { n: s }) : t('short.minutes', { n: Math.floor(s / 60) })}</span>
+      <span className="tabular-nums">
+        <RollingNumber value={s < 60 ? t('short.seconds', { n: s }) : t('short.minutes', { n: Math.floor(s / 60) })} />
+      </span>
     </span>
   )
 }

@@ -29,6 +29,7 @@ private func runs(_ departures: [Departure], now: Foundation.Date, only: Set<Str
 private struct ShortTime: View {
     let departure: Departure
     let now: Foundation.Date
+    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         let s = departure.departure.timeIntervalSince(now)
@@ -39,6 +40,9 @@ private struct ShortTime: View {
             : "\(Countdown.upcoming(s).value)'"
         HStack(alignment: .top, spacing: 2) {
             Text(text).font(.system(size: 17, weight: .semibold)).monospacedDigit().lineLimit(1).fixedSize()
+                // Numbers roll when they change, as on the departure rows (off with the setting)
+                .contentTransition(settings.animateNumbers ? .numericText(countsDown: true) : .identity)
+                .animation(settings.animateNumbers ? .default : nil, value: text)
             if live && s >= 0 { LiveIcon(size: 10).foregroundStyle(Theme.secondary).padding(.top, 2) }
         }
         .padding(.horizontal, s >= 3600 ? 4 : 0) // a clock time needs room around it

@@ -122,6 +122,7 @@ export const pt: Record<MessageKey, Message> = {
   'layers.lines': 'Linhas',
   'stop.terminus': 'Terminal · apenas chegadas',
   'settings.radius': 'Raio de pesquisa',
+  'settings.animateNumbers': 'Animar números que mudam',
   'departures.more': 'Mostrar mais',
   'stations.summary': '{dirs} plataformas · {lines} linhas',
   'departures.arrives': 'Chega',

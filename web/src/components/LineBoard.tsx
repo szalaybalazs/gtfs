@@ -1,8 +1,9 @@
+import RollingNumber from './RollingNumber'
 import { useLayoutEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { Departure } from '../lib/api'
 import { compareLines } from '../lib/categories'
-import { countdown } from '../lib/countdown'
+import { countdown, justLeftValue } from '../lib/countdown'
 import { useT } from '../lib/i18n'
 import { realtimeStatus } from '../lib/realtimeStatus'
 import { formatTime } from '../lib/time'
@@ -151,16 +152,16 @@ function Countdown({
     : left && fixed
       ? { value: `-${Math.ceil(-seconds / 60)}`, unit: 'unit.min' as const }
       : left
-        ? { value: `-${Math.ceil(-seconds)}`, unit: 'unit.sec' as const }
+        ? { value: justLeftValue(seconds), unit: 'unit.sec' as const }
         : countdown(seconds)
   const size = clock ? (small ? 'text-[12px]' : 'text-[15px]') : small ? 'text-[16px]' : 'text-2xl'
   return (
     <div className={`text-right whitespace-nowrap ${small ? 'w-9 text-secondary' : 'w-11 text-label'} ${left ? 'opacity-45' : ''}`}>
       {/* Same line height for clock times and countdowns, so the unit lines stay level */}
       <p className={`relative flex items-end justify-end font-bold tabular-nums ${small ? 'h-4' : 'h-6'} leading-none ${size}`}>
-        <span data-value>{value}</span>
+        <span data-value><RollingNumber value={value} /></span>
         {/* Live mark right after the number, hanging into the gap between columns so it never shifts the digits */}
-        {live && !left && <LiveIcon className={`absolute top-0 -right-2.5 text-secondary ${small ? 'h-2 w-2' : 'h-2.5 w-2.5'}`} aria-hidden />}
+        {live && <LiveIcon className={`absolute top-0 -right-2.5 text-secondary ${small ? 'h-2 w-2' : 'h-2.5 w-2.5'}`} aria-hidden />}
       </p>
       <p className={`flex items-center justify-end gap-0.5 font-medium text-secondary ${small ? 'text-[10px]' : 'text-[11px]'}`}>
         {unit ? t(unit) : '\u00a0'}

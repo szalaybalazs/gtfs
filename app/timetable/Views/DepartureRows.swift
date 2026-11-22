@@ -26,6 +26,7 @@ private func isLive(_ d: Departure) -> Bool {
 
 /// One departure in time order: badge, destination, marks and exact time, big countdown, chevron.
 struct DepartureRow: View {
+    @Environment(AppSettings.self) private var settings
     let departure: Departure
     let now: Date
     var fixed = false
@@ -44,8 +45,10 @@ struct DepartureRow: View {
         let count: CountdownText = fixed && seconds < 0
             ? CountdownText(value: String(Int((-seconds / 60).rounded(.up))), unit: tr("min before"))
             : left ? CountdownText(value: String(Int((-seconds / 60).rounded())), unit: tr("min ago"))
-            : justLeft ? CountdownText(value: "-\(Int((-seconds).rounded(.up)))", unit: tr("sec"))
+            : justLeft ? Countdown.justLeft(seconds)
             : Countdown.upcoming(seconds)
+        // No number roll while the row is leaving (or has left): it would roll through old values as the row closes or comes back
+        let roll = settings.animateNumbers && seconds >= 0
         HStack(spacing: 12) {
             if let route = d.route { LineBadge(line: route) }
             VStack(alignment: .leading, spacing: 0) {
@@ -82,6 +85,8 @@ struct DepartureRow: View {
             // Countdown stays plain (black, grey once gone); colour lives on the time line. Live mark in its own corner.
             VStack(alignment: .trailing, spacing: 0) {
                 Text(count.value).font(.system(size: 24, weight: .bold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                    .contentTransition(roll ? .numericText(countsDown: true) : .identity)
+                    .animation(roll ? .default : nil, value: count.value)
                 Text(count.unit ?? " ").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.secondary).lineLimit(1).minimumScaleFactor(0.7)
             }
             .foregroundStyle(left ? Theme.secondary : Color.primary)
@@ -89,7 +94,7 @@ struct DepartureRow: View {
             .frame(width: 56, alignment: .trailing)
             .padding(.trailing, 14)
             .overlay(alignment: .topTrailing) {
-                if status != .scheduled && !justLeft && !left {
+                if status != .scheduled {
                     LiveIcon(size: 12).foregroundStyle(Theme.secondary)
                 }
             }
